@@ -1,0 +1,8 @@
+.cache/*
+.eggs/*
+build/*
+dist/*
+*__pycache__*
+wordseg.egg-info/*
+wordseg/algos/*/build/*
+*.pyc
