@@ -21,43 +21,50 @@ import os
 import subprocess
 import sys
 
+import distutils.command.build
 from setuptools import setup, find_packages
 
 
 def on_readthedocs():
     """Return True if building the online documentation on readthedocs"""
-    return os.environ.get('READTHEDOCS', None)
+    return os.environ.get('READTHEDOCS', None) == 'True'
 
 
-PACKAGE_NAME = 'wordseg'
-PACKAGE_VERSION = open('VERSION').read().strip()
+class WordsegBuild(distutils.command.build.build):
+    """Compile the C++ code needed by wordseg"""
+    # a list of C++ binaries to compile. We must have the Makefile
+    # './wordseg/algos/TARGET/Makefile' that produces the executable
+    # './wordseg/algos/TARGET/build/TARGET'
+    targets = ['dpseg']
 
-# A list of python packages required by wordseg
-REQUIREMENTS = ['joblib'] if on_readthedocs() else ['joblib', 'numpy', 'pandas']
+    def run(self):
+        # call the usual build method
+        super(WordsegBuild, self).run()
 
-# a list of C++ binaries to compile. We must have the Makefile
-# './wordseg/algos/TARGET/Makefile' that produces the executable
-# './wordseg/algos/TARGET/build/TARGET'
-CPP_TARGETS = [] if on_readthedocs() else ['dpseg']
+        if on_readthedocs():
+            return
 
-# the list of binaries to be installed with wordseg
-BIN_TARGETS = ['wordseg/algos/{}/build/{}'.format(t, t) for t in CPP_TARGETS]
+        # calling "make" and compile all the C++ targets
+        for target in self.targets:
+            build_dir = os.path.join('wordseg', 'algos', target, 'build')
+            print('compiling C++ dependencies for', target, 'in', build_dir)
 
-# calling "make" and compile all the C++ targets just defined
-for target in CPP_TARGETS:
-    build_dir = os.path.join('wordseg', 'algos', target, 'build')
-    print('compiling C++ dependencies for', target, 'in', build_dir)
+            if not os.path.exists(build_dir):
+                os.makedirs(build_dir)
 
-    if not os.path.exists(build_dir):
-        os.makedirs(build_dir)
+            subprocess.call(
+                ['make'], cwd=os.path.join('wordseg', 'algos', target))
 
-    subprocess.call(['make'], cwd=os.path.join('wordseg', 'algos', target))
+    @classmethod
+    def bin_targets(cls):
+        """Return the list of binaries to be installed with wordseg"""
+        return ['wordseg/algos/{}/build/{}'.format(t, t) for t in cls.targets]
 
 
 setup(
-    name=PACKAGE_NAME,
-    version=PACKAGE_VERSION,
-    description='A collection of tools for text based word segmentation',
+    name='wordseg',
+    version=open('VERSION').read().strip(),
+    description='tools for text based word segmentation',
     long_description=open('README.md').read(),
     author='Alex Cristia, Mathieu Bernard, Elin Larsen',
     url='https://github.com/mmmaat/wordseg',
@@ -65,7 +72,7 @@ setup(
     zip_safe=True,
 
     packages=find_packages(exclude=['test']),
-    install_requires=REQUIREMENTS,
+    install_requires=['joblib'] if on_readthedocs() else ['joblib', 'numpy', 'pandas'],
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],
 
@@ -79,4 +86,5 @@ setup(
         'wordseg-tp = wordseg.algos.tp:main',
         'wordseg-puddle = wordseg.algos.puddle:main']},
 
-    data_files=[('bin', BIN_TARGETS)])
+    cmdclass={'build': WordsegBuild},
+    data_files=[('bin', WordsegBuild.bin_targets())])
