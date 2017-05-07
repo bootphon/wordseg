@@ -126,7 +126,7 @@ def _dpseg(text, args, log_level=logging.ERROR, log_name='wordseg-dpseg'):
 
         def writer():
             for utt in text:
-                process.stdin.write((utt.strip() + '\n').encode())
+                process.stdin.write((utt.strip() + '\n').encode('utf8'))
             process.stdin.close()
 
         thread = threading.Thread(target=writer)
