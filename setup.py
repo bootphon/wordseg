@@ -39,7 +39,7 @@ class WordsegBuild(distutils.command.build.build):
 
     def run(self):
         # call the usual build method
-        super(WordsegBuild, self).run()
+        distutils.command.build.build.run(self)
 
         if on_readthedocs():
             return
