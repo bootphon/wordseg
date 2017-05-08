@@ -17,7 +17,11 @@
 
 """Prepare an input text for word segmentation
 
-The input text must be in a phonologized from
+The input text must be in a phonologized form (TODO define that). The
+input text is checked for errors in formatting (presence of
+punctuation, missing separators, etc...). The program fails on the
+first encountered error, or ignore them if the "--tolerant" option is
+used.
 
 """
 
@@ -31,6 +35,7 @@ The input text must be in a phonologized from
 # phones -> phone ' ' phones
 # phone -> 'p'
 
+import six
 import string
 import re
 
@@ -41,6 +46,12 @@ punctuation_re = re.compile('[%s]' % re.escape(string.punctuation))
 """A regular expression matching all the punctuation characters"""
 
 
+def _pairwise(l):
+    """l -> (l[0], l[1]), (l[1], l[2]), ..."""
+    for a, b in zip(l[:-1], l[1:]):
+        yield a, b
+
+
 def check_utterance(utt, separator):
     """Raise ValueError if any error is detected on `utt`
 
@@ -49,13 +60,17 @@ def check_utterance(utt, separator):
       * `utt` contains any punctuation character (once separators removed)
       * `utt` begins with a separator
       * `utt` does not end with a word separator
+      * `utt` contains syllable tokens but a word does not end with a
+        syllable separator
 
     Return True if no error detected
 
     """
-    # utterance is empty or not a string
-    if not utt or not isinstance(utt, str):
-        raise ValueError('utterance is not a string')
+    # utterance is empty or not a string (or unicode for python2)
+    if not utt or not isinstance(utt, six.string_types):
+        raise ValueError(
+            'utterance is not a string ({}): {}'.format(type(utt), utt))
+
     if not len(utt):
         raise ValueError('utterance is an empty string')
 
@@ -69,16 +84,26 @@ def check_utterance(utt, separator):
     for sep in separator.iterate():
         if sep and re.match('^{}'.format(re.escape(sep)), utt):
             raise ValueError(
-                'utterance begins with the separator "{}"'.format(sep))
+                'utterance begins with a separator: "{}"'.format(utt))
 
     # utterance ends with a word separator
     if not utt.endswith(separator.word):
-        raise ValueError('utterance does not end with a word separator')
+        raise ValueError(
+            'utterance does not end with a word separator: "{}"'.format(utt))
+
+    # a words does not finish with a syllable separator
+    if separator.syllable and separator.syllable in utt and not all(
+            a == separator.syllable
+            for a, b in _pairwise(utt.split(separator.phone))
+            if b == separator.word):
+        raise ValueError(
+            'a word does not end with a syllable separator: "{}"'.format(utt))
 
     return True
 
 
-def prepare(text, separator, unit='phoneme'):
+def prepare(text, separator, unit='phoneme', tolerant=False,
+            log=utils.null_logger()):
     """Return a text prepared for word segmentation from a tagged text
 
     Remove syllable and word separators from a sequence of tagged
@@ -93,9 +118,18 @@ def prepare(text, separator, unit='phoneme'):
       or 'phoneme'. This put a space between two syllables or phonemes
       respectively.
 
-    :return: the `text` with separators removed, prepared for
-      segmentation at a syllable or phoneme representation level
-      (separated by space).
+    :param bool tolerant: if False, raise ValueError on the first
+      format error detected in the `text`. If True, the badly formated
+      utterances are filtered out from the output.
+
+    :param logger log: a logger instance where to send messages
+
+    :raise: ValueError on the first format error in `text` (see the
+       prepare.check_utterance function), only if `tolerant` is False.
+
+    :return: a generator of utterances from the `text` with separators
+      removed, prepared for segmentation at a syllable or phoneme
+      representation level (separated by space).
 
     """
     # raise an error if unit is not valid
@@ -113,8 +147,20 @@ def prepare(text, separator, unit='phoneme'):
                        .replace(' ', '')\
                        .replace(separator.syllable, ' ')
 
-    return (utils.strip(func(line)) for line in text
-            if check_utterance(line.strip(), separator))
+    nremoved = 0
+    for line in text:
+        try:
+            check_utterance(line, separator)
+            yield utils.strip(func(line))
+        except ValueError as err:
+            if tolerant:
+                log.debug('removing utterance: "%s"', line)
+                nremoved += 1
+            else:
+                raise err
+
+    if tolerant and nremoved:
+        log.warning('removed %d badly formated utterances', nremoved)
 
 
 @utils.CatchExceptions
@@ -127,20 +173,28 @@ def main():
             choices=['phoneme', 'syllable'], default='phoneme', help='''
             output level representation, must be "phoneme" or "syllable"''')
 
+        parser.add_argument(
+            '-t', '--tolerant', action='store_true',
+            help='''tolerate the badly formated utterances in input, but ignore them in
+            output (default is to exit on the first encountered
+            error)''')
+
     # command initialization
     streamin, streamout, separator, log, args = utils.prepare_main(
-        name='wordseg-gold',
+        name='wordseg-prep',
         description=__doc__,
         separator=utils.Separator(' ', ';esyll', ';eword'),
         add_arguments=add_arguments)
 
-    # check all the utterances are correctly formatted. One the first
-    # error detected, this raises a ValueError exception catched in
-    # the CatchException class: display an error message and exit
-    prep = prepare(streamin, separator, unit=args.unit)
+    log.debug('separator is %s', separator)
+
+    # check all the utterances are correctly formatted.
+    prep = utils.CountingIterator(prepare(
+        streamin, separator, unit=args.unit, tolerant=args.tolerant))
 
     # write prepared text, one utterance a line, ending with a newline
     streamout.write('\n'.join(prep) + '\n')
+    log.debug('prepared %s utterances', prep.count)
 
 
 if __name__ == '__main__':

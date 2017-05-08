@@ -1,5 +1,12 @@
+.. _installation:
+
 Installation
 ============
+
+
+The ``wordseg`` package is made of a collection of command-line
+programs and a Python library that can be installed using the above
+instructions.
 
 .. note::
 
@@ -10,12 +17,17 @@ Installation
      cd ./wordseg
 
 
-The ``wordseg`` package is made of a collection of command-line
-programs that can be installed using the above instructions. It is
-implemented in Python3 and C++, so the minimal dependencies to install
-``wordseg`` are *python3*, *make*, *gcc*. The C++ part also depends on
-the *boost-program-options* library.
+Dependencies
+------------
 
+The package is implemented in python and C++. Minimal dependencies to
+install ``wordseg`` are:
+
+- python3 (python2 is supported but python3 prefered for native
+  unicode support),
+- make and a C++ compiler supporting the ``-std=c++11`` option (should
+  be the case on most modern compilers),
+- the boost C++ library.
 
 
 System-wide installation
@@ -26,28 +38,28 @@ your personal computer (and you do not want to modify/contribute to
 the code). In all other cases, consider installing ``wordseg`` in a
 virtual environment.
 
-.. todo::
+* Install the required dependencies:
 
-   Actually only documented for Debian/Ubuntu (``apt-get``)
+  - on **Ubuntu/Debian**::
 
-::
-   sudo apt-get install python3 python3-setuptools python3-pandas \
-        build-essential libboost-program-options-dev
+      sudo apt-get install python3 python3-pip libboost-dev
 
-   python3 setup.py build
+  - on **Mac OSX**::
 
-   sudo python3 setup.py install
+      brew install python3 boost
+
+* Build and install the ``wordseg`` package::
+
+    python3 setup.py build
+    sudo python3 setup.py install
 
 
-.. note:: Uninstall
+* With this method there is no clear uninstallation process, you need to
+  delete the files manually (see https://stackoverflow.com/q/1550226 )::
 
-   With this system-wide installation there is no clear uninstalling
-   process, you need to delete the files manually (see
-   https://stackoverflow.com/questions/1550226 )::
-
-     sudo python3 setup.py install --record files.txt
-     cat files.txt | sudo xargs rm -rf
-     sudo rm files.txt
+    sudo python3 setup.py install --record files.txt
+    cat files.txt | sudo xargs rm -rf
+    sudo rm files.txt
 
 
 Installation in a virtual environment
@@ -79,10 +91,12 @@ supported by conda.
   in your $HOME and make them callable from the terminal). If you do
   not want to edit the code::
 
+    python setup.py build
     python setup.py install
 
   Or if you want to edit the code::
 
+    python setup.py build
     python setup.py develop
 
 * To uninstall it, simply remove the ``wordseg`` directory in your
@@ -98,7 +112,7 @@ Running the tests
 
 * The tests are located in ``./test`` and are executed by
   pytest_. ``python setup.py test`` is in fact an alias for ``pytest
-  --verbose``.
+  ./test``.
 
 * pytest supports a lot of options. For exemple to stop the execution
   at the first failure, use ``pytest -x``. To execute a single test

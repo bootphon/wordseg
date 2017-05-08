@@ -26,6 +26,7 @@ from . import prep
 def test_tp(prep, threshold):
     out = list(tp.segment(prep, threshold=threshold))
     s = Separator().remove
+
     assert len(out) == len(prep)
     for n, (a, b) in enumerate(zip(out, prep)):
         assert s(a) == s(b), 'line {}: "{}" != "{}"'.format(n+1, s(a), s(b))

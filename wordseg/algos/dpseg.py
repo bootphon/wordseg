@@ -48,9 +48,9 @@ See Goldwater, Griffiths, Johnson (2010) and Phillips & Pearl (2014).
 
 """
 
-import builtins
 import joblib
 import logging
+import os
 import pkg_resources
 import re
 import shlex
@@ -61,13 +61,26 @@ import threading
 from wordseg import utils, folding
 
 
-# TODO
-try:
-    DPSEG_BIN = pkg_resources.resource_filename(
-        pkg_resources.Requirement.parse('wordseg'),
-        'wordseg/algos/dpseg/build/dpseg')
-except KeyError:
-    pass
+def get_dpseg_binary():
+    """Return the path to the dpseg program
+
+    dpseg has been compiled during the wordseg installation. This
+    function retrieve that file or raise AssertionError if the binary
+    is not found.
+
+    """
+    pkg = pkg_resources.Requirement.parse('wordseg')
+
+    # case of 'python setup.py install'
+    dpseg = pkg_resources.resource_filename(pkg, 'bin/dpseg')
+
+    # case of 'python setup.py develop' or 'make'
+    if not os.path.isfile(dpseg):
+        dpseg = pkg_resources.resource_filename(
+            pkg, 'wordseg/algos/dpseg/build/dpseg')
+
+    assert os.path.isfile(dpseg), 'dpseg binary not found: {}'.format(dpseg)
+    return dpseg
 
 
 class UnicodeGenerator(object):
@@ -81,11 +94,17 @@ class UnicodeGenerator(object):
     def __init__(self, start=3001):
         self.index = start
 
+        # A little tweak for python 2/3 compatibility
+        try:
+            self._chr = unichr  # python2
+        except NameError:
+            self._chr = chr  # python 3
+
     def __call__(self):
-        char = builtins.chr(self.index)
+        char = self._chr(self.index)
         while re.match('\s', char):
             self.index += 1
-            char = chr(self.index)
+            char = self._chr(self.index)
         self.index += 1
         return char
 
@@ -97,7 +116,7 @@ def _dpseg(text, args, log_level=logging.ERROR, log_name='wordseg-dpseg'):
     with tempfile.NamedTemporaryFile() as tmp_output:
         command = (
             '{} --output-file {} --debug-level 1000 {}'
-            .format(DPSEG_BIN, tmp_output.name, args))
+            .format(get_dpseg_binary(), tmp_output.name, args))
 
         log.debug('running "%s"', command)
 
@@ -107,7 +126,7 @@ def _dpseg(text, args, log_level=logging.ERROR, log_name='wordseg-dpseg'):
 
         def writer():
             for utt in text:
-                process.stdin.write((utt.strip() + '\n').encode())
+                process.stdin.write((utt.strip() + '\n').encode('utf8'))
             process.stdin.close()
 
         thread = threading.Thread(target=writer)
@@ -207,7 +226,7 @@ class Argument(object):
 def yield_dpseg_arguments():
     # get the help message of the dpseg program
     help_msg= subprocess.Popen(
-        [DPSEG_BIN, '--help'],
+        [get_dpseg_binary(), '--help'],
         stderr=subprocess.PIPE).communicate()[1].decode()
 
     # parse the message line by line to build arguments for argparse

@@ -19,12 +19,13 @@ import os
 import pytest
 from wordseg import folding
 
+from . import tags
 
-def load_science_text():
-    science_file = os.path.join(
-        os.path.dirname(__file__), 'data', 'science.txt')
-    text = open(science_file, 'r').readlines()
-    return [line.strip() for line in text if len(line.strip())]
+# def load_science_text():
+#     science_file = os.path.join(
+#         os.path.dirname(__file__), 'data', 'science.txt')
+#     text = open(science_file, 'r').readlines()
+#     return [line.strip() for line in text if len(line.strip())]
 
 
 def test_permute():
@@ -77,8 +78,7 @@ def test_unfold_basic(nfolds):
     assert folding.unfold(folds, index) == [1, 2, 3]
 
 
-@pytest.mark.parametrize('nfolds', [1] + list(range(2, 16, 2)))
-def test_fold_unfold(nfolds):
-    text = load_science_text()
-    folds, index = folding.fold(text, nfolds)
-    assert folding.unfold(folds, index) == text
+@pytest.mark.parametrize('nfolds', [1] + list(range(2, 12, 2)))
+def test_fold_unfold_nfolds(nfolds, tags):
+    folds, index = folding.fold(tags, nfolds)
+    assert folding.unfold(folds, index) == tags

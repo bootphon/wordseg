@@ -1,27 +1,33 @@
-# ubuntu trusty has g++-1.48 and boost-1.54
-dist: trusty
-
-language: python
-python: 
-  - "2.7"
-  - "3.5"
-  - "3.7"
+matrix:
+  include:
+    - os: linux
+      dist: trusty
+      language: python
+      python: "2.7"
+    - os: linux
+      dist: trusty
+      language: python
+      python: "3.5"
+    - os: osx
+      osx_image: xcode8.3
+      language: generic
 
 notifications:
   email: false
 
 install:
-#  - pip install .
-  - python setup.py develop
-  
+  - pip install --upgrade pip
+  - pip install pandas numpy joblib pytest
+  - python setup.py build
+  - python setup.py install
+
 script:
   - pytest
-  
+
 addons:
   apt:
-    packages:      
+    packages:
       - libboost-program-options-dev
-      
+
 cache:
-  - apt
   - pip

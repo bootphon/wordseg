@@ -23,8 +23,6 @@ algorithms are evaluated.
 
 """
 
-import re
-
 from wordseg import utils, Separator
 
 
@@ -62,10 +60,13 @@ def main():
         description=__doc__,
         separator=utils.Separator(' ', ';esyll', ';eword'))
 
-    gold_text = gold(streamin, separator=separator)
+    log.debug('separator is %s', separator)
+
+    gold_text = utils.CountingIterator(gold(streamin, separator=separator))
 
     # write gold, one utterance per line, add a newline at the end
     streamout.write('\n'.join(gold_text) + '\n')
+    log.debug('prepared %s utterances', gold_text.count)
 
 
 if __name__ == '__main__':

@@ -25,6 +25,34 @@ import sys
 from wordseg import Separator
 
 
+class CountingIterator(object):
+    """A class for counting elements in a generator
+
+    Usefull because this avoid to convert a generator to list
+    (preserving time and memory) to count it's elements. Use it as
+    follows:
+
+    >>> counter = CountingIterator(range(10))
+    >>> for c in counter: pass
+    >>> counter.count
+    10
+
+    """
+    def __init__(self, generator):
+        self.generator = generator
+        self.count = 0
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        nxt = next(self.generator)
+        self.count += 1
+        return nxt
+
+    __next__ = next
+
+
 class CatchExceptions(object):
     """Decorator wrapping a function in a try/except block
 
@@ -217,7 +245,6 @@ def prepare_main(name=None,
         else:  # verbose >= 2
             level = logging.DEBUG
         log = get_logger(name=name, level=level)
-        log.debug('log level set to %s', logging.getLevelName(level))
 
     # setup the separator from parsed arguments
     separator = Separator(

@@ -26,6 +26,19 @@
 #include <vector>
 
 
+// Predeclaration of the function because compilation failed on OSX
+// with xbuild-7.3
+template <typename X, typename Y>
+std::wostream& operator<< (std::wostream&, const std::pair<X,Y>&);
+
+template <typename Key, typename Value>
+std::wostream& operator<< (std::wostream&, const std::map<Key,Value>&);
+
+template <typename Value>
+std::wostream& operator<< (std::wostream&, const std::vector<Value>&);
+
+
+
 template <typename X, typename Y>
 std::wostream& operator<< (std::wostream& os, const std::pair<X,Y>& xy)
 {
@@ -45,6 +58,7 @@ std::wostream& operator<< (std::wostream& os, const std::map<Key,Value>& k_v)
     }
     return os << L')';
 }
+
 
 template <typename Value>
 std::wostream& operator<< (std::wostream& os, const std::vector<Value>& vs)

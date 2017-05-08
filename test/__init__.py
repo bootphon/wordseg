@@ -13,24 +13,38 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import os
 import pytest
 import wordseg
 
 
+_tags = '''
+hh ih r ;esyll ;eword
+dh eh r ;esyll ;eword w iy ;esyll ;eword g ow ;esyll ;eword
+s ow ;esyll ;eword ax m p ;esyll ey sh ;esyll ax n t ;esyll ;eword
+w ah t ;esyll ;eword d ih d ;esyll ;eword y uw ;esyll ;eword iy t ;esyll ;eword ah p ;esyll ;eword
+uw p s ;esyll ;eword
+l ih t ;esyll ax l ;esyll ;eword b ih t ;esyll ;eword m ao r ;esyll ;eword
+l ih t ;esyll ax l ;esyll ;eword b ih t ;esyll ;eword m ao r ;esyll ;eword
+l ih t ;esyll ax l ;esyll ;eword b ih t ;esyll ;eword m ao r ;esyll ;eword
+uw p ;esyll s iy ;esyll ;eword
+uw p ;esyll s iy ;esyll ;eword b ih t ;esyll iy ;esyll ;eword b ih t ;esyll iy ;esyll ;eword b ih t ;esyll iy ;esyll ;eword b ey b ;esyll iy ;esyll ;eword g er l ;esyll ;eword
+y uw hh ;esyll aa ;esyll ;eword s p ae g hh ;esyll eh t ;esyll iy ;esyll ow z ;esyll ;eword
+w aa n t ;esyll ;eword s ax m ;esyll ;eword m ao r ;esyll ;eword
+n ow ;esyll ;eword
+'''
+
+
 @pytest.yield_fixture(scope='session')
-def tags(nlines=10):
+def tags():
     """Return a list of `nlines` utterances loaded from tags.txt"""
-    _file = os.path.join(os.path.dirname(__file__), 'data', 'tags.txt')
-    text = open(_file, 'r').readlines()[:nlines]
-    return [line.strip() for line in text if len(line.strip())]
+    return _tags.strip().split('\n')
 
 
 @pytest.yield_fixture(scope='session')
-def prep(nlines=10):
-    return list(wordseg.prepare(tags(nlines=nlines), wordseg.Separator()))
+def prep():
+    return list(wordseg.prepare(tags(), wordseg.Separator()))
 
 
 @pytest.yield_fixture(scope='session')
-def gold(nlines=10):
-    return list(wordseg.gold(tags(nlines=nlines), wordseg.Separator()))
+def gold():
+    return list(wordseg.gold(tags(), wordseg.Separator()))
