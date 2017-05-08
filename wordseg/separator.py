@@ -47,6 +47,11 @@ class Separator(object):
             'syllable': re.compile(self.syllable) if syllable else None,
             'word': re.compile(self.word) if word else None}
 
+    def __str__(self):
+        return '({})'.format(
+            ', '.join('{}: "{}"'.format(k, v) for k, v
+                      in self.iterate(type='pair') if v))
+
     def split(self, utt, level, remove=True):
         """Split the string `utt` at a given token `level`
 
@@ -80,8 +85,22 @@ class Separator(object):
             utt = re.sub(self._regexp['word'], '', utt)
         return re.sub(' +', ' ', utt)
 
-    def iterate(self):
-        """Return a generator on phone, syllable, word (in that order)"""
-        yield self.phone
-        yield self.syllable
-        yield self.word
+    def iterate(self, type='value'):
+        """Return a generator on phone, syllable, word tokens (in that order)
+
+        :param str type: must be 'value' or 'pair'
+
+        :return:
+
+        """
+        if type == 'value':
+            yield self.phone
+            yield self.syllable
+            yield self.word
+        elif type == 'pair':
+            yield ('phone', self.phone)
+            yield ('syllable', self.syllable)
+            yield ('word', self.word)
+        else:
+            raise ArgumentError(
+                'iteration type must be "value" or "pair", it is "{}"'.format(type))

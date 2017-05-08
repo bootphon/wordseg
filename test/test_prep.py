@@ -22,7 +22,8 @@ from wordseg.prepare import check_utterance, prepare
 
 def test_strip():
     assert utils.strip('  ') == ''
-    assert utils.strip('a  b \n') == 'a b'
+    assert utils.strip('\na\ta   \t\naa a\n  ') == 'a a aa a'
+    assert utils.strip('a  a \n') == 'a a'
 
 
 bad_utterances = [
@@ -30,9 +31,13 @@ bad_utterances = [
         ' ',
         '\n\n',
         'ah ;esyll ah',
-        'ah ;esyll ah ;esyll',
+        'ah ;esyll ah ;esyll',  # missing ;eword
+        'ah ;esyll ah ;eword',  # missing ;esyll
         'ah ah ; eword',
         ';eword',
+        ';eword a b ;esyll ;eword',
+        ';esyll a b ;esyll ;eword',
+        ' a b ;esyll ;eword',
         'a. ;eword',
         'a! ;eword',
 ]
@@ -54,13 +59,35 @@ def test_good_utterances(utt):
     assert check_utterance(utt, separator=Separator())
 
 
-def test_prepare_text():
+@pytest.mark.parametrize('level', ['phoneme', 'syllable'])
+def test_prepare_text(level):
     p = {'raw': ['hh ax l ;esyll ow ;esyll ;eword w er l d ;esyll ;eword'],
-         'phn': ['hh ax l ow w er l d'],
-         'syl': ['hhaxl ow werld']}
+         'phoneme': ['hh ax l ow w er l d'],
+         'syllable': ['hhaxl ow werld']}
 
     def f(u):
         return list(prepare(p['raw'], separator=Separator(), unit=u))
 
-    assert f('phoneme') == p['phn']
-    assert f('syllable') == p['syl']
+    assert f(level) == p[level]
+
+
+def test_prepare_bad_types():
+    # give dict or list of int as input, must fail
+    with pytest.raises(ValueError):
+        list(prepare({1: 1, 2: 2}, separator=Separator()))
+
+    with pytest.raises(ValueError):
+        list(prepare([1, 2], separator=Separator()))
+
+
+def test_prepare_tolerant():
+    utterances = good_utterances + bad_utterances
+
+    # tolerant=False
+    with pytest.raises(ValueError):
+        list(prepare(utterances, separator=Separator(), tolerant=False))
+
+    # tolerant=True
+    prepared = list(prepare(utterances, separator=Separator(), tolerant=True))
+    assert len(prepared) == len(good_utterances)
+    assert prepared == list(prepare(good_utterances, separator=Separator()))

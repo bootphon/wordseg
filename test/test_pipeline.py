@@ -1,3 +1,5 @@
+# coding: utf-8
+
 # Copyright 2017 Mathieu Bernard, Elin Larsen
 #
 # This program is free software: you can redistribute it and/or modify
@@ -20,18 +22,25 @@ import wordseg
 
 from . import tags
 
-
 algos = {
     'dibs': wordseg.algos.dibs,
     'dpseg': wordseg.algos.dpseg,
     'puddle': wordseg.algos.puddle,
     'tp': wordseg.algos.tp}
 
+params = [(a, e) for a in algos.keys() for e in ('ascii', 'unicode')]
 
-@pytest.mark.parametrize('algo', algos)
-def test_pipeline(algo, tags):
+
+@pytest.mark.parametrize('algo, encoding', params)
+def test_pipeline(algo, encoding, tags):
     # the token separator we use in the whole pipeline
     separator = wordseg.Separator(phone=' ', syllable=';esyll', word=';eword')
+
+    # add some unicode chars in the input text
+    if encoding == 'unicode':
+        tags = [line.replace('ih', u'ଖ')
+                .replace('eh', u'ࠇ').replace(' m ', u'ლ')
+                for line in tags]
 
     # build the gold version from the tags
     gold = list(wordseg.gold(tags, separator=separator))
@@ -46,7 +55,11 @@ def test_pipeline(algo, tags):
         assert separator.remove(a) == separator.remove(b)
 
     # segment it with the given algo (use default options)
-    segmented = list(algos[algo].segment(prepared_text))
+    if algo in ('dpseg', 'puddle'):
+        # only 1 fold for iteratove algos: faster
+        segmented = list(algos[algo].segment(prepared_text, nfolds=1))
+    else:
+        segmented = list(algos[algo].segment(prepared_text))
 
     s = separator.remove
     assert len(segmented) == len(tags)

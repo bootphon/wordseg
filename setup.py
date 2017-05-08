@@ -72,7 +72,8 @@ setup(
     zip_safe=True,
 
     packages=find_packages(exclude=['test']),
-    install_requires=['joblib'] if on_readthedocs() else ['joblib', 'numpy', 'pandas'],
+    install_requires=(['six', 'joblib'] if on_readthedocs() else
+                      ['six', 'joblib', 'numpy', 'pandas']),
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],
 

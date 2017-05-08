@@ -226,7 +226,7 @@ class Argument(object):
 def yield_dpseg_arguments():
     # get the help message of the dpseg program
     help_msg= subprocess.Popen(
-        [DPSEG_BIN, '--help'],
+        [get_dpseg_binary(), '--help'],
         stderr=subprocess.PIPE).communicate()[1].decode()
 
     # parse the message line by line to build arguments for argparse
