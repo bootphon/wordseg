@@ -58,7 +58,8 @@ class WordsegBuild(distutils.command.build.build):
     @classmethod
     def bin_targets(cls):
         """Return the list of binaries to be installed with wordseg"""
-        return ['wordseg/algos/{}/build/{}'.format(t, t) for t in cls.targets]
+        return ([] if on_readthedocs() else
+                ['wordseg/algos/{}/build/{}'.format(t, t) for t in cls.targets])
 
 
 setup(
