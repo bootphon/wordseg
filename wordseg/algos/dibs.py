@@ -110,7 +110,7 @@ class Summary(object):
 
 
 class Dibs(Counter):
-    def __init__(self, multigraphemic=False, threshold=0.5, wordsep='##'):
+    def __init__(self, multigraphemic=False, threshold=0.5, wordsep=' '):
         super(Dibs, self).__init__()
         self.multigraphemic = multigraphemic
         self.threshold = threshold
@@ -232,20 +232,21 @@ def lexical(speech, lexicon=None, pwb=None, log=utils.null_logger()):
 # TODO fix this confusion between test/train texts, see if can
 # completly avoid train text... For now the train is used to
 # initialize diphones
-# TODO docstring
-def segment(text, pwb=None, train_text=None, diphones=None,
-            log=utils.null_logger()):
-    # force text to be a list (can be a generator or a stream)
-    text = [line for line in text]
+def segment(text, prob_word_boundary=None, train_text=None,
+            diphones=None, log=utils.null_logger()):
+    """Word segmentation using the dibs algorithm"""
+
+    text = list(text)
 
     # TODO wow!!!
     if not train_text:
+        log.warning('using the input text for training!')
         train_text = text
 
     training = Summary(multigraphemic=True, wordsep=' ')
     training.readstream(train_text)
 
-    phrasal_dibs = phrasal(training, pwb=pwb, log=log)
+    phrasal_dibs = phrasal(training, pwb=prob_word_boundary, log=log)
     segmented = phrasal_dibs.test(text)
 
     if diphones:
@@ -305,8 +306,8 @@ def main():
         train_text = test_text[:ntrain]
 
     segmented = segment(
-        test_text, pwb=args.prob_word_boundary, train_text=train_text,
-        diphones=args.diphones, log=log)
+        test_text, prob_word_boundary=args.prob_word_boundary,
+        train_text=train_text, diphones=args.diphones, log=log)
 
     streamout.write('\n'.join(segmented) + '\n')
 

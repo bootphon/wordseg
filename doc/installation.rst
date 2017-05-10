@@ -5,8 +5,8 @@ Installation
 
 
 The ``wordseg`` package is made of a collection of command-line
-programs and a Python library that can be installed using the above
-instructions.
+programs and a Python library that can be installed using the
+instructions below.
 
 .. note::
 
@@ -77,7 +77,7 @@ supported by conda.
 
 * Create a new Python 3 virtual environment named *wordseg* and
   install the required dependencies (include pytest and sphinx for
-  test and documentation, see above)::
+  test and documentation, see below)::
 
     conda create --name wordseg python=3 \
           pytest pytest-runner sphinx sphinx_rtd_theme \

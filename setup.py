@@ -34,7 +34,7 @@ class WordsegBuild(distutils.command.build.build):
     """Compile the C++ code needed by wordseg"""
     # a list of C++ binaries to compile. We must have the Makefile
     # './wordseg/algos/TARGET/Makefile' that produces the executable
-    # './wordseg/algos/TARGET/build/TARGET'
+    # './build/TARGET/TARGET'
     targets = ['dpseg']
 
     def run(self):
@@ -46,20 +46,27 @@ class WordsegBuild(distutils.command.build.build):
 
         # calling "make" and compile all the C++ targets
         for target in self.targets:
-            build_dir = os.path.join('wordseg', 'algos', target, 'build')
+            build_dir = os.path.join('build', target)
             print('compiling C++ dependencies for', target, 'in', build_dir)
 
+            # create the build dir if needed
             if not os.path.exists(build_dir):
                 os.makedirs(build_dir)
 
+            # inform make about the build dir
+            env = os.environ.copy()
+            env['BUILDDIR'] = os.path.abspath(build_dir)
+
+            # call make
             subprocess.call(
-                ['make'], cwd=os.path.join('wordseg', 'algos', target))
+                ['make'], env=env,
+                cwd=os.path.join('wordseg', 'algos', target))
 
     @classmethod
     def bin_targets(cls):
         """Return the list of binaries to be installed with wordseg"""
         return ([] if on_readthedocs() else
-                ['wordseg/algos/{}/build/{}'.format(t, t) for t in cls.targets])
+                ['build/{}/{}'.format(t, t) for t in cls.targets])
 
 
 setup(

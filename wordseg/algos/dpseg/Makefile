@@ -14,8 +14,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
-# output directory with object code and binaries
-BUILDDIR = ./build
+# output directory with object code and binaries (this is defined from setup.py)
+# BUILDDIR = ./build
 
 # directory with C++ sources (must be *.cc extension) and headers
 SRCDIR	 = ./src

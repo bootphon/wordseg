@@ -28,6 +28,7 @@ made for open science, we welcome all the contributions (see
 
    installation
    algorithms
+   evaluation
    commands
    tutorial
    modules

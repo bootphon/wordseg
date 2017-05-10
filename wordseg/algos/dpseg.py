@@ -76,8 +76,7 @@ def get_dpseg_binary():
 
     # case of 'python setup.py develop' or 'make'
     if not os.path.isfile(dpseg):
-        dpseg = pkg_resources.resource_filename(
-            pkg, 'wordseg/algos/dpseg/build/dpseg')
+        dpseg = pkg_resources.resource_filename(pkg, 'build/dpseg/dpseg')
 
     assert os.path.isfile(dpseg), 'dpseg binary not found: {}'.format(dpseg)
     return dpseg

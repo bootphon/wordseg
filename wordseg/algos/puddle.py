@@ -193,7 +193,7 @@ def add_arguments(parser):
         help='number of parallel jobs to use, default is %(default)s')
 
     parser.add_argument(
-        '-w', '--window', type=int, default=2, help='''
+        '-w', '--window', type=int, default=2, metavar='<int>', help='''
         Number of phonemes to be taken into account for boundary constraint,
         default is %(default)s.''')
 

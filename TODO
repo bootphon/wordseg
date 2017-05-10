@@ -1,6 +1,4 @@
-* For wordseg-1.0
 - Adaptor Grammar
-- terminate the doc
+- terminate the doc (python tuto)
 - bugfix in dpseg/osx (unicode related)
   See https://travis-ci.org/mmmaat/wordseg/jobs/229570592#L266
-- build dpseg in ./build/dpseg (instead of ./wordseg/algos/dpseg/build)

@@ -1,3 +1,5 @@
+# coding: utf-8
+
 # Copyright 2017 Mathieu Bernard, Elin Larsen
 #
 # This program is free software: you can redistribute it and/or modify
@@ -30,6 +32,7 @@ bad_utterances = [
         '',
         ' ',
         '\n\n',
+        'hello',
         'ah ;esyll ah',
         'ah ;esyll ah ;esyll',  # missing ;eword
         'ah ;esyll ah ;eword',  # missing ;esyll
@@ -37,9 +40,9 @@ bad_utterances = [
         ';eword',
         ';eword a b ;esyll ;eword',
         ';esyll a b ;esyll ;eword',
-        ' a b ;esyll ;eword',
         'a. ;eword',
-        'a! ;eword',
+        'a! ;eword'
+        ' a b ;esyll ;eword',
 ]
 
 
@@ -51,7 +54,8 @@ def test_bad_utterances(utt):
 
 good_utterances = [
     'a ;eword',
-    'a ;esyll ;eword']
+    'a ;esyll ;eword',
+    'ˌʌ s ;eword t ə ;eword p l eɪ ;eword ð ə ;eword s oʊ l oʊ z ;eword']
 
 
 @pytest.mark.parametrize('utt', good_utterances)
@@ -73,10 +77,10 @@ def test_prepare_text(level):
 
 def test_prepare_bad_types():
     # give dict or list of int as input, must fail
-    with pytest.raises(ValueError):
-        list(prepare({1: 1, 2: 2}, separator=Separator()))
+    with pytest.raises(AttributeError):
+        list(prepare({1: 1, 2: 2}))
 
-    with pytest.raises(ValueError):
+    with pytest.raises(AttributeError):
         list(prepare([1, 2], separator=Separator()))
 
 
@@ -85,9 +89,9 @@ def test_prepare_tolerant():
 
     # tolerant=False
     with pytest.raises(ValueError):
-        list(prepare(utterances, separator=Separator(), tolerant=False))
+        list(prepare(utterances, tolerant=False))
 
     # tolerant=True
-    prepared = list(prepare(utterances, separator=Separator(), tolerant=True))
+    prepared = list(prepare(utterances, tolerant=True))
     assert len(prepared) == len(good_utterances)
-    assert prepared == list(prepare(good_utterances, separator=Separator()))
+    assert prepared == list(prepare(good_utterances))

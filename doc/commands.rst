@@ -6,7 +6,9 @@ Commands reference
 List of wordseg commands
 ------------------------
 
-The commands composing the **wordseg** package are:
+Once **wordseg** is installed on your plaform, the commands are
+available from the terminal as any other command line tool. The
+commands composing the **wordseg** package are:
 
 * ``wordseg-prep`` prepares a text in a phonological-like form for
   segmentation, basically removing word separators and checking format.
@@ -21,42 +23,37 @@ The commands composing the **wordseg** package are:
 
 * ``wordseg-eval`` evaluates a segmented text on a gold version,
   computing the precision, recall and f-score at type, token and
-  boundary levels.
+  boundary levels. See more on the :ref:`evaluation` page.
 
 * ``wordseg-stats`` computes basic statistics on a segmdented or gold
   text.
 
+.. note::
 
-Once **wordseg** is installed on your plaform, the commands are
-available from the terminal as any other command line tool.  To get
-more details on a specific command arguments, have a
-``wordseg-<command> --help``.
+   To get all the details of a command arguments, have a::
+
+     wordseg-<command> --help
 
 
 Hello world example
 -------------------
 
-Here is a minimalist "hello world" exemple. We are segmenting a
-two-words utterance with the tp algorithm::
+This is a minimalistic "hello world" example of word segmentation with
+wordseg. We are simply segmenting a two-words utterance with the TP
+algorithm, showing the input, output and gold texts.
 
-  $ # uterance as a list of phones with word boundaries
-  $ HELLO="hh ax l ow ;eword w er l d ;eword"
+.. literalinclude:: hello_world.sh
+   :language: bash
 
-  $ # make the words separated by spaces
-  $ echo $HELLO | wordseg-gold
+This should output::
+
+  hh ax l ow w er l d
+  hhaxl owwerld
   hhaxlow werld
 
-  $ # make the phones separated by spaces
-  $ echo $HELLO | wordseg-prep
-  hh ax l ow w er l d
 
-  $ # estimates word boundaries by spaces
-  $ echo $HELLO | wordseg-prep | wordseg-tp
-  hhaxl owwerld
-
-
-Input / Output
---------------
+Commands input/output
+---------------------
 
 All the commands **read from standard input** and **write to standard
 output** by default (this allows easy communication with other
@@ -86,11 +83,3 @@ When running several commands in scripts or in parallel, the standard
 error can become a mess. It is possible to redirect stderr to a file using::
 
    wordseg-<command> 2> ./my_log.txt
-
-
-The case of iterative algorithms
---------------------------------
-
-.. todo::
-
-   explain folding here.

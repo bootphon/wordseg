@@ -39,7 +39,7 @@ import six
 import string
 import re
 
-from wordseg import utils
+from wordseg import utils, Separator
 
 
 punctuation_re = re.compile('[%s]' % re.escape(string.punctuation))
@@ -102,7 +102,7 @@ def check_utterance(utt, separator):
     return True
 
 
-def prepare(text, separator, unit='phoneme', tolerant=False,
+def prepare(text, separator=Separator(), unit='phoneme', tolerant=False,
             log=utils.null_logger()):
     """Return a text prepared for word segmentation from a tagged text
 
@@ -148,19 +148,27 @@ def prepare(text, separator, unit='phoneme', tolerant=False,
                        .replace(separator.syllable, ' ')
 
     nremoved = 0
-    for line in text:
+    for n, line in enumerate(text):
+        line = line.strip()
+
+        # ignore empty lines
+        if line == '':
+            log.debug('ignoring empty line %d', n)
+            nremoved +=1
+            continue
+
         try:
             check_utterance(line, separator)
             yield utils.strip(func(line))
         except ValueError as err:
             if tolerant:
-                log.debug('removing utterance: "%s"', line)
+                log.debug('removing line %d: "%s"', n, line)
                 nremoved += 1
             else:
                 raise err
 
-    if tolerant and nremoved:
-        log.warning('removed %d badly formated utterances', nremoved)
+    if nremoved:
+        log.warning('removed %d badly formatted utterances', nremoved)
 
 
 @utils.CatchExceptions

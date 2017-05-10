@@ -22,3 +22,11 @@ wordseg-puddle
 
 wordseg-tps
 -----------
+
+
+The case of iterative algorithms
+--------------------------------
+
+.. todo::
+
+   explain folding here.

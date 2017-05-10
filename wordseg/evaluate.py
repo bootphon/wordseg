@@ -115,30 +115,30 @@ def _stringpos_typepos(stringpos):
     return [{pos for pos in line} for line in stringpos]
 
 
-def evaluate(train, gold, separator=DEFAULT_SEPARATOR):
-    train_words, train_stringpos = read_data(train, separator)
+def evaluate(text, gold, separator=DEFAULT_SEPARATOR):
+    text_words, text_stringpos = read_data(text, separator)
     gold_words, gold_stringpos = read_data(gold, separator)
 
-    if len(gold_words) != len(train_words):
+    if len(gold_words) != len(text_words):
         raise RuntimeError(
             'gold and train have different size: len(gold)={}, len(train)={}'
-            .format(len(gold_words), len(train_words)))
+            .format(len(gold_words), len(text_words)))
 
-    for i, (g, t) in enumerate(zip(gold_words, train_words)):
+    for i, (g, t) in enumerate(zip(gold_words, text_words)):
         if g != t:
             raise RuntimeError(
                 'gold and train differ at line {}: gold="{}", train="{}"'
                 .format(i+1), g, t)
 
     type_eval = Evaluation()
-    type_eval.update_lists(_stringpos_typepos(train_stringpos),
+    type_eval.update_lists(_stringpos_typepos(text_stringpos),
                            _stringpos_typepos(gold_stringpos))
 
     token_eval = Evaluation()
-    token_eval.update_lists(train_stringpos, gold_stringpos)
+    token_eval.update_lists(text_stringpos, gold_stringpos)
 
     boundary_eval = Evaluation()
-    boundary_eval.update_lists(_stringpos_boundarypos(train_stringpos),
+    boundary_eval.update_lists(_stringpos_boundarypos(text_stringpos),
                                _stringpos_boundarypos(gold_stringpos))
 
     return {
@@ -167,11 +167,11 @@ def main():
     # load the gold text as a list of utterances
     gold = [l.strip() for l in codecs.open(args.gold, 'r', encoding='utf8')]
 
-    # load the train text as a list of utterances
-    train = [l.strip() for l in streamin]
+    # load the text as a list of utterances
+    text = [l.strip() for l in streamin]
 
     # evaluation returns a dict of 'score name' -> float
-    results = evaluate(train, gold)
+    results = evaluate(text, gold)
 
     streamout.write('\n'.join(
         # display scores with 4-digit float precision
