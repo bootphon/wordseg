@@ -20,7 +20,7 @@
 See Goldwater, Griffiths, Johnson (2010) and Phillips & Pearl (2014).
 
 1. Uses a hierarchical Pitman-Yor process rather than a hierarchical
-   Dirichlet process model.  The HDP model can be recovered by setting
+   Dirichlet process model. The HDP model can be recovered by setting
    the PY parameters appropriately (set --a1 and --a2 to 0, --b1 and
    --b2 then correspond to the HDP parameters).
 
@@ -28,21 +28,21 @@ See Goldwater, Griffiths, Johnson (2010) and Phillips & Pearl (2014).
    original Gibbs sampler (*flip sampler*) as well as a sentence-based
    Gibbs sampler that uses dynamic programming (*tree sampler*) and a
    similar dynamic programming algorithm that chooses the best
-   segmentation of each utterance rather than a sample.  The latter
+   segmentation of each utterance rather than a sample. The latter
    two algorithms can be run either in batch mode or in online mode.
    If in online mode, they can also be set to "forget" parts of the
-   previously analysis.  This is described in more detail below.
+   previously analysis. This is described in more detail below.
 
 3. Functionality for using separate training and testing files.  If
    you provide an evaluation file, the program will first run through
    its full training procedure (i.e., using whichever algorithm for
-   however many iterations, kneeling, etc.).  After that, it will
+   however many iterations, kneeling, etc.). After that, it will
    freeze the lexicon in whatever state it is in and then make a
    single pass through the evaluation data, segmenting each sentence
    according to the probabilities computed from the frozen lexicon.
    No new words/counts will be added to the lexicon during evaluation.
    Evaluation can be set to either sample segmentations or choose the
-   maximum probability segmentation for each utterance.  Scores will
+   maximum probability segmentation for each utterance. Scores will
    be printed out at the end of the complete run based on either the
    evaluation data (if provided) or the training data (if not).
 
@@ -64,9 +64,10 @@ from wordseg import utils, folding
 def get_dpseg_binary():
     """Return the path to the dpseg program
 
-    dpseg has been compiled during the wordseg installation. This
-    function retrieve that file or raise AssertionError if the binary
-    is not found.
+    :return: path to the dpseg binary (which has been compiled during
+      the wordseg installation).
+
+    :raise: AssertionError if the binary is not found
 
     """
     pkg = pkg_resources.Requirement.parse('wordseg')
@@ -80,6 +81,33 @@ def get_dpseg_binary():
 
     assert os.path.isfile(dpseg), 'dpseg binary not found: {}'.format(dpseg)
     return dpseg
+
+
+def get_dpseg_conf_files():
+    """Return a list of dpseg example configuration files
+
+    :return: a list of example configuration files bundled with
+        wordseg-dpseg
+
+    :raise: AssertionError if no configuration files found
+
+    """
+    pkg = pkg_resources.Requirement.parse('wordseg')
+
+    # case of 'python setup.py install'
+    config_dir = pkg_resources.resource_filename(pkg, 'config/dpseg')
+
+    # case of 'python setup.py develop' or local install
+    if not os.path.isdir(config_dir):
+        config_dir = pkg_resources.resource_filename(
+            pkg, 'wordseg/algos/dpseg/config')
+
+    assert os.path.isdir(config_dir), 'dpseg configuration directory not found'
+
+    config_files = os.listdir(config_dir)
+    assert len(config_files) > 0, 'no files in {}'.format(config_dir)
+
+    return [os.path.join(config_dir, f) for f in config_files]
 
 
 class UnicodeGenerator(object):
@@ -114,7 +142,7 @@ def _dpseg(text, args, log_level=logging.ERROR, log_name='wordseg-dpseg'):
 
     with tempfile.NamedTemporaryFile() as tmp_output:
         command = (
-            '{} --output-file {} --debug-level 1000 {}'
+            '{} --output-file {} {}'
             .format(get_dpseg_binary(), tmp_output.name, args))
 
         log.debug('running "%s"', command)
@@ -196,10 +224,9 @@ def segment(text, nfolds=5, njobs=1,
 class Argument(object):
     """Argument read from a binary and sent to argparse"""
     # a list of dpseg options we don't want to expose in wordseg-dpseg
-    excluded = ['--help', '--config-file', '--data-file', '--debug-level',
-                '--data-start-index', '--data-num-sents',
-                '--eval-start-index', '--eval-num-sents',
-                '--output-file', '--nsubjects']
+    excluded = ['--help', '--data-file', '--data-start-index',
+                '--data-num-sents', '--eval-start-index',
+                '--eval-num-sents', '--output-file', '--nsubjects']
 
     def __init__(self, name=None, default=None,  help=''):
         self.name = name
@@ -214,7 +241,21 @@ class Argument(object):
         return True
 
     def send(self):
-        self.help += ', default is "%(default)s"'
+        # adapting help message for some options
+        if self.name == '--debug-level':
+            self.help = (
+                'increase the amount of debug messages, use together with -vv '
+                '(a reasonable value is 1000)')
+
+        if self.name == '--config-file':
+            self.help += (
+                ' (in case of duplicates, precedence goes to the command line option)'
+                ', for example configuration files see {}'.format(
+                    os.path.dirname(get_dpseg_conf_files()[0])))
+
+        # adding the default argument value in help
+        if self.default:
+            self.help += ', default is "%(default)s"'
         return self
 
     def add(self, parser):
@@ -250,6 +291,7 @@ def yield_dpseg_arguments():
             argument.help = m.group(7).strip()
         else:  # the regext is not matched: this is the continuation
                # of a help message
+            assert '--' not in line
             argument.help += ' ' + line.strip()
 
     if argument.is_valid():

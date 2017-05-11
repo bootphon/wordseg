@@ -1,11 +1,10 @@
-wordseg: text based word segmentation
-=====================================
+# wordseg: text based word segmentation #
 
 [![Documentation Status](https://readthedocs.org/projects/wordseg/badge/?version=latest)](http://wordseg.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.org/mmmaat/wordseg.svg?branch=master)](https://travis-ci.org/mmmaat/wordseg)
 
 
-### Please see the online documentation at https://wordseg.readthedocs.io
+### Please see the online documentation at https://wordseg.readthedocs.io ###
 
 
 The wordseg package provides **a collection of tools for text based
@@ -37,7 +36,7 @@ The wordseg commands are:
   text.
 
 
-### Copyright 2015-2017 Alex Cristia, Mathieu Bernard, Elin Larsen
+### Copyright 2015-2017 Alex Cristia, Mathieu Bernard, Elin Larsen ###
 
 wordseg is free software: you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the

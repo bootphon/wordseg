@@ -13,10 +13,11 @@ work of several contributors:
 * Mark Jonhson
 * Elin Larsen
 * Lisa Pearl
+* Lawrence Phillips
 * Amanda Saksida
 
 
-**Copyright 2015-2017 LSCP, Ecole Normale Supérieure, Paris**
+**Copyright 2015-2017 Alex Cristia, Mathieu Bernard, Elin Larsen**
 
 wordseg is free software: you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the

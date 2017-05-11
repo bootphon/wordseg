@@ -113,7 +113,7 @@ Model* get_sampler(CorpusData* data,
         else if(estimator == "D")
         {
             if(debug_level >= 1000)
-                std::cerr
+                std::cout
                     << "Creating Bigram DecayedMCMC model, with decay rate " << decay_rate
                     << " and samples per utterance " << samples_per_utt << std::endl;
 
@@ -145,7 +145,7 @@ Model* get_sampler(CorpusData* data,
         else if(estimator == "D")
         {
             if(debug_level >= 1000)
-                std::cerr
+                std::cout
                     << "Creating Unigram DecayedMCMC model, with decay rate "
                     << decay_rate << " and samples per utterance " << samples_per_utt
                     << std::endl;
@@ -162,12 +162,11 @@ int main(int argc, char** argv) {
     // Set a new global UTF8 locale to make output streams handle utf8.
     // Otherwise we'll get aborts when trying to output large character
     // values.
-    std::locale old_locale;
-    std::locale utf8_locale(old_locale, new utf8_codecvt_facet());
+    std::locale utf8_locale(std::locale(), new utf8_codecvt_facet());
     std::locale::global(utf8_locale);
 
-    std::wcerr.imbue(utf8_locale);
-    std::wcout.imbue(utf8_locale);
+    // std::wcerr.imbue(utf8_locale);
+    // std::wcout.imbue(utf8_locale);
     std::wcout.precision(5);
 
     std::ios_base::sync_with_stdio(false);
@@ -424,7 +423,7 @@ int main(int argc, char** argv) {
             std::cerr << "Error: couldn't open " << data_file << std::endl;
             exit(1);
         }
-        is.imbue(std::locale(std::locale(), new utf8_codecvt_facet()));
+        // is.imbue(std::locale(std::locale(), new utf8_codecvt_facet()));
 
         data.read(is, vm["data-start-index"].as<U>(), vm["data-num-sents"].as<U>());
     }
@@ -442,7 +441,7 @@ int main(int argc, char** argv) {
             std::cerr << "Error: couldn't open " << eval_file << std::endl;
             exit(1);
         }
-        is.imbue(std::locale(std::locale(), new utf8_codecvt_facet()));
+        // is.imbue(std::locale(std::locale(), new utf8_codecvt_facet()));
         data.read_eval(is,vm["eval-start-index"].as<U>(),vm["eval-num-sents"].as<U>());
     }
 
@@ -470,7 +469,7 @@ int main(int argc, char** argv) {
                   << std::endl;
         exit(1);
     }
-    os.imbue(utf8_locale);
+    // os.imbue(utf8_locale);
 
     for(uint subject = 0; subject < vm["nsubjects"].as<uint>(); subject++)
     {

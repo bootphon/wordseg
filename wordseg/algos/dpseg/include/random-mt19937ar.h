@@ -41,7 +41,7 @@ public:
     ~uniform01_type()
         {}
 
-    // Return a random number in [0, 1)
+    // Return a random number in [min, max)
     T operator()()
         {
             return m_distribution(m_generator);

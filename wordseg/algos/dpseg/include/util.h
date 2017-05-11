@@ -26,8 +26,8 @@
 #include <vector>
 
 
-// Predeclaration of the function because compilation failed on OSX
-// with xbuild-7.3
+// Predeclaration of the following operator<< functions because
+// compilation failed on OSX with xbuild-7.3
 template <typename X, typename Y>
 std::wostream& operator<< (std::wostream&, const std::pair<X,Y>&);
 

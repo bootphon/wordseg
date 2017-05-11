@@ -17,6 +17,16 @@ wordseg-dibs
 wordseg-dpseg
 -------------
 
+The original implementation comes from
+`https://github.com/lawphill/phillips-pearl2014`, on which we applied
+the following changes:
+
+* conversion to C++11 standard (removed tr1/unsorted_map and mt19937,
+  use stdlib implementation instead)
+* code cleanup, removed useless functions and code
+* complete rewrite of the build process (Makefile, link on boost)
+
+
 wordseg-puddle
 --------------
 

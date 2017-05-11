@@ -21,6 +21,18 @@ to help you getting in. The **wordseg** package is a free software
 made for open science, we welcome all the contributions (see
 :ref:`contributing`).
 
+.. note::
+
+   The source code of **wordseg** is available on it's `github page
+   <https://github.com/mmmaat/wordseg>`_
+
+.. note::
+
+   This package is tested on `continuous integration
+   <https://travis-ci.org/mmmaat/wordseg>`_ to work on python 2.7 and
+   3.5, both on Linux and Mac OS. **Actually the osx test is failing
+   for wordseg-dpseg**
+
 
 .. toctree::
    :maxdepth: 2

@@ -15,8 +15,10 @@
 
 """Test of the 'wordseg-dpseg' command"""
 
+import os
 import pytest
 
+import wordseg
 from wordseg import utils, Separator
 from wordseg.algos.dpseg import segment
 from . import prep
@@ -24,13 +26,17 @@ from . import prep
 
 args = [
     '',
-    '--ngram 1 --a1 0 --b1 1',
+    '--ngram 1 --a1 0 --b1 1  --a2 0 -- b2 1',
     '--ngram 1 --a1 0.1 --b1 0.9 --do-mbdp 1',
     '--ngram 1 --a1 0 --b1 1 --forget-method P',
     '--ngram 1 --a1 0 --b1 1 --estimator V --mode batch',
     '--ngram 1 --a1 0 --b1 1 --estimator F',
     '--ngram 1 --a1 0 --b1 1 --estimator T',
-    # '--ngram 1 --a1 0 --b1 1 --estimator D --mode online',
+    utils.strip('''
+    --ngram 1 --a1 0 --b1 1 --estimator D --mode online --eval-maximize 1
+    --eval-interval 50 --decay-rate 1.5 --samples-per-utt 20
+    --hypersamp-ratio 0 --anneal-a 10 --burnin-iterations 1
+    --anneal-iterations 0'''.replace('\n', ' ')),
 ]
 
 
@@ -46,7 +52,20 @@ def test_dpseg_parallel_folds(prep, nfolds, njobs):
 
 @pytest.mark.parametrize('args', args)
 def test_dpseg_args(prep, args):
-    text = prep[:5]
+    segmented = segment(prep[:5], nfolds=1, args=args)
+    assert len(list(segmented)) == 5
 
-    segmented = segment(text, nfolds=1, args=args)
+
+def test_config_files_are_here():
+    confs = wordseg.algos.dpseg.get_dpseg_conf_files()
+    assert len(confs) > 0
+    for conf in confs:
+        assert os.path.isfile(conf)
+        assert conf[-5:] == '.conf'
+        assert 'dpseg' in conf
+
+
+@pytest.mark.parametrize('conf', wordseg.algos.dpseg.get_dpseg_conf_files())
+def test_dpseg_from_config_file(prep, conf):
+    segmented = segment(prep[:5], nfolds=1, args='--config-file {}'.format(conf))
     assert len(list(segmented)) == 5

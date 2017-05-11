@@ -68,6 +68,12 @@ class WordsegBuild(distutils.command.build.build):
         return ([] if on_readthedocs() else
                 ['build/{}/{}'.format(t, t) for t in cls.targets])
 
+    @classmethod
+    def dpseg_config_files(cls):
+        """Return a list of exemple configuration files bundled with dpseg"""
+        config_dir = os.path.join('wordseg', 'algos', 'dpseg', 'config')
+        return [os.path.join(config_dir, f) for f in os.listdir(config_dir)]
+
 
 setup(
     name='wordseg',
@@ -96,4 +102,6 @@ setup(
         'wordseg-puddle = wordseg.algos.puddle:main']},
 
     cmdclass={'build': WordsegBuild},
-    data_files=[('bin', WordsegBuild.bin_targets())])
+    data_files=[
+        ('bin', WordsegBuild.bin_targets()),
+        ('config/dpseg', WordsegBuild.dpseg_config_files())])

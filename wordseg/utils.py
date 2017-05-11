@@ -154,14 +154,14 @@ def get_parser(description=None, separator=Separator()):
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
         '-v', '--verbose', action='count', default=0, help='''
-        Increase the amount of logging on stderr.  By default only
+        increase the amount of logging on stderr (by default only
         warnings and errors are displayed, a single '-v' adds info
-        messages and '-vv' adds debug messages.  Use '--quiet' to
-        disable logging.''')
+        messages and '-vv' adds debug messages, use '--quiet' to
+        disable logging)''')
 
     group.add_argument(
         '-q', '--quiet', action='store_true',
-        help='Do not output anything on stderr.')
+        help='do not output anything on stderr')
 
     # add token separation arguments
     if separator.phone or separator.syllable or separator.word:
@@ -169,28 +169,28 @@ def get_parser(description=None, separator=Separator()):
             parser.add_argument(
                 '-p', '--phone-separator', metavar='<str>',
                 default=separator.phone,
-                help='Phone separator, default is "%(default)s".')
+                help='phone separator, default is "%(default)s"')
 
         if separator.syllable:
             parser.add_argument(
                 '-s', '--syllable-separator', metavar='<str>',
                 default=separator.syllable,
-                help='Syllable separator, default is "%(default)s".')
+                help='syllable separator, default is "%(default)s"')
 
         if separator.word:
             parser.add_argument(
                 '-w', '--word-separator', metavar='<str>',
                 default=separator.word,
-                help='Word separator, default is "%(default)s".')
+                help='word separator, default is "%(default)s"')
 
     # add input and output arguments to the parser
     parser.add_argument(
         'input', default=sys.stdin, nargs='?', metavar='<input-file>',
-        help='Input text file to read, if not specified read from stdin.')
+        help='input text file to read, if not specified read from stdin')
 
     parser.add_argument(
         '-o', '--output', default=sys.stdout, metavar='<output-file>',
-        help='Output text file to write, if not specified write to stdout.')
+        help='output text file to write, if not specified write to stdout')
 
     return parser
 
