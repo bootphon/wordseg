@@ -42,37 +42,36 @@ orthographic form to a phonological one.
     cat orthographic.txt | phonemize --lang en-us -p " " -w ";eword " > phonologic.txt
 
 
-We have now a file ``orthographic.txt`` with the text utterances::
+We have now a file ``orthographic.txt`` with the text utterances:
 
-  us to play the solos
-  no i i don't wanna
-  terrible
-  you'd learn a heck a lot from that uh
-  angry that people like that even get
+   | us to play the solos
+   | no i i don't wanna
+   | terrible
+   | you'd learn a heck a lot
+   | people like that even get
 
 And a file ``phonologic.txt`` with the utterances represented as a
-list of phones with word boundaries tagged as *;eword*::
+list of phones with word boundaries tagged as *;eword*:
 
-  ˌʌ s ;eword t ə ;eword p l eɪ ;eword ð ə ;eword s oʊ l oʊ z ;eword
-  n oʊ ;eword aɪ  ;eword aɪ ;eword d oʊ n t ;eword w ɑː n ə ;eword
-  t ɛ ɹ ə b əl ;eword
-  j uː d ;eword l ɜː n ;eword ɐ ;eword h ɛ k ;eword ɐ ;eword l ɑː t ;eword f ɹ ʌ m ;eword ð æ t ;eword ʌ ;eword
-  æ ŋ ɡ ɹ i ;eword ð æ t ;eword p iː p əl ;eword l aɪ k ;eword ð æ t ;eword iː v ə n ;eword ɡ ɛ t ;eword
-
+   | ˌʌ s ;eword t ə ;eword p l eɪ ;eword ð ə ;eword s oʊ l oʊ z ;eword
+   | n oʊ ;eword aɪ  ;eword aɪ ;eword d oʊ n t ;eword w ɑː n ə ;eword
+   | t ɛ ɹ ə b əl ;eword
+   | j uː d ;eword l ɜː n ;eword ɐ ;eword h ɛ k ;eword ɐ ;eword l ɑː t ;eword
+   | p iː p əl ;eword l aɪ k ;eword ð æ t ;eword iː v ə n ;eword ɡ ɛ t ;eword
 
 
 Bash tutorial
 -------------
 
 The following script is located in ``../doc/tutorial.sh`` and takes an
-input text file (in phonological form) as argument. From the tutorial
-directory, we can execute the script and display the result in a table
-with ``../doc/tutorial.sh phonologic.txt | column -t``:
+input text file (in phonological form) as argument:
 
 .. literalinclude:: tutorial.sh
    :language: bash
 
-This should output someting like that::
+From the tutorial directory, we can execute the script and display the
+result in a table with ``../doc/tutorial.sh phonologic.txt | column
+-t``. This should output someting like that::
 
   score            tp       puddle   dibs
   ---------------  -------  -------  -------
@@ -91,13 +90,13 @@ Python tutorial
 ---------------
 
 The following script is located in ``../doc/tutorial.py``. It
-implements exactly the same process as the bash one. We can execute it
-using ``../doc/tutorial.py phonologic.txt | column -t``:
+implements exactly the same process as the bash one:
 
 .. literalinclude:: tutorial.py
    :language: python
 
-As previously, this should output something like::
+We can execute it using ``../doc/tutorial.py phonologic.txt | column
+-t``. As previously, this should output something like::
 
   score             tp       puddle   dibs
   ----------------  -------  -------  -------

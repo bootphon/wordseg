@@ -45,11 +45,75 @@ algorithm, showing the input, output and gold texts.
 .. literalinclude:: hello_world.sh
    :language: bash
 
-This should output::
+This should output:
 
-  hh ax l ow w er l d
-  hhaxl owwerld
-  hhaxlow werld
+  | hh ax l ow w er l d
+  | hhaxl owwerld
+  | hhaxlow werld
+
+
+Input text format
+-----------------
+
+* For all the commands, the input must be a multi-line text, one
+  utterance per line, with **no punctuation**.
+
+* Each utterance is made of a sequence of phonological units separated
+  by token boundaries (at word level and phone or syllable level).
+
+* The **phonological units** can be any unicode characters, or even
+  strings. In the example above (``""hh ax l ow _ w er l d _""``) the
+  phonetic units for the first word are ``"hh"``, ``"ax"``, ``"l"``
+  and ``"ow"``.
+
+* Phonological units are separated by **phone, syllable and word
+  boundaries**. In the hello world example, phones are separated by
+  ``" "`` and words by ``"_"``.
+
+* Syllable boundaries are optional. When provided, you can tell
+  **wordseg-prep** to prepare your input at the syllable level with
+  the option ``wordseg-prep --unit syllable``.
+
+.. note::
+
+   The default separators used in wordseg are:
+
+   * ``" "`` as **phone boundary**
+   * ``";esyll"`` as **syllable boundary**
+   * ``";eword"`` as **word boundary**
+
+   You can specify another separators using the ``-p``, ``-s`` and
+   ``-w`` options of the related wordseg commands.
+
+
+Input of wordseg-prep and wordseg-gold
+""""""""""""""""""""""""""""""""""""""
+
+   .. productionlist::
+      input_file: utterances
+      utterances: utterance
+                : utterances
+      utterance: words
+      words: word words
+      word: (syllables | phones) `word_boundary`
+      syllables: syllable syllables
+      syllable: phones `syll_boundary`
+      phones: phone `phone_boundary` phones
+      phone: `phonological_unit`
+
+
+Input of wordseg-<algorithm>
+""""""""""""""""""""""""""""
+
+   .. productionlist::
+      input_file: utterances
+      utterances: utterance
+                : utterances
+      utterance: phones
+      phones: phone " " phones
+      phone: `phonological_unit`
+
+
 
 
 Commands input/output
