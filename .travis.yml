@@ -12,8 +12,17 @@ matrix:
       osx_image: xcode8.3
       language: generic
 
-notifications:
-  email: false
+# install boost on linux only (already here on osx)
+addons:
+  apt:
+    packages:
+      - libboost-dev
+
+# install python3 on osx
+before_install:
+  - [[ "$TRAVIS_OS_NAME" == "osx" ]] && brew install python3
+  - [[ "$TRAVIS_OS_NAME" == "osx" ]] && virtualenv venv --python=python3
+  - [[ "$TRAVIS_OS_NAME" == "osx" ]] && source activate venv
 
 install:
   - pip install --upgrade pip
@@ -22,12 +31,10 @@ install:
   - python setup.py install
 
 script:
-  - pytest
-
-addons:
-  apt:
-    packages:
-      - libboost-program-options-dev
+  - pytest ./test
 
 cache:
   - pip
+
+notifications:
+  email: false
