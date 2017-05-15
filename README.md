@@ -19,10 +19,10 @@ bash utilities.
 The wordseg commands are:
 
 * **wordseg-prep** prepares a text in a phonological-like form for
-  segmentation, basically removing word separators and checking format.
-
-* **wordseg-gold** generates a gold text from a phonological one,
-  replacing word separators by spaces.
+  segmentation, basically removing word separators and checking
+  format. Optionally generates a gold text (with ground truth word
+  boundaries) from the phonological one, replacing word separators by
+  spaces.
 
 * **wordseg-\<algorithm\>** computes word segmentation on a prepared
   text, outputting the text with word boundaries added. The algorithms

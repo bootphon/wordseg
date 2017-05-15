@@ -19,8 +19,6 @@
 
 import os
 import subprocess
-import sys
-
 import distutils.command.build
 from setuptools import setup, find_packages
 
@@ -93,7 +91,6 @@ setup(
 
     entry_points={'console_scripts': [
         'wordseg-prep = wordseg.prepare:main',
-        'wordseg-gold = wordseg.gold:main',
         'wordseg-eval = wordseg.evaluate:main',
         'wordseg-stats = wordseg.stats:main',
         'wordseg-dibs = wordseg.algos.dibs:main',

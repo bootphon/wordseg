@@ -1,4 +1,4 @@
 - Adaptor Grammar
-- terminate the doc (python tuto)
+- terminate the doc
 - bugfix in dpseg/osx (unicode related)
   See https://travis-ci.org/mmmaat/wordseg/jobs/229570592#L266
