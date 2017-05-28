@@ -14,7 +14,6 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from wordseg.separator import Separator
-from wordseg.prepare import prepare
-from wordseg.gold import gold
+from wordseg.prepare import prepare, gold
 from wordseg.evaluate import evaluate
 from wordseg import algos

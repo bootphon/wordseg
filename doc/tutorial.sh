@@ -1,10 +1,7 @@
 #!/bin/bash
 
-# Prepare the input for segmentation
-cat $1 | wordseg-prep > prepared.txt
-
-# Generate the gold text
-cat $1 | wordseg-gold > gold.txt
+# prepare the input for segmentation and generate the gold text
+cat $1 | wordseg-prep --gold gold.txt > prepared.txt
 
 # segment the prepared text with different algorithms (we show few
 # options for them, use --help to list all of them)

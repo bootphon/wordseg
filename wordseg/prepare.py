@@ -25,16 +25,6 @@ used.
 
 """
 
-# TODO define clearly the format of the input (maybe as a formal grammar?)
-# utterances -> utterance utterances
-# utterance -> words
-# words -> word words
-# word -> syllables ;eword
-# syllables -> syllable syllables
-# syllable -> phones ;esyll
-# phones -> phone ' ' phones
-# phone -> 'p'
-
 import six
 import string
 import re
@@ -154,7 +144,7 @@ def prepare(text, separator=Separator(), unit='phoneme', tolerant=False,
         # ignore empty lines
         if line == '':
             log.debug('ignoring empty line %d', n)
-            nremoved +=1
+            nremoved += 1
             continue
 
         try:
@@ -169,6 +159,32 @@ def prepare(text, separator=Separator(), unit='phoneme', tolerant=False,
 
     if nremoved:
         log.warning('removed %d badly formatted utterances', nremoved)
+
+
+def gold(text, separator=Separator()):
+    """Return a gold text from a phonologized one
+
+    Remove syllable and word separators from a sequence of tagged
+    utterances. The returned text is the gold version, against which
+    the algorithms are evaluated.
+
+    :param sequence(str) text: the input sequence to process, each
+      string in the sequence is an utterance
+
+    :param Separator separator: token separation in the `text`
+
+    :return sequence(str): text with separators removed, with word
+      separated by spaces. The returned text is the gold version,
+      against which the algorithms are evaluated.
+
+    """
+    # delete syllable and word separators
+    gold = (line.replace(separator.syllable, '')
+            .replace(separator.phone or '', '')
+            .replace(separator.word, ' ') for line in text)
+
+    # delete any duplicate, begin or end spaces
+    return (utils.strip(line) for line in gold)
 
 
 @utils.CatchExceptions
@@ -187,12 +203,19 @@ def main():
             output (default is to exit on the first encountered
             error)''')
 
+        parser.add_argument(
+            '-g', '--gold', type=str, metavar='<gold-file>',
+            help='''Generates the gold text to the specified file,
+            do not generate gold if no file specified''')
+
     # command initialization
     streamin, streamout, separator, log, args = utils.prepare_main(
         name='wordseg-prep',
         description=__doc__,
         separator=utils.Separator(' ', ';esyll', ';eword'),
         add_arguments=add_arguments)
+
+    streamin = list(streamin)
 
     log.debug('separator is %s', separator)
 
@@ -204,6 +227,10 @@ def main():
     streamout.write('\n'.join(prep) + '\n')
     log.debug('prepared %s utterances', prep.count)
 
+    if args.gold:
+        log.info('generating gold text to %s', args.gold)
+        gold_text = gold(streamin, separator=separator)
+        open(args.gold, 'w').write('\n'.join(gold_text) + '\n')
 
 if __name__ == '__main__':
     main()
