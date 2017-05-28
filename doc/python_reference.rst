@@ -1,7 +1,7 @@
 .. _python:
 
-Python API
-==========
+Python API Reference
+====================
 
 .. note::
 

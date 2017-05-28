@@ -20,23 +20,14 @@ instructions below.
 Dependencies
 ------------
 
-The package is implemented in python and C++. Minimal dependencies to
-install ``wordseg`` are:
+* The package is implemented in python and C++. Minimal dependencies to
+  install ``wordseg`` are:
 
-- python3 (python2 is supported but python3 prefered for native
-  unicode support),
-- make and a C++ compiler supporting the ``-std=c++11`` option (should
-  be the case on most modern compilers),
-- the boost C++ library.
-
-
-System-wide installation
-------------------------
-
-This is the recommended installation if you want to use ``wordseg`` on
-your personal computer (and you do not want to modify/contribute to
-the code). In all other cases, consider installing ``wordseg`` in a
-virtual environment.
+  - python3 (python2 is supported but python3 prefered for it's native
+    unicode support),
+  - make and a C++ compiler supporting the ``-std=c++11`` option (should
+    be the case on most modern compilers),
+  - the boost C++ library.
 
 * Install the required dependencies:
 
@@ -47,6 +38,15 @@ virtual environment.
   - on **Mac OSX**::
 
       brew install python3 boost
+
+
+System-wide installation
+------------------------
+
+This is the recommended installation if you want to use ``wordseg`` on
+your personal computer (and you do not want to modify/contribute to
+the code). In all other cases, consider installing ``wordseg`` in a
+virtual environment.
 
 * Build and install the ``wordseg`` package::
 
@@ -81,7 +81,7 @@ supported by conda.
 
     conda create --name wordseg python=3 \
           pytest pytest-runner sphinx sphinx_rtd_theme \
-          boost joblib numpy pandas
+          joblib numpy pandas
 
 * Activate your virtual environment::
 
@@ -100,7 +100,15 @@ supported by conda.
     python setup.py develop
 
 * To uninstall it, simply remove the ``wordseg`` directory in your
-  conda folder (generally ``~/.conda/envs`` or ``~/.anaconda/envs``)
+  conda installation folder (generally ``~/.conda/envs`` or
+  ``~/.anaconda/envs``)
+
+
+.. note::
+
+   Do not forget to activate your virtual environment before using wordseg::
+
+     source activate wordseg
 
 
 Running the tests

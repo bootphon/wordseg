@@ -8,32 +8,9 @@
 
 
 The wordseg package provides **a collection of tools for text based
-word segmentation** covering both algorithms, evaluation and
-statistics relevant for word segmentation studies.
-
-The segmentation pipeline provided by wordseg is **command line
-oriented**. We provide a set of useful commands for text preparation,
-segmentation and evaluation than be used in conjunction to any other
-bash utilities.
-
-The wordseg commands are:
-
-* **wordseg-prep** prepares a text in a phonological-like form for
-  segmentation, basically removing word separators and checking format.
-
-* **wordseg-gold** generates a gold text from a phonological one,
-  replacing word separators by spaces.
-
-* **wordseg-\<algorithm\>** computes word segmentation on a prepared
-  text, outputting the text with word boundaries added. The algorithms
-  available are ag, dibs, dpseg, puddle and tp.
-
-* **wordseg-eval** evaluates a segmented text on a gold version,
-  computing the precision, recall and f-score at type, token and
-  boundary levels.
-
-* **wordseg-stats** computes basic statistics on a segmented or gold
-  text.
+word segmentation** covering both text preprocessing, segmentation
+algorithms, evaluation and statistics relevant for word segmentation
+studies. It can be used from **bash** and **python**.
 
 
 ### Copyright 2015-2017 Alex Cristia, Mathieu Bernard, Elin Larsen ###

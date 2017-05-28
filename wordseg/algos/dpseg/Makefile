@@ -14,15 +14,19 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
-# output directory with object code and binaries (this is defined from setup.py)
-# BUILDDIR = ./build
+# The following variable are defined in the setup.py: BUILDDIR is the
+# output directory with object code and binaries
+#
+# BUILDDIR  = ./build
+
 
 # directory with C++ sources (must be *.cc extension) and headers
 SRCDIR	 = ./src
 INCDIR	 = ./include
 
 # C++ compiler to use and option passed during compilation and link
-CXXFLAGS = -Wall -O3 -std=c++11 -I$(INCDIR) -DNDEBUG
+# (DNDEBUG flag disable some debug related code)
+CXXFLAGS = -Wall -O3 -std=c++11 -DNDEBUG
 LDLIB	 = -lboost_program_options
 
 # source files must be *.cc files in $(SRCDIR)
@@ -38,7 +42,7 @@ clean:
 	rm -f $(BUILDDIR)/*.o $(BUILDDIR)/dpseg
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.cc
-	$(CXX) -o $@ -c $? $(CXXFLAGS)
+	$(CXX) -o $@ -c $? $(CXXFLAGS) -I$(INCDIR)
 
 dpseg: $(OBJECTS) $(BUILDDIR)/dpseg.o
-	$(CXX) -o $(BUILDDIR)/$@ $^ $(CXXFLAGS) $(LDLIB)
+	$(CXX) -o $(BUILDDIR)/$@ $^ $(LDLIB)

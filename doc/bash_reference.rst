@@ -1,7 +1,7 @@
 .. _commands:
 
-Commands reference
-==================
+Bash commands reference
+=======================
 
 List of wordseg commands
 ------------------------
@@ -56,10 +56,11 @@ Input text format
 -----------------
 
 * For all the commands, the input must be a multi-line text, one
-  utterance per line, with **no punctuation**.
+  utterance per line, with **no punctuation** (excepted for token
+  separators, see below).
 
 * Each utterance is made of a sequence of phonological units separated
-  by token boundaries (at word level and phone or syllable level).
+  by token boundaries (at word, phone or syllable levels).
 
 * The **phonological units** can be any unicode characters, or even
   strings. In the example above (``""hh ax l ow _ w er l d _""``) the
