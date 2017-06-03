@@ -1,0 +1,101 @@
+research/py-cfg/Changelog.txt
+
+Mark Johnson, 5th March 2014
+
+This version contains a simple hack to avoid underflow in the
+double-point sampler when the data contains a few long sentences.
+This hack only addresses the initialisation pass, where the underflow
+occurs because the initial parse is done with a random grammar.
+Typically it's the case that the probabilities of all strings rises
+dramatically even in the first iteration, because the rule
+probabilities have been fitted to the data somewhat.
+
+So the hack is the following: instead of exiting with an error when a
+sentence fails to parse during initialisation, we record that sentence
+and parse it again after the grammar has been initialised by the first
+iteration.  In many data sets the sentences will now parse (if a
+sentence fails to parse after the first iteration the code halts with
+an error, although I suppose we could retry parsing after even more
+iterations too).
+
+====================================================================
+
+Mark Johnson, 7th January 2014
+
+Gabriel Synnaeve found that in low data situations, the Gamma prior
+on the PY b parameter can result in the slice sampler producing sample
+values b = 0 (due to an underflow in exp()).  Perhaps the "right thing"
+would be to rework the code so it uses log(b) instead of b, but I took
+the easy way out of simply forcing b > 1e-20.
+
+====================================================================
+
+Mark Johnson, 31st December 2013
+
+A small modification so that tracing prints out both the prior and the
+likelihood (i.e., the probability of the Pitman-Yor parameter values,
+and the probability of the analyses given those parameters).
+
+Also incorporates Ben Börschinger's extensions to pipe the rules into
+an external command with the -Y flag.
+
+====================================================================
+
+Mark Johnson, 2nd May 2013
+
+Several people have been running this code on larger data sets, and 
+long running times have become a problem.
+
+The "right thing" would be to rewrite the code to make it run
+efficiently, but until someone gets around to doing that, I've added
+very simple multi-threading support using OpenMP, so there are now
+four different versions of the sampler:
+
+py-cfg  -- single threaded, double precision
+py-cfg-quad  -- single threaded, quad precision
+py-cfg-mp -- multi-threaded, double precision
+py-cfg-quad-mp -- multi-threaded, quad precision
+
+On my 8 core desktop machine, the multi-threaded version runs about
+twice as fast as the single threaded version, albeit using on average
+about 6 cores (i.e., its parallel efficiency is about 33%).
+
+====================================================================
+
+Mark Johnson, 17th November 2012
+
+On very long strings the probabilities estimated by the parser can
+sometimes underflow, especially during the first couple of iterations
+when the probability estimates are still very poor.
+
+The right way to fix this is to rewrite the program so it rescales
+all of its probabilities during the computation to avoid unflows,
+but until someone gets around to doing this, I've implemented a hack,
+which is just to compile the code using new new quadruple-precision
+floating point maths.
+
+So now when you run make it will produce two binaries:
+
+   py-cfg      -- uses double-precision maths (the default)
+
+   py-cfg-quad -- uses quadruple precision maths
+
+Quadruple precision maths enables it to parse very long strings without
+underflow, but it's much slower than double precision!
+
+====================================================================
+
+Previous CVS tag: v20090827
+
+27th August 2009: 
+
+I've updated the program to use the TR1 unordered_map and
+unordered_set, instead of the older SGI hash_map and hash_set
+routines.  If for some reason you have to use an older compiler, copy
+utility-old.h to utility.h.
+
+I also found and fixed a potential bug in the deallocation routines;
+if an adapted non-terminal ever completely disappears from all 
+sampled parse trees, it could result a dangling pointer to deleted
+memory.
+

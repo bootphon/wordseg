@@ -1,0 +1,242 @@
+~/research/py-cfg/README
+
+Mark Johnson, 7th January, 2014
+
+See py-cfg.cc for instructions on running the py-cfg program after
+you've compiled it, or just run "py-cfg -h".
+
+Installation instructions for Linux:
+
+If you have a reasonably modern g++, you should just have to run:
+
+make
+
+However, the standard version of g++ on Mac OSX is quite old,
+so I found I had to install a new g++ and the getopt library
+to get it to work.
+
+I used MacPorts to install the required software on my Macbook Air.
+I'm doing this from memory, but I think this is what I did:
+
+sudo port install gcc47
+sudo port install libgnugetopt
+
+export CC=gcc-mp-4.7
+export CXX=g++-mp-4.7
+export GCCFLAGS=""
+export GCCLDFLAGS="-L/opt/local/lib -l gnugetopt"
+
+make
+
+I'm afraid I'm not an expert on Mac OSX, so this may not be optimal
+(e.g., maybe there are optimisation flags that would speed it up
+considerably).
+
+Hmm, apparently the right way to trace under OSX is to use the
+"Sample Process" tool in the "Activity Monitor".
+
+If you want to profile with Google gperftools, you'll need to compile
+with the following:
+
+sudo port install google-perftools
+sudo port install gv
+
+make py-cfg NDEBUG= GCCLDFLAGS="$GCCLDFLAGS -lprofiler -Wl,-no_pie" GCCFLAGS="$GCCFLAGS -Wl,-no_pie"
+
+env CPUPROFILE=py-cfg.prof py-cfg -d 10 -D -n 100 -R -1 -e 1 -f 1 -g 1e2 -h 1e-2 grammar.lt < input-strings.txt 
+
+Mark
+
+
+=======================================================================
+
+Usage:
+
+py-cfg [-d debug]
+       [-A parses-file] [-C] [-D] [-E] [-F trace-file] [-G grammar-file]
+       [-H] [-I] [-P] [-R nr]
+       [-r rand-init] [-n niterations] [-N nanal-its]
+       [-a a] [-b b] [-w weight]
+       [-e pya-beta-a] [-f pya-beta-b] [-g pyb-gamma-s] [-h pyb-gamma-c]
+       [-s train_frac] -S
+       [-T anneal-temp-start] [-t anneal-temp-stop] [-m anneal-its]
+       [-Z ztemp] [-z zits]
+       [-x eval-every] [-X eval-cmd] [-Y eval-cmd]
+       [-u test1.yld] [-U eval-cmd]
+       [-v test1.yld] [-V eval-cmd]
+       grammar.lt < train.yld
+
+ -d debug        -- debug level
+ -A parses-file  -- print analyses of training data at termination
+ -N nanal-its    -- print analyses during last nanal-its iterations
+ -C              -- print compact trees omitting uncached categories
+ -D              -- delay grammar initialization until all sentences are parsed
+ -E              -- estimate rule prob (theta) using Dirichlet prior
+ -F trace-file   -- file to write trace output to
+ -G grammar-file -- print grammar at termination
+ -H              -- skip Hastings correction of tree probabilities
+ -I              -- parse sentences in order (default is random order)
+ -P              -- use a predictive Earley parse to filter useless categories
+ -R nr           -- resample PY cache strings during first nr iterations (-1 = forever)
+ -n niterations  -- number of iterations
+ -r rand-init    -- initializer for random number generator (integer)
+ -a a            -- default PY a parameter
+ -b b            -- default PY b parameter
+ -e pya-beta-a   -- if positive, parameter of Beta prior on pya; if negative, number of iterations to anneal pya
+ -f pya-beta-b   -- if positive, parameter of Beta prior on pya
+ -g pyb-gamma-s  -- if non-zero, parameter of Gamma prior on pyb
+ -h pyb-gamma-c  -- parameter of Gamma prior on pyb
+ -w weight       -- default value of theta (or Dirichlet prior) in generator
+ -s train_frac   -- train only on train_frac percentage of training sentences (ignore remainder)
+ -S              -- randomise training fraction of sentences (default: training fraction is at front)
+ -T tstart       -- start with this annealing temperature
+ -t tstop        -- stop annealing at this annealing temperature
+ -m anneal-its   -- anneal for this many iterations
+ -Z ztemp        -- temperature used just before stopping
+ -z zits         -- perform zits iterations at temperature ztemp at end of run
+ -X eval-cmd     -- pipe each run's parses into this command (empty line separates runs)
+ -Y eval-cmd     -- pipe each run's grammar-rules into this command (empty line separates runs)
+ -x eval-every   -- pipe trees into the eval-cmd every eval-every iterations
+ -u test1.yld    -- test strings to be parsed (but not trained on) every eval-every iterations
+ -U eval-cmd     -- parses of test1.yld are piped into this command
+ -v test2.yld    -- test strings to be parsed (but not trained on) every eval-every iterations
+ -V eval-cmd     -- parses of test2.yld are piped into this command
+
+The grammar consists of a sequence of rules, one per line, in the
+following format:
+
+   [theta [a [b]]] Parent --> Child1 Child2 ...
+
+where theta is the rule's probability (or, with the -E flag, the Dirichlet prior
+            parameter associated with this rule) in the generator, and
+      a, b (0<=a<=1, 0<b) are the parameters of the Pitman-Yor adaptor process.
+
+If a==1 then the Parent is not adapted.
+
+If a==0 then the Parent is sampled with a Chinese Restaurant process
+           (rather than the more general Pitman-Yor process).
+
+If theta==0 then we use the default value for the rule prior (given by the -w flag).
+
+The start category for the grammar is the Parent category of the
+first rule.
+
+If you specify the -C flag, these trees are printed in "compact" format,
+i.e., only cached categories are printed.
+
+If you don't specify the -C flag, cached nodes are suffixed by a 
+'#' followed by a number, which is the number of customers at this
+table.
+
+The -A parses-file causes it to print out analyses of the training data
+for the last few iterations (the number of iterations is specified by the
+-N flag).
+
+The -X eval-cmd causes the program to run eval-cmd as a subprocess
+and pipe the current sample trees into it (this is useful for monitoring
+convergence).  Note that the eval-cmd is only run _once_; all the
+sampled parses of all the training data are piped into it.
+Trees belonging to different iterations are separated by blank lines.
+
+The -u and -v flags specify test-sets which are parsed using the current PCFG
+approximation every eval-every iterations, but they are not trained on.  These
+parses are piped into the commands specified by the -U and -V parameters respectively.
+Just as for the -X eval-cmd, these commands are only run _once_.
+
+The program can now estimate the Pitman-Yor hyperparameters a and b for each
+adapted nonterminal.  To specify a uniform Beta prior on the a parameter, set
+
+   -e 1 -f 1
+
+and to specify a vague Gamma prior on the b parameter, set
+
+   -g 10 -h 0.1
+or
+   -g 100 -h 0.01
+
+If you want to estimate the values for a and b hyperparameters, their
+initial values must be greater than zero.  The -a flag may be useful here.
+
+If a nonterminal has an a value of 1, this means that the nonterminal
+is not adapted.
+
+=======================================================================
+
+Mark Johnson, 27th August 2009
+
+Pitman-Yor Context-Free Grammars
+================================
+
+Rules are of format
+
+[w [a [b]]] X --> Y1 ... Yn
+
+where X is a nonterminal and Y1 ... Yn are either terminals or
+nonterminals,
+
+w is the Dirichlet hyper-parameter (i.e., pseudo-count) associated
+with this rule (a positive real)
+
+a is the PY "a" constant associated with X (a positive real less
+than 1)
+
+b is the PY "b" constant associated with X (a positive real)
+
+
+The -h flag causes the program to print out a list of options.
+
+The -A parses-file causes it to print out analyses of the training data
+for the last few iterations (the number of iterations is specified by the
+-N flag).
+
+If you specify the -C flag, these trees are printed in "compact" format,
+i.e., only cached categories are printed (I think the root node is always
+printed, just so we have a tree).
+
+If you don't specify the -C flag, cached nodes are suffixed by a 
+'#' followed by a number, which is the number of customers at this
+table.
+
+
+Brief recap of Pitman-Yor processes
+===================================
+
+Suppose there are n samples occupying m tables.  Then the probability
+that the n+1 sample occupies table 1 <= k <= m is:
+
+  P(x_{n+1} = k) = (n_k - a)/(n + b)
+
+and the probability that the n+1 sample occupies the new table m+1 is:
+
+  P(x_{n+1} = m+1) = (m*a + b)/(n + b)
+
+The probability of a configuration in which a restaurant contains n
+customers at m tables, with n_k customers at table k is:
+
+
+  a^{-m} G(m+b/a)  G(b)                 G(n_k-a)
+         -------- ------  \prod_{k=1}^m --------
+          G(b/a)  G(n+b)                 G(1-a)
+
+where G is the Gamma function.
+
+=======================================================================
+
+Mark Johnson, 2nd May 2013
+
+Several people have been running this code on larger data sets, and 
+long running times have become a problem.
+
+The "right thing" would be to rewrite the code to make it run
+efficiently, but until someone gets around to doing that, I've added
+very simple multi-threading support using OpenMP, so there are now
+four different versions of the sampler:
+
+py-cfg  -- single threaded, double precision
+py-cfg-quad  -- single threaded, quad precision
+py-cfg-mp -- multi-threaded, double precision
+py-cfg-quad-mp -- multi-threaded, quad precision
+
+On my 8 core desktop machine, the multi-threaded version runs about
+twice as fast as the single threaded version, albeit using on average
+about 6 cores (i.e., its parallel efficiency is about 33%).

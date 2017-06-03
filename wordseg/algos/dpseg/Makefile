@@ -14,7 +14,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
-# The following variable are defined in the setup.py: BUILDDIR is the
+# The following variables are defined in the setup.py: BUILDDIR is the
 # output directory with object code and binaries
 #
 # BUILDDIR  = ./build
