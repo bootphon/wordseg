@@ -15,66 +15,61 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
-# Usage:
-#
-#   production:
-#
-#      make clean pycfg
-#
-#   debugging:
-#
-#      make clean run-toy NDEBUG=
-#
-# Other targets:
-#
-#  pycfg-quad: uses quad-precision instead of double floats (doesn't
-#  underflow as much)
-#
-#  pycfg-mp: uses OpenMP multi-threaded computation (try
-#  -ftree-parallelize-loops with g++ 4.8)
-#
-#  pycfg-quad-mp: uses quad-precision and OpenMP
-
 
 # The following variables are defined in the setup.py: BUILDDIR is the
 # output directory with object code and binaries
 #
-BUILDDIR  = ./build
+BUILDDIR = ./build
 
 
 # directory with C++ sources (must be *.cc extension) and headers
-SRCDIR	 = ./src
-INCDIR	 = ./include
+SRCDIR  = ./src
+INCDIR  = ./include
 
-# C++ compiler to use and option passed during compilation and link
-DEBUG   = no
-ifeq ($(DEBUG), yes)  # debug compilation
-  CXXFLAGS = -Wall -g -I$(INCDIR)
-else  # compile without debug info and with optimizations
-  CXXFLAGS = -Wall -O3 -std=c++11 -I$(INCDIR)
+# some flags (yes or no)
+DEBUG   = no  # compile for debug
+QUAD    = no  # quad precision (float128, slow but avoid underflows)
+MP	= no  # OpenMP multi-threaded computation
+
+# TODO fix that... (use cmake? good idea for boost as well)
+# define CXXFLAGS and LDFLAGS according to the above flags
+ifeq ($(DEBUG),yes)
+  CXXFLAGS = -Wall -g -I$(INCDIR) -DBOOST_LOG_DYN_LINK
+else
+  CXXFLAGS = -Wall -O3 -std=c++11 -I$(INCDIR) -DBOOST_LOG_DYN_LINK
   LDFLAGS  = -g
 endif
-LDLIB	 = -lm  # -lboost_program_options
 
-# source files must be *.cc files in $(SRCDIR)
-SOURCES	 = gammadist mt19937ar sym
+ifeq ($(QUAD),yes)
+  QUADFLAG =  -DQUADPREC
+endif
+
+ifeq ($(MP),yes)
+  MPFLAG = -fopenmp
+endif
+
+
+# source files must be *.cpp files in $(SRCDIR)
+SOURCES	 = gammadist mt19937ar sym logging
 OBJECTS	 = $(SOURCES:%=$(BUILDDIR)/%.o)
 
-TARGETS=pycfg pycfg-quad pycfg-mp pycfg-quad-mp
+LDLIB	 = -pthread -lboost_program_options -lboost_date_time \
+		-lboost_filesystem -lboost_system -lboost_log -lboost_thread
 
-.PHONY: all clean run-toy
 
-all: $(TARGETS)
+.PHONY: all clean  # run-toy
+
+all: pycfg
 
 clean:
 	rm -f $(BUILDDIR)/*.o $(BUILDDIR)/pycfg
 
 
-$(BUILDDIR)/%.o: $(SRCDIR)/%.cc
-	$(CXX) -o $@ -c $? $(CXXFLAGS) -I$(INCDIR)
+$(BUILDDIR)/%.o: $(SRCDIR)/%.cpp
+	$(CXX) -o $@ -c $? $(CXXFLAGS) -I$(INCDIR) $(MPFLAG) $(QUADFLAG)
 
 pycfg: $(OBJECTS) $(BUILDDIR)/pycfg.o
-	$(CXX) -o $(BUILDDIR)/$@ $^ $(LDLIB)
+	$(CXX) -o $(BUILDDIR)/$@ $^ $(LDLIB) $(MPFLAG)
 
 # pycfg-quad: gammadist.o pycfg-quad.o mt19937ar.o sym.o
 # 	$(CXX) $^ -lm $(LDFLAGS) -o $@

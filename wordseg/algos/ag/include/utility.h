@@ -38,7 +38,6 @@
 #define ATTRIBUTE_UNUSED __attribute__ ((__unused__))
 #endif /* ATTRIBUTE_UNUSED */
 
-#include "custom-allocator.h"  // must be first
 
 #include <algorithm>
 // #include <boost/smart_ptr.hpp>    // Comment out this line if boost is not used
@@ -73,7 +72,7 @@ namespace tr1 = std::tr1;
 // Uncomment this if you want the full function signature (despite the name
 // it is hardly pretty!)
 //
-// #define HERE   __FILE__ << ":" << __LINE__ << ": In " << __PRETTY_FUNCTION__ 
+// #define HERE   __FILE__ << ":" << __LINE__ << ": In " << __PRETTY_FUNCTION__
 
 #define TRACE1(expr)                                                         \
   std::cerr << HERE                                                          \
@@ -184,7 +183,7 @@ inline const typename Map::mapped_type dfind(const Map& m, const Key& k)
     return i->second;
 }
 
-// dfind(map, key, default) returns the value map associates with key, or 
+// dfind(map, key, default) returns the value map associates with key, or
 //  default if no such key exists
 //
 template <class Map, class Key, class Default>
@@ -232,10 +231,10 @@ inline const typename Map::mapped_type& afind(const Map& m, const Key& k)
 //! key, and binds key to value.
 //
 template <class Map, class Key, class Value>
-inline typename Map::value_type& 
-insert_newkey(Map& m, const Key& k,const Value& v) 
+inline typename Map::value_type&
+insert_newkey(Map& m, const Key& k,const Value& v)
 {
-  std::pair<typename Map::iterator, bool> itb 
+  std::pair<typename Map::iterator, bool> itb
     = m.insert(Map::value_type(k, v));
   assert(itb.second);
   return *(itb.first);
@@ -326,14 +325,14 @@ inline bool disjoint(const Set1& set1, const Set2& set2, Compare comp)
 
 
 template <typename Set1, typename Set2, typename OutputIterator>
-inline OutputIterator set_intersection(const Set1& set1, const Set2& set2, 
+inline OutputIterator set_intersection(const Set1& set1, const Set2& set2,
 				       OutputIterator result)
 {
   return set_intersection(set1.begin(), set1.end(), set2.begin(), set2.end(), result);
 }
 
 template <typename Set1, typename Set2, typename OutputIterator, typename Compare>
-inline OutputIterator set_intersection(const Set1& set1, const Set2& set2, 
+inline OutputIterator set_intersection(const Set1& set1, const Set2& set2,
 				       OutputIterator result, Compare comp)
 {
   return set_intersection(set1.begin(), set1.end(), set2.begin(), set2.end(), result, comp);
@@ -358,13 +357,13 @@ template <class Es> inline typename Es::const_iterator max_element(const Es& es)
   return std::max_element(es.begin(), es.end());
 }
 
-template <class Es, class BinaryPredicate> 
+template <class Es, class BinaryPredicate>
 inline typename Es::iterator max_element(Es& es, BinaryPredicate comp)
 {
   return std::max_element(es.begin(), es.end(), comp);
 }
 
-template <class Es, class BinaryPredicate> 
+template <class Es, class BinaryPredicate>
 inline typename Es::const_iterator max_element(const Es& es, BinaryPredicate comp)
 {
   return std::max_element(es.begin(), es.end(), comp);
@@ -382,13 +381,13 @@ template <class Es> inline typename Es::const_iterator min_element(const Es& es)
   return std::min_element(es.begin(), es.end());
 }
 
-template <class Es, class BinaryPredicate> 
+template <class Es, class BinaryPredicate>
 inline typename Es::iterator min_element(Es& es, BinaryPredicate comp)
 {
   return std::min_element(es.begin(), es.end(), comp);
 }
 
-template <class Es, class BinaryPredicate> 
+template <class Es, class BinaryPredicate>
 inline typename Es::const_iterator min_element(const Es& es, BinaryPredicate comp)
 {
   return std::min_element(es.begin(), es.end(), comp);
@@ -438,16 +437,16 @@ namespace std { namespace tr1 {
     // hash function for bool
     //
     template <> struct hash<bool>
-      : public std::unary_function<bool, std::size_t> 
+      : public std::unary_function<bool, std::size_t>
     {
-      size_t operator() (bool b) const 
+      size_t operator() (bool b) const
       {
 	return b;
       } // operator()
     }; // hash<bool>{}
-    
+
     */
-    
+
 
     //! hash function for arbitrary pairs.  This is actually not such a great hash;
     //! particularly if the pairs are used to build arbitrary trees.
@@ -460,21 +459,21 @@ namespace std { namespace tr1 {
 	return h1 ^ (h1 >> 1) ^ h2 ^ (h2 << 1);
       }
     };  // std::tr1::hash<std::pair<T1,T2> >
-    
+
     //! hash function for vectors
     //!  This is the fn hashpjw of Aho, Sethi and Ullman, p 436.
     //
-    template<class T> struct hash<std::vector<T> > 
-      : public std::unary_function<std::vector<T>, std::size_t>  { 
-      size_t operator()(const std::vector<T>& s) const 
+    template<class T> struct hash<std::vector<T> >
+      : public std::unary_function<std::vector<T>, std::size_t>  {
+      size_t operator()(const std::vector<T>& s) const
       {
 	typedef typename std::vector<T>::const_iterator CI;
-	
-	unsigned long h = 0; 
+
+	unsigned long h = 0;
 	unsigned long g;
 	CI p = s.begin();
 	CI end = s.end();
-	
+
 	while (p!=end) {
 	  h = (h << 5) + hash<T>()(*p++);
 	  if ((g = h&0xff000000)) {
@@ -488,17 +487,17 @@ namespace std { namespace tr1 {
     //! hash function for slists
     //! This is the fn hashpjw of Aho, Sethi and Ullman, p 436.
     //
-    template<class T> struct hash<std::list<T> > 
-      : public std::unary_function<std::list<T>, std::size_t> { 
-      size_t operator()(const std::list<T>& s) const 
+    template<class T> struct hash<std::list<T> >
+      : public std::unary_function<std::list<T>, std::size_t> {
+      size_t operator()(const std::list<T>& s) const
       {
 	typedef typename std::list<T>::const_iterator CI;
-	
-	unsigned long h = 0; 
+
+	unsigned long h = 0;
 	unsigned long g;
 	CI p = s.begin();
 	CI end = s.end();
-	
+
 	while (p!=end) {
 	  h = (h << 7) + hash<T>()(*p++);
 	  if ((g = h&0xff000000)) {
@@ -508,7 +507,7 @@ namespace std { namespace tr1 {
 	return size_t(h);
       }
     };
-    
+
     //! hash function for maps
   //
     template<typename T1, typename T2> struct hash<std::map<T1,T2> >
@@ -517,12 +516,12 @@ namespace std { namespace tr1 {
       {
 	typedef typename std::map<T1,T2> M;
 	typedef typename M::const_iterator CI;
-	
+
 	unsigned long h = 0;
 	unsigned long g;
 	CI p = m.begin();
 	CI end = m.end();
-	
+
 	while (p != end) {
 	  h = (h << 11) + hash<typename M::value_type>()(*p++);
 	  if ((g = h&0xff000000)) {
@@ -532,7 +531,7 @@ namespace std { namespace tr1 {
 	return size_t(h);
       }
     };
-    
+
   } } // namespace std::tr1
 
 
@@ -585,18 +584,18 @@ inline std::istream& operator>> (std::istream& is, const char* cp)
 }
 
 
-// Write out an auto_ptr object just as you would write out the pointer object
-//
-template <typename T> 
-inline std::ostream& operator<< (std::ostream& os, const std::auto_ptr<T>& sp)
-{
-  return os << sp.get();
-}
+// // Write out an auto_ptr object just as you would write out the pointer object
+// //
+// template <typename T>
+// inline std::ostream& operator<< (std::ostream& os, const std::auto_ptr<T>& sp)
+// {
+//   return os << sp.get();
+// }
 
 
 // Pairs
 //
-template <class T1, class T2> 
+template <class T1, class T2>
 std::ostream& operator<< (std::ostream& os, const std::pair<T1,T2>& p)
 {
   return os << '(' << p.first << ' ' << p.second << ')';
@@ -610,7 +609,7 @@ std::istream& operator>> (std::istream& is, std::pair<T1,T2>& p)
     if (c == '(') {
       if (is >> p.first >> p.second >> c && c == ')')
 	return is;
-      else 
+      else
 	is.setstate(std::ios::badbit);
     }
     else
@@ -650,7 +649,7 @@ std::istream& operator>> (std::istream& is, std::list<T>& xs)
       is.clear(is.rdstate() & ~std::ios::failbit);  // clear failbit
       if (is >> c && c == ')')     // read terminating ')'
 	return is;                 // successful return
-      else 
+      else
 	is.setstate(std::ios::badbit); // something went wrong, set badbit
     }
     else                           // c is not '('
@@ -690,7 +689,7 @@ std::istream& operator>> (std::istream& is, std::vector<T>& xs)
       is.clear(is.rdstate() & ~std::ios::failbit);  // clear failbit
       if (is >> c && c == ')')     // read terminating ')'
 	return is;                 // successful return
-      else 
+      else
 	is.setstate(std::ios::badbit); // something went wrong, set badbit
     }
     else                           // c is not '('
@@ -901,7 +900,7 @@ inline double runtime(int who=RUSAGE_SELF) {
 // enhancements to boost::shared_ptr so it can be used with hash
 //
 namespace std {
-  template <typename T> struct equal_to<boost::shared_ptr<T> > 
+  template <typename T> struct equal_to<boost::shared_ptr<T> >
     : public binary_function<boost::shared_ptr<T>, boost::shared_ptr<T>, bool> {
     bool operator() (const boost::shared_ptr<T>& p1, const boost::shared_ptr<T>& p2) const {
       return equal_to<T*>()(p1.get(), p2.get());
@@ -910,7 +909,7 @@ namespace std {
 }  // namespace std
 
 namespace std { namespace tr1 {
-    template <typename T> struct hash<boost::shared_ptr<T> > 
+    template <typename T> struct hash<boost::shared_ptr<T> >
       : public std::unary_function<boost::shared_ptr<T>, std::size_t> {
       size_t operator() (const boost::shared_ptr<T>& a) const {
 	return hash<T*>()(a.get());
@@ -918,7 +917,7 @@ namespace std { namespace tr1 {
     };
   } } // namespace std::tr1
 
-template <typename T> 
+template <typename T>
 inline std::ostream& operator<< (std::ostream& os, const boost::shared_ptr<T>& sp)
 {
   return os << sp.get();
@@ -942,14 +941,14 @@ inline std::ostream& operator<< (std::ostream& os, resource_usage r)
   int stime;
   unsigned int vsize;
   unsigned int rss;
-  int result ATTRIBUTE_UNUSED = 
+  int result ATTRIBUTE_UNUSED =
     fscanf(fp, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %d %d %*d %*d %*d %*d"
            "%*u %*u %*d %u %u", &utime, &stime, &vsize, &rss);
   assert(result == 4);
   fclose(fp);
   // s << "utime = " << utime << ", stime = " << stime << ", vsize = " << vsize << ", rss = " << rss;
   // return s << "utime = " << utime << ", vsize = " << vsize;
-  return os << "utime " << float(utime)/1.0e2 << "s, vsize " 
+  return os << "utime " << float(utime)/1.0e2 << "s, vsize "
 	    << float(vsize)/1048576.0 << " Mb.";
 }
 #endif

@@ -11,13 +11,12 @@
 #ifndef TRIE_H
 #define TRIE_H
 
-#include "custom-allocator.h"  // must be first
 
 #include <map>
 #include <iostream>
 #include <vector>
 
-//! A trie maps from a sequence of keys to data.  
+//! A trie maps from a sequence of keys to data.
 //
 template <class key_type_, class data_type_>
 class trie {
@@ -64,7 +63,7 @@ public:
     typename key_trie_type::iterator i = key_trie.find(key);
     if (i == key_trie.end())
       return end();
-    else 
+    else
       return &i->second;
   }  // trie::find1()
 
@@ -72,7 +71,7 @@ public:
     typename key_trie_type::const_iterator i = key_trie.find(key);
     if (i == key_trie.end())
       return end();
-    else 
+    else
       return &i->second;
   }  // trie::find1()
 
@@ -81,13 +80,13 @@ public:
   //
   template <class It>
   iterator find(It start, It finish) {
-    if (start == finish) 
+    if (start == finish)
       return this;
     else {
       typename key_trie_type::iterator i = key_trie.find(*start);
       if (i == key_trie.end())
 	return end();
-      else 
+      else
 	return i->second.find(++start, finish);
     }
   }  // trie::find()
@@ -102,13 +101,13 @@ public:
 
   template <class It>
   const_iterator find(It start, It finish) const {
-    if (start == finish) 
+    if (start == finish)
       return this;
     else {
       typename key_trie_type::const_iterator i = key_trie.find(*start);
       if (i == key_trie.end())
 	return end();
-      else 
+      else
 	return i->second.find(++start, finish);
     }
   }  // trie::find()
@@ -158,7 +157,7 @@ public:
     return insert(keys.begin(), keys.end(), d);
   }  // trie::insert()
 
-  //! operator[]() returns a reference to the value associated with 
+  //! operator[]() returns a reference to the value associated with
   //! keys.begin() to keys.end(), creating such a value if necessary.
   //
   template <class It>
@@ -177,7 +176,7 @@ public:
     else {
       typename key_trie_type::iterator it(key_trie.find(*start));
       if (it != key_trie.end()) {
-	if (it->second.erase(++start, finish)) 
+	if (it->second.erase(++start, finish))
 	  key_trie.erase(it->first);
       }
       return key_trie.empty() && data == data_type();
@@ -202,7 +201,7 @@ public:
   void for_each_helper(Proc& p, Keys& keys) {
     if (data != data_type())
       p(keys, data);
-    for (typename key_trie_type::iterator i = key_trie.begin(); 
+    for (typename key_trie_type::iterator i = key_trie.begin();
 	 i != key_trie.end(); ++i) {
       keys.push_back(i->first);
       i->second.for_each_helper(p, keys);
@@ -223,7 +222,7 @@ public:
   void for_each_helper(Proc& p, Keys& keys) const {
     if (data != data_type())
       p(keys, data);
-    for (typename key_trie_type::const_iterator i = key_trie.begin(); 
+    for (typename key_trie_type::const_iterator i = key_trie.begin();
 	 i != key_trie.end(); ++i) {
       keys.push_back(i->first);
       i->second.for_each_helper(p, keys);
@@ -244,7 +243,7 @@ std::ostream& operator<< (std::ostream& os, const trie<key_type,data_type>& t) {
     os << ' ' << i->first << ' ' << i->second;
   return os << ')';
 }  // operator<<
-  
+
 template <class key_type, class data_type>
 std::istream& operator>> (std::istream& is, trie<key_type,data_type>& t) {
   typedef trie<key_type,data_type> trie_type;

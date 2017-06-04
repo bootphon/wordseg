@@ -74,7 +74,6 @@ typedef std::map<SSs,F> SSs_F;
 
 //! readline_symbols() reads all of the symbols on the current
 //! line into syms
-//
 std::istream& readline_symbols(std::istream& is, Ss& syms) {
   syms.clear();
   std::string line;
