@@ -36,9 +36,9 @@ MP	= no  # OpenMP multi-threaded computation
 # TODO fix that... (use cmake? good idea for boost as well)
 # define CXXFLAGS and LDFLAGS according to the above flags
 ifeq ($(DEBUG),yes)
-  CXXFLAGS = -Wall -g -I$(INCDIR) -DBOOST_LOG_DYN_LINK
+  CXXFLAGS = -Wall -g -I$(INCDIR)
 else
-  CXXFLAGS = -Wall -O3 -std=c++11 -I$(INCDIR) -DBOOST_LOG_DYN_LINK
+  CXXFLAGS = -Wall -O3 -std=c++11 -I$(INCDIR)
   LDFLAGS  = -g
 endif
 
@@ -52,7 +52,7 @@ endif
 
 
 # source files must be *.cpp files in $(SRCDIR)
-SOURCES	 = gammadist mt19937ar symbol logging gibbs pycky
+SOURCES	 = gammadist mt19937ar symbol logging gibbs xtree pycfg_type
 OBJECTS	 = $(SOURCES:%=$(BUILDDIR)/%.o)
 
 LDLIB	 = -pthread -lboost_program_options -lboost_date_time \

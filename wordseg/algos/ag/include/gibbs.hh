@@ -6,8 +6,6 @@
 
 #include "pstream.hh"
 #include "pycky.hh"
-#include "symbol.hh"
-#include "xtree.hh"
 
 
 using Postreamps = std::vector<pstream::ostream*>;

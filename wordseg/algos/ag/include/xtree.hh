@@ -196,6 +196,6 @@ public:
 
 };  //catcounttree_type{}
 
-bool catcounttree_type::compact_trees = false;
+//bool catcounttree_type::compact_trees;
 
 #endif // XTREE_H

@@ -63,6 +63,8 @@
 #include <utility>
 #include <vector>
 
+#include "logging.hh"
+
 namespace tr1 = std::tr1;
 
 // define some useful macros
@@ -75,53 +77,54 @@ namespace tr1 = std::tr1;
 // #define HERE   __FILE__ << ":" << __LINE__ << ": In " << __PRETTY_FUNCTION__
 
 #define TRACE1(expr)                                                         \
-  std::cerr << HERE                                                          \
-            << ", " << __STRING(expr) << " = " << (expr) << std::endl
+    LOG(trace) << HERE                                                  \
+               << ", " << __STRING(expr) << " = " << (expr) << std::endl
 
 #define TRACE2(expr1, expr2)						     \
-  std::cerr << HERE                                                          \
+    LOG(trace) << HERE                                                       \
             << ", " << __STRING(expr1) << " = " << (expr1)                   \
-            << ", " << __STRING(expr2) << " = " << (expr2) << std::endl
+            << ", " << __STRING(expr2) << " = " << (expr2)
 
 #define TRACE3(expr1, expr2, expr3)					     \
-  std::cerr << HERE                                                          \
+    LOG(trace) << HERE                                                       \
             << ", " << __STRING(expr1) << " = " << (expr1)                   \
             << ", " << __STRING(expr2) << " = " << (expr2)                   \
-            << ", " << __STRING(expr3) << " = " << (expr3) << std::endl
+            << ", " << __STRING(expr3) << " = " << (expr3)
 
 #define TRACE4(expr1, expr2, expr3, expr4)				     \
-  std::cerr << HERE                                                          \
+    LOG(trace) << HERE                                                       \
             << ", " << __STRING(expr1) << " = " << (expr1)                   \
             << ", " << __STRING(expr2) << " = " << (expr2)                   \
             << ", " << __STRING(expr3) << " = " << (expr3)                   \
-            << ", " << __STRING(expr4) << " = " << (expr4) << std::endl
+            << ", " << __STRING(expr4) << " = " << (expr4)
 
 #define TRACE5(expr1, expr2, expr3, expr4, expr5)			     \
-  std::cerr << HERE                                                          \
+    LOG(trace) << HERE                                                       \
             << ", " << __STRING(expr1) << " = " << (expr1)                   \
             << ", " << __STRING(expr2) << " = " << (expr2)                   \
             << ", " << __STRING(expr3) << " = " << (expr3)                   \
             << ", " << __STRING(expr4) << " = " << (expr4)                   \
-            << ", " << __STRING(expr5) << " = " << (expr5) << std::endl
+            << ", " << __STRING(expr5) << " = " << (expr5)
 
 #define TRACE6(expr1, expr2, expr3, expr4, expr5, expr6)		     \
-  std::cerr << HERE                                                          \
+    LOG(trace) << HERE                                                       \
             << ", " << __STRING(expr1) << " = " << (expr1)                   \
             << ", " << __STRING(expr2) << " = " << (expr2)                   \
             << ", " << __STRING(expr3) << " = " << (expr3)                   \
             << ", " << __STRING(expr4) << " = " << (expr4)                   \
             << ", " << __STRING(expr5) << " = " << (expr5)                   \
-            << ", " << __STRING(expr6) << " = " << (expr6) << std::endl
+            << ", " << __STRING(expr6) << " = " << (expr6)
 
 #define TRACE7(expr1, expr2, expr3, expr4, expr5, expr6, expr7)		     \
-  std::cerr << HERE                                                          \
+    LOG(trace) << HERE                                                       \
             << ", " << __STRING(expr1) << " = " << (expr1)                   \
             << ", " << __STRING(expr2) << " = " << (expr2)                   \
             << ", " << __STRING(expr3) << " = " << (expr3)                   \
             << ", " << __STRING(expr4) << " = " << (expr4)                   \
             << ", " << __STRING(expr5) << " = " << (expr5)                   \
             << ", " << __STRING(expr6) << " = " << (expr6)                   \
-            << ", " << __STRING(expr7) << " = " << (expr7) << std::endl
+            << ", " << __STRING(expr7) << " = " << (expr7)
+
 
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       //
