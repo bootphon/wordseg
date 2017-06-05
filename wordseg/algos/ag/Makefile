@@ -21,6 +21,8 @@
 #
 BUILDDIR = ./build
 
+# name of the compiled binary
+BIN	 = pycfg
 
 # directory with C++ sources (must be *.cc extension) and headers
 SRCDIR  = ./src
@@ -50,7 +52,7 @@ endif
 
 
 # source files must be *.cpp files in $(SRCDIR)
-SOURCES	 = gammadist mt19937ar sym logging
+SOURCES	 = gammadist mt19937ar symbol logging gibbs pycky
 OBJECTS	 = $(SOURCES:%=$(BUILDDIR)/%.o)
 
 LDLIB	 = -pthread -lboost_program_options -lboost_date_time \
@@ -59,41 +61,17 @@ LDLIB	 = -pthread -lboost_program_options -lboost_date_time \
 
 .PHONY: all clean  # run-toy
 
-all: pycfg
+all: $(BIN)
 
 clean:
-	rm -f $(BUILDDIR)/*.o $(BUILDDIR)/pycfg
+	rm -f $(BUILDDIR)/*.o $(BUILDDIR)/$(BIN)
 
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.cpp
 	$(CXX) -o $@ -c $? $(CXXFLAGS) -I$(INCDIR) $(MPFLAG) $(QUADFLAG)
 
-pycfg: $(OBJECTS) $(BUILDDIR)/pycfg.o
+pycfg: $(OBJECTS) $(BUILDDIR)/main.o
 	$(CXX) -o $(BUILDDIR)/$@ $^ $(LDLIB) $(MPFLAG)
-
-# pycfg-quad: gammadist.o pycfg-quad.o mt19937ar.o sym.o
-# 	$(CXX) $^ -lm $(LDFLAGS) -o $@
-
-# pycfg-mp:  gammadist.o pycfg-mp.o mt19937ar.o sym.o
-# 	$(CXX) -fopenmp $^ -lm $(LDFLAGS) -o $@
-
-# pycfg-quad-mp: gammadist.o pycfg-quad-mp.o mt19937ar.o sym.o
-# 	$(CXX) -fopenmp $^ -lm $(LDFLAGS) -o $@
-
-# pycfg-quad.o: $(SRCDIR)/pycfg.cc
-# 	$(CXX) -c $(CXXFLAGS) -DQUADPREC $< -o $@
-
-# pycfg-mp.o: $(SRCDIR)/pycfg.cc
-# 	$(CXX) -c $(CXXFLAGS) -fopenmp $^ -o $@
-
-# pycfg-quad-mp.o: $(SRCDIR)/pycfg.cc
-# 	$(CXX) -c $(CXXFLAGS) -fopenmp -DQUADPREC $< -o $@
-
-# gammadist.o: $(SRCDIR)/gammadist.cc
-# 	$(CXX) -c $(CXXFLAGS) $< -o $@
-
-# mt19937ar.o: $(SRCDIR)/mt19937ar.cc
-# 	$(CXX) -c $(CXXFLAGS) $< -o $@
 
 
 # run-toy: pycfg pycfg-quad testengger.lt testeng.yld

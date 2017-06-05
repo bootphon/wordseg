@@ -10,7 +10,7 @@
  *
  *   Gamma(x | alpha, beta) = pow(x/beta, alpha-1) * exp(-x/beta) / (gamma(alpha)*beta)
  *
- * shape parameter alpha > 0 (also called c), scale parameter beta > 0 (also called s); 
+ * shape parameter alpha > 0 (also called c), scale parameter beta > 0 (also called s);
  * mean is alpha*beta, variance is alpha*beta**2
  *
  * Note that many parameterizations of the Gamma function are in terms of an _inverse_
@@ -21,12 +21,12 @@
 /* #define GAMMATEST */
 
 #include <assert.h>
-#include <math.h> 
+#include <math.h>
 
-#include "gammadist.h"
-#include "mt19937ar.h"
+#include "gammadist.hh"
+#include "mt19937ar.hh"
 
-/* gammadist() returns the probability density of x under a Gamma(alpha,beta) 
+/* gammadist() returns the probability density of x under a Gamma(alpha,beta)
  * distribution
  */
 
@@ -56,7 +56,7 @@ double gammavariate(double alpha, double beta) {
   assert(beta > 0);
 
   if (alpha > 1.0) {
-    
+
     /* Uses R.C.H. Cheng, "The generation of Gamma variables with
        non-integral shape parameters", Applied Statistics, (1977), 26,
        No. 1, p71-74 */
@@ -64,7 +64,7 @@ double gammavariate(double alpha, double beta) {
     double ainv = sqrt(2.0 * alpha - 1.0);
     double bbb = alpha - log(4.0);
     double ccc = alpha + ainv;
-    
+
     while (1) {
       double u1 = mt_genrand_real3();
       if (u1 > 1e-7  || u1 < 0.9999999) {
@@ -84,10 +84,10 @@ double gammavariate(double alpha, double beta) {
       u = mt_genrand_real3();
     return -log(u) * beta;
   }
-  else { 
-    /* alpha is between 0 and 1 (exclusive) 
+  else {
+    /* alpha is between 0 and 1 (exclusive)
        Uses ALGORITHM GS of Statistical Computing - Kennedy & Gentle */
-    
+
     while (1) {
       double u = mt_genrand_real3();
       double b = (exp(1) + alpha)/exp(1);
@@ -162,26 +162,26 @@ int main(int argc, char **argv) {
 #if 0
 
 /*! gammavariate() returns samples from a Gamma distribution
- *! where alpha is the shape parameter and beta is the scale 
- *! parameter, using the algorithm described on p. 94 of 
- *! Gentle (1998) Random Number Generation and Monte Carlo Methods, 
+ *! where alpha is the shape parameter and beta is the scale
+ *! parameter, using the algorithm described on p. 94 of
+ *! Gentle (1998) Random Number Generation and Monte Carlo Methods,
  *! Springer.
  */
 
 double gammavariate(double alpha) {
 
-  assert(alpha > 0); 
-  
+  assert(alpha > 0);
+
   if (alpha > 1.0) {
     while (1) {
       double u1 = mt_genrand_real3();
       double u2 = mt_genrand_real3();
       double v = (alpha - 1/(6*alpha))*u1/(alpha-1)*u2;
-      if (2*(u2-1)/(alpha-1) + v + 1/v <= 2 
+      if (2*(u2-1)/(alpha-1) + v + 1/v <= 2
          || 2*log(u2)/(alpha-1) - log(v) + v <= 1)
 	return (alpha-1)*v;
     }
-  } else if (alpha < 1.0) {  
+  } else if (alpha < 1.0) {
     while (1) {
       double t = 0.07 + 0.75*sqrt(1-alpha);
       double b = alpha + exp(-t)*alpha/t;
@@ -205,9 +205,9 @@ double gammavariate(double alpha) {
       }
     }
   }
-  else  
+  else
     return -log(mt_genrand_real3());
-} 
+}
 
 
 /*! gammavariate() returns a deviate distributed as a gamma
@@ -221,18 +221,18 @@ double nr_gammavariate(double ia) {
   int j;
   double am,e,s,v1,v2,x,y;
   assert(ia > 0);
-  if (ia < 10) { 
-    x=1.0; 
-    for (j=1;j<=ia;j++) 
+  if (ia < 10) {
+    x=1.0;
+    for (j=1;j<=ia;j++)
       x *= mt_genrand_real3();
     x = -log(x);
-  } else { 
+  } else {
     do {
       do {
-	do { 
+	do {
 	  v1=mt_genrand_real3();
 	  v2=2.0*mt_genrand_real3()-1.0;
-	} while (v1*v1+v2*v2 > 1.0); 
+	} while (v1*v1+v2*v2 > 1.0);
 	y=v2/v1;
 	am=ia-1;
 	s=sqrt(2.0*am+1.0);
@@ -242,6 +242,6 @@ double nr_gammavariate(double ia) {
     } while (mt_genrand_real3() > e);
   }
   return x;
-} 
+}
 
 #endif

@@ -12,7 +12,7 @@
 #include <set>
 #include <vector>
 
-#include "sym.h"
+#include "symbol.hh"
 
 //! xtree_type{} is a generic tree node type.  It consists of a generic label
 //! together with a sequence of children pointers.

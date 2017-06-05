@@ -5,7 +5,7 @@
 //! Based directly on the doubling procedure slice sampler described
 //! in Neal (2003) "Slice Sampling", The Annals of Statistics 3:705-767.
 //!
-//! The primary user-callable functions are slice_sampler1d() and 
+//! The primary user-callable functions are slice_sampler1d() and
 //! slice_sampler1dp(), which are defined at the bottom of this file.
 
 #ifndef SLICE_SAMPLER_H
@@ -17,7 +17,7 @@
 #include <iostream>
 #include <limits>
 
-#include "utility.h"
+#include "utility.hh"
 
 //! slice_sampler1d_type{} implements a 1-d slice sampler based on
 //! the procedure described in
@@ -100,7 +100,7 @@ struct slice_sampler1d_type {
       F m = (l+r)/2;
       if ((x0 < m && x1 >= m) || (x0 >= m && x1 < m))
 	d = true;
-      if (x1 < m) 
+      if (x1 < m)
 	r = m;
       else
 	l = m;
@@ -121,7 +121,7 @@ struct slice_sampler1d_type {
     stepping_out(x0, y, w, m, l, r);
     F x1 = shrinkage(x0, y, w, l, r, true);
     return x1;
-  } 
+  }
 
   //! doubling_sample() computes one sample using the doubling procedure.
   //
@@ -134,7 +134,7 @@ struct slice_sampler1d_type {
   }
 
 }; // slice_sampler1d_type{}
-  
+
 
 //! bounded_domain_function_type{}(x) returns f(x) if x is within the domain
 //!  bounds, and -infinity otherwise
@@ -145,10 +145,10 @@ struct bounded_domain_function_type {
 
   const Fn& f;      //!< original function
   F min_x, max_x;   //!< domain bounds
-  
-  bounded_domain_function_type(const Fn& f, F min_x, F max_x) 
+
+  bounded_domain_function_type(const Fn& f, F min_x, F max_x)
     : f(f), min_x(min_x), max_x(max_x) { }
-  
+
   F operator() (F x) const {
     if (min_x < x && x < max_x) {
       F fx = f(x);
@@ -159,7 +159,7 @@ struct bounded_domain_function_type {
       return fx;
     }
     else
-      return -std::numeric_limits<F>::infinity();      
+      return -std::numeric_limits<F>::infinity();
   }
 };  // bounded_domain_function_type{}
 
@@ -181,8 +181,8 @@ slice_sampler1d(const LogF& logF,                                        //!< lo
 
   assert(std::isfinite(x0));
 
-  if (w <= 0.0) {                           // set w to a default width 
-    if (min_x > -std::numeric_limits<F>::infinity() 
+  if (w <= 0.0) {                           // set w to a default width
+    if (min_x > -std::numeric_limits<F>::infinity()
 	&& max_x < std::numeric_limits<F>::infinity())
       w = (max_x - min_x)/4;
     else
@@ -207,7 +207,7 @@ slice_sampler1d(const LogF& logF,                                        //!< lo
   return x0;
 } // slice_sampler1d()
 
-//! log_domain_function_type{}() 
+//! log_domain_function_type{}()
 //
 template <typename LogF>
 struct log_domain_function_type {
@@ -215,7 +215,7 @@ struct log_domain_function_type {
   typedef double F;
 
   const LogF& logF;    //!< original function
-  
+
   log_domain_function_type(const LogF& logF) : logF(logF) { }
 
   F operator() (F x) const {
@@ -229,7 +229,7 @@ struct log_domain_function_type {
 };  // log_domain_function_type{}
 
 
-//! slice_sampler1dp() slice samples on the positive reals by log-transforming 
+//! slice_sampler1dp() slice samples on the positive reals by log-transforming
 //! the x-axis, so it doesn't need any bounds on the function.  Also, the
 //! stepping-out procedure corresponds to multiplicative jumps in log-space.
 //
@@ -248,7 +248,7 @@ slice_sampler1dp(const LogF& logF,                //!< log of function to sample
   assert(y0 > 0);
   assert(w > 0);
   F x0 = log(y0);
-  
+
   assert(std::isfinite(w));
 
   typedef log_domain_function_type<LogF> LDLogF;

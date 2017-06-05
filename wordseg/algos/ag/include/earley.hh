@@ -12,8 +12,8 @@
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
 
-#include "sym.h"
-#include "utility.h"
+#include "symbol.hh"
+#include "utility.hh"
 
 extern int debug;
 
@@ -23,7 +23,7 @@ extern int debug;
 //!  CKY parser that follows.
 //
 struct earley {
-  
+
   typedef unsigned int U;
   typedef std::set<U> sU;
 
@@ -50,7 +50,7 @@ struct earley {
 	assert(rule.second.size() == 1);
 	terminal_preterminals[rule.second.front()].insert(rule.first);
       }
-      else 
+      else
 	parent_ruleps[rule.first].push_back(&rule);
     }  // earley::grammar::add_rule()
 
@@ -62,13 +62,13 @@ struct earley {
     Rp rulep;     //!< pointer to rule being expanded
     A(U index, U left, Rp rulep) : index(index), left(left), rulep(rulep) { }
 
-    bool operator= (const A& a) const { 
-      return index == a.index && left == a.left && rulep == a.rulep; 
+    bool operator= (const A& a) const {
+      return index == a.index && left == a.left && rulep == a.rulep;
     }
 
     bool operator< (const A& a) const {
-      return index < a.index 
-	|| (index == a.index 
+      return index < a.index
+	|| (index == a.index
 	    && (left < a.left
 		|| (left == a.left && rulep < a.rulep)));
     }
@@ -87,21 +87,21 @@ struct earley {
 
   static U index(U i, U j) { return j*(j-1)/2+i; }
   static U ncells(U n) { return n*(n+1)/2; }
-  
+
   void inside(U left, U right, Rp rp, U i) {
     // TRACE4(left, right, *rp, i);
-    if (i == rp->second.size()) 
+    if (i == rp->second.size())
       icomplete(left, right, rp->first);
     else if (right < terminals.size()) {
       S child = rp->second[i];
-      std::pair<S_sAsU::iterator,bool> citb 
+      std::pair<S_sAsU::iterator,bool> citb
 	= ichart[right].insert(S_sAsU::value_type(child,sAsU()));
       sA& as = citb.first->second.first;
       sU& cs = citb.first->second.second;
       // TRACE2(citb.second, as.count(A(i,left,rp)));
       if (!as.insert(A(i,left,rp)).second)
 	return;  // this active edge is already in chart
-      if (terminals[right] == child) 
+      if (terminals[right] == child)
 	inside(left, right+1, rp, i+1);
       if (citb.second) { // new search
 	const sSp preterminals_right = preterminals[right];
@@ -113,7 +113,7 @@ struct earley {
 	inside(right, child);
       }
       else {  // already searched for
-	cforeach (sU, cit, cs) 
+	cforeach (sU, cit, cs)
 	  inside(left, *cit, rp, i+1);
       }
     }
@@ -149,8 +149,8 @@ struct earley {
     return completes[i].count(cat);
   }
 
-  earley(const grammar& g, S start, const Ss& terminals, U_sS& completes) 
-    : g(g), terminals(terminals), preterminals(terminals.size()), 
+  earley(const grammar& g, S start, const Ss& terminals, U_sS& completes)
+    : g(g), terminals(terminals), preterminals(terminals.size()),
       ichart(terminals.size()), completes(completes)
   {
     completes.clear();
@@ -164,7 +164,7 @@ struct earley {
 	preterminals[i] = &it->second;
     }
 
-    if (debug >= 50000) 
+    if (debug >= 50000)
       std::cerr << "\n# earley terminals = " << terminals << std::endl;
 
     if (debug >= 70000) {
@@ -182,7 +182,7 @@ struct earley {
       const sSp preterminals0 = preterminals[0];
       if (preterminals0 != NULL && preterminals0->count(start)) {
 	completes[index(0,1)].insert(start);
-	std::pair<S_sAsU::iterator,bool> citb 
+	std::pair<S_sAsU::iterator,bool> citb
 	  = ichart[0].insert(S_sAsU::value_type(start,sAsU()));
 	assert(citb.second);
 	sU& cs = citb.first->second.second;
@@ -193,9 +193,9 @@ struct earley {
 
     if (debug >= 50000)
       for (U left = 0; left < terminals.size(); ++left)
-	for (U right = left+1; right <= terminals.size(); ++right) 
+	for (U right = left+1; right <= terminals.size(); ++right)
 	  if (!completes[index(left,right)].empty()) {
-	    std::cerr << "# earley: left = " << left << ", right = " << right 
+	    std::cerr << "# earley: left = " << left << ", right = " << right
 		      << ", completes =";
 	    cforeach (sS, it, completes[index(left,right)])
 	      std::cerr << ' ' << *it;
@@ -203,13 +203,13 @@ struct earley {
 	  }
 
     if (debug >= 70000)
-      for (U right = 0; right < ichart.size(); ++right) 
+      for (U right = 0; right < ichart.size(); ++right)
 	cforeach (S_sAsU, it0, ichart[right]) {
 	  S cat = it0->first;
 	  const sA& as = it0->second.first;
 	  const sU& cs = it0->second.second;
 	  std::cerr << "# earley incomplete: right = " << right << ", cs = " << cs;
-	  cforeach (sA, it1, as) 
+	  cforeach (sA, it1, as)
 	    std::cerr << "; cat = " << cat
 		      << "; left = " << it1-> left
 		      << ", index = " << it1->index

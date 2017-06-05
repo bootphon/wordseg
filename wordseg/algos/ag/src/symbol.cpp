@@ -11,7 +11,7 @@
 
 // #define SYM_CC_MAIN   // uncomment this to include the main() test program below
 
-#include "sym.h"
+#include "symbol.hh"
 #include <cctype>
 
 #define ESCAPE     '\\'
@@ -21,7 +21,7 @@
 
 // define these as local static variables to avoid static initialization order bugs
 //
-symbol::Table& symbol::table() 
+symbol::Table& symbol::table()
 {
   static Table table_(65536);   // default table size
   return table_;
@@ -29,9 +29,9 @@ symbol::Table& symbol::table()
 
 symbol::symbol(const std::string& s) : sp(&*(table().insert(s).first)) { };
 
-symbol::symbol(const char* cp) { 
+symbol::symbol(const char* cp) {
   if (cp) {
-    std::string s(cp); 
+    std::string s(cp);
     sp = &*(table().insert(s).first);
   }
   else
@@ -41,12 +41,12 @@ symbol::symbol(const char* cp) {
 
 // Read/write code
 
-// inline static bool dont_escape(char c) { 
-//  return isalnum(c) || c == '_' || c == '.' || c == '-' || c == '+'; 
+// inline static bool dont_escape(char c) {
+//  return isalnum(c) || c == '_' || c == '.' || c == '-' || c == '+';
 // }
 
-inline static bool dont_escape(char c) { 
-  return (!isspace(c)) && c != ESCAPE && c != OPENQUOTE && c != CLOSEQUOTE 
+inline static bool dont_escape(char c) {
+  return (!isspace(c)) && c != ESCAPE && c != OPENQUOTE && c != CLOSEQUOTE
          && c != '%' && c != '(' && c != ')';
 }
 
@@ -143,7 +143,7 @@ std::ostream& operator<< (std::ostream& os, const symbol s)
 int main(int argc, char** argv) {
   const size_t ns = 1000000;
 
-  const char *syms[] = { "Hello world", "1", "2.0e-5", "this", "is", "a", "test", 
+  const char *syms[] = { "Hello world", "1", "2.0e-5", "this", "is", "a", "test",
 		   "'", "", "\"", "\\", " ", "-", "'-'", "**", "&", "`", "`'",
 		   "(", ")", "()", ")(", "][" };
   const size_t nsyms = sizeof(syms)/sizeof(syms[0]);
@@ -158,7 +158,7 @@ int main(int argc, char** argv) {
   }
   s.insert(symbol::undefined());
   vs.push_back(symbol::undefined());
-  
+
   std::ostringstream os;
   os << s;
   std::ostringstream ovs;
@@ -172,8 +172,8 @@ int main(int argc, char** argv) {
     std::ostringstream os1;
     os1 << i;
     ss.push_back(symbol(os1.str()));  // ss will resize several times
-  }  
-  
+  }
+
   std::istringstream is(os.str());
   sS s1;
   is >> s1;
@@ -181,7 +181,7 @@ int main(int argc, char** argv) {
     std::cerr << "Oops: these two sets are different!\n" << s << '\n' << s1 << std::endl;
     exit(EXIT_FAILURE);
   }
- 
+
   std::istringstream ivs(ovs.str());
   Ss vs1;
   ivs >> vs1;
@@ -189,12 +189,12 @@ int main(int argc, char** argv) {
     std::cerr << "Oops: these two vectors are different!\n" << vs << '\n' << vs1 << std::endl;
     exit(EXIT_FAILURE);
   }
-  
+
   for (size_t i = 0; i < ns; ++i) {
     std::ostringstream os1;
     os1 << i;
     if (ss[i] != symbol(os1.str())) {
-      std::cerr << "Oops: os1.str() = " << os1.str() 
+      std::cerr << "Oops: os1.str() = " << os1.str()
 		<< ", ss[" << i << "] = " << ss[i] << std::endl;
       exit(EXIT_FAILURE);
     }
