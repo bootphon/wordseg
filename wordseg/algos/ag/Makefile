@@ -19,10 +19,10 @@
 # The following variables are defined in the setup.py: BUILDDIR is the
 # output directory with object code and binaries
 #
-BUILDDIR = ./build
+# BUILDDIR = ./build
 
 # name of the compiled binary
-BIN	 = pycfg
+BIN	 = ag
 
 # directory with C++ sources (must be *.cc extension) and headers
 SRCDIR  = ./src
@@ -37,9 +37,9 @@ MP	= no  # OpenMP multi-threaded computation
 # define CXXFLAGS and LDFLAGS according to the above flags
 ifeq ($(DEBUG),yes)
   CXXFLAGS = -Wall -g -I$(INCDIR)
+  LDFLAGS  = -g
 else
   CXXFLAGS = -Wall -O3 -std=c++11 -I$(INCDIR)
-  LDFLAGS  = -g
 endif
 
 ifeq ($(QUAD),yes)
@@ -70,7 +70,7 @@ clean:
 $(BUILDDIR)/%.o: $(SRCDIR)/%.cpp
 	$(CXX) -o $@ -c $? $(CXXFLAGS) -I$(INCDIR) $(MPFLAG) $(QUADFLAG)
 
-pycfg: $(OBJECTS) $(BUILDDIR)/main.o
+$(BIN): $(OBJECTS) $(BUILDDIR)/main.o
 	$(CXX) -o $(BUILDDIR)/$@ $^ $(LDLIB) $(MPFLAG)
 
 

@@ -33,7 +33,7 @@ class WordsegBuild(distutils.command.build.build):
     # a list of C++ binaries to compile. We must have the Makefile
     # './wordseg/algos/TARGET/Makefile' that produces the executable
     # './build/TARGET/TARGET'
-    targets = ['dpseg']
+    targets = ['dpseg', 'ag']
 
     def run(self):
         # call the usual build method
@@ -72,6 +72,12 @@ class WordsegBuild(distutils.command.build.build):
         config_dir = os.path.join('wordseg', 'algos', 'dpseg', 'config')
         return [os.path.join(config_dir, f) for f in os.listdir(config_dir)]
 
+    @classmethod
+    def ag_config_files(cls):
+        """Return a list of exemple configuration files bundled with ag"""
+        config_dir = os.path.join('wordseg', 'algos', 'ag', 'config')
+        return [os.path.join(config_dir, f) for f in os.listdir(config_dir)]
+
 
 setup(
     name='wordseg',
@@ -93,6 +99,7 @@ setup(
         'wordseg-prep = wordseg.prepare:main',
         'wordseg-eval = wordseg.evaluate:main',
         'wordseg-stats = wordseg.stats:main',
+        'wordseg-ag = wordseg.algos.ag:main',
         'wordseg-dibs = wordseg.algos.dibs:main',
         'wordseg-dpseg = wordseg.algos.dpseg:main',
         'wordseg-tp = wordseg.algos.tp:main',

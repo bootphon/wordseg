@@ -35,81 +35,6 @@
 #include "pycky.hh"
 
 
-static const std::string usage =
-    "pycfg [-d debug]\n"
-    "      [-A parses-file] [-C] [-D] [-E] [-G grammar-file]\n"
-    "      [-H] [-I] [-P] [-R nr]\n"
-    "      [-r rand-init] [-n niterations] [-N nanal-its]\n"
-    "      [-a a] [-b b] [-w weight]\n"
-    "      [-epya-beta-a] [-f pya-beta-b] [-g pyb-gamma-s] [-i pyb-gamma-c]\n"
-    "      [-s train_frac] -S\n"
-    "      [-T anneal-temp-start] [-t anneal-temp-stop] [-m anneal-its]\n"
-    "      [-Z ztemp] [-z zits]\n"
-    "      [-x eval-every] [-X eval-cmd] [-Y eval-cmd]\n"
-    "      [-u test1.yld] [-U eval-cmd]\n"
-    "      [-v test1.yld] [-V eval-cmd]\n"
-    "      grammar.lt < train.yld\n"
-    "\n"
-    "The grammar consists of a sequence of rules, one per line, in the\n"
-    "following format:\n"
-    "\n"
-    "   [theta [a [b]]] Parent --> Child1 Child2 ...\n"
-    "\n"
-    "where theta is the rule's probability (or, with the -E flag, the Dirichlet prior\n"
-    "            parameter associated with this rule) in the generator, and\n"
-    "      a, b (0<=a<=1, 0<b) are the parameters of the Pitman-Yor adaptor process.\n"
-    "\n"
-    "If a==1 then the Parent is not adapted.\n"
-    "\n"
-    "If a==0 then the Parent is sampled with a Chinese Restaurant process\n"
-    "           (rather than the more general Pitman-Yor process).\n"
-    "\n"
-    "If theta==0 then we use the default value for the rule prior (given by the -w flag).\n"
-    "\n"
-    "The start category for the grammar is the Parent category of the\n"
-    "first rule.\n"
-    "\n"
-    "If you specify the -C flag, these trees are printed in \"compact\" format,\n"
-    "i.e., only cached categories are printed.\n"
-    "\n"
-    "If you don't specify the -C flag, cached nodes are suffixed by a \n"
-    "'#' followed by a number, which is the number of customers at this\n"
-    "table.\n"
-    "\n"
-    "The -A parses-file causes it to print out analyses of the training data\n"
-    "for the last few iterations (the number of iterations is specified by the\n"
-    "-N flag).\n"
-    "\n"
-    "The -X eval-cmd causes the program to run eval-cmd as a subprocess\n"
-    "and pipe the current sample trees into it (this is useful for monitoring\n"
-    "convergence).  Note that the eval-cmd is only run _once_; all the\n"
-    "sampled parses of all the training data are piped into it.\n"
-    "Trees belonging to different iterations are separated by blank lines.\n"
-    "\n"
-    "The -u and -v flags specify test-sets which are parsed using the current PCFG\n"
-    "approximation every eval-every iterations, but they are not trained on.  These\n"
-    "parses are piped into the commands specified by the -U and -V parameters respectively.\n"
-    "Just as for the -X eval-cmd, these commands are only run _once_.\n"
-    "\n"
-    "The program can now estimate the Pitman-Yor hyperparameters a and b for each\n"
-    "adapted nonterminal.  To specify a uniform Beta prior on the a parameter, set\n"
-    "\n"
-    "   -e 1 -f 1\n"
-    "\n"
-    "and to specify a vague Gamma prior on the b parameter, set\n"
-    "\n"
-    "   -g 10 -h 0.1\n"
-    "or\n"
-    "   -g 100 -h 0.01\n"
-    "\n"
-    "If you want to estimate the values for a and b hyperparameters, their\n"
-    "initial values must be greater than zero.  The -a flag may be useful here.\n"
-    "\n"
-    "If a nonterminal has an a value of 1, this means that the nonterminal\n"
-    "is not adapted.\n"
-    "\n";
-
-
 typedef pstream::ostream* Postreamp;
 typedef std::vector<Postreamp> Postreamps;
 
@@ -268,7 +193,6 @@ int main(int argc, char** argv)
     po::notify(vm);
 
     // TODO better if we trigger that directly in the argument parser...
-    catcount_tree::set_compact_trees(vm["compact-trees"].as<bool>());
     anneal_start = 1.0 / anneal_start;
     anneal_stop = 1.0 / anneal_stop;
     for (const auto& cmd : evalcmdstrs)
@@ -283,7 +207,7 @@ int main(int argc, char** argv)
     // if --help given, display the help message and exit
     if (vm.count("help"))
     {
-        std::cerr << usage << std::endl << desc << std::endl;
+        std::cerr << desc << std::endl;
         exit(0);
     }
 
@@ -322,6 +246,17 @@ int main(int argc, char** argv)
         exit(1);
     }
     is >> g;
+
+    // setup compact trees display if asked
+    if (vm.count("print-compact-trees"))
+    {
+        bool compact_trees = vm["print-compact-trees"].as<bool>();
+        catcount_tree::set_compact_trees(compact_trees);
+        if (compact_trees)
+            LOG(info) << "compact tree display enabled";
+        else
+            LOG(info) << "compact tree display disabled";
+    }
 
     // log the eval commands if there are ones
     if (evalcmds.size())

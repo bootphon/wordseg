@@ -18,8 +18,10 @@
 import argparse
 import codecs
 import logging
+import os
 import pkg_resources
 import re
+import subprocess
 import sys
 
 from wordseg import Separator
@@ -83,6 +85,83 @@ class CatchExceptions(object):
         """Write `msg` on stderr and exit with error code 1"""
         sys.stderr.write(msg.strip() + '\n')
         sys.exit(1)
+
+
+class Argument(object):
+    """Commandline argument adpater class
+
+    Read argument from a C++ binary (argument parsing must be handled
+    by boost::program_options) and convert it to a python argparse
+    argument.
+
+    """
+    def __init__(self, name=None, default=None,  help='', excluded=[]):
+        self.name = name
+        self.default = default
+        self.help = help
+        self.excluded = excluded
+
+    def is_valid(self):
+        if not self.name:
+            return False
+        if self.name in self.excluded:
+            return False
+        return True
+
+    def send(self):
+        # adapting help message for some options
+        if self.name == '--debug-level':
+            self.help = (
+                'increase the amount of debug messages, use together with -vv '
+                '(a reasonable value is 1000)')
+
+        if self.name == '--config-file':
+            self.help += ' (in case of duplicates, precedence goes to the command line option)'
+
+        # adding the default argument value in help
+        if self.default:
+            self.help += ', default is "%(default)s"'
+        return self
+
+    def add(self, parser):
+        parser.add_argument(self.name, default=self.default,
+                            help=self.help, metavar='<arg>')
+
+
+def yield_binary_arguments(binary, excluded=[]):
+    """Yields commandline arguments parsed from "`binary` --help" message"""
+    # get the help message of the binary
+    help_msg= subprocess.Popen(
+        [binary, '--help'], stderr=subprocess.PIPE).communicate()[1].decode()
+
+    # parse the message line by line to build arguments for argparse
+    short_opts = '\s+-\w \[ (--[\w_\-]+) \]'
+    long_opts = '\s+(--[\w_\-]+)'
+    argument_re = ('({}|{})\s*'
+                   '(arg)?\s*(\(\=([a-zA-Z0-9\._\-\s]+)\))?(.*)'
+                   .format(short_opts, long_opts))
+
+    argument = Argument(excluded=excluded)
+    for line in help_msg.split('\n'):
+        m = re.match(argument_re, line)
+        if m:  # continuation of the previous help message
+            # yield the previous argument
+            if argument.is_valid():
+                yield argument.send()
+            argument = Argument(excluded=excluded)
+
+            argument.name = m.group(2) if m.group(2) else m.group(3)
+            argument.default = (m.group(6).replace('(=', '').replace(')', '')
+                                if m.group(6) else None)
+            argument.help = m.group(7).strip()
+        else:  # the regext is not matched: this is the continuation
+               # of a help message
+            assert '--' not in line
+            argument.help += ' ' + line.strip()
+
+    if argument.is_valid():
+        argument.help += ', default is %(default)s'
+        yield argument.send()
 
 
 def strip(utt):
