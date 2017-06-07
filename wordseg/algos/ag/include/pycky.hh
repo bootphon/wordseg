@@ -22,7 +22,6 @@
 #include "mt19937ar.hh"
 #include "slice-sampler.hh"
 #include "symbol.hh"
-#include "xtree.hh"
 #include "trie.hpp"
 #include "utility.hh"
 
@@ -269,13 +268,13 @@ public:
 
     void add_pycache(const sT& tps, S_F& inactives) const {
         cforeach (sT, it, tps) {
-            symbol cat = (*it)->cat;
+            symbol cat = (*it)->label();
             F pya = g.get_pya(cat);    // PY cache statistics
             if (pya == 1.0)
                 continue;
             F pyb = g.get_pyb(cat);
             U pyn = dfind(g.parent_pyn, cat);
-            inactives[cat] += power( ((*it)->count - pya)/(pyn + pyb), anneal);
+            inactives[cat] += power( ((*it)->count() - pya)/(pyn + pyb), anneal);
         }
     }  // pycky::add_cache()
 
@@ -356,9 +355,9 @@ public:
             const StsTit& pytit = pytits[index(left, right)];
             if (pytit != g.terms_pytrees.end())
                 cforeach (sT, it, pytit->data) {
-                    if ((*it)->cat != parent)
+                    if ((*it)->label() != parent)
                         continue;
-                    probsofar += power( ((*it)->count - pya)/(pyn + pyb), anneal);
+                    probsofar += power( ((*it)->count() - pya)/(pyn + pyb), anneal);
                     if (probsofar >= probthreshold)
                         return *it;
                 }
@@ -383,14 +382,13 @@ public:
                 probsofar += childprob
                     * power(dfind(parent1_weight, parent)*rulefactor, anneal);
                 if (probsofar >= probthreshold) {
-                    tp->children.push_back(random_inactive(child, childprob, left, right));
+                    tp->add_child(random_inactive(child, childprob, left, right));
                     return tp;
                 }
             }
         }
 
         // try binary rules
-
         for (U mid = left+1; mid < right; ++mid) {
             const Stit_F& leftactives = actives[index(left,mid)];
             const S_F& rightinactives = inactives[index(mid,right)];
@@ -407,8 +405,8 @@ public:
                             probsofar += leftprob * rightprob
                                 * power(it->second*rulefactor, anneal);
                             if (probsofar >= probthreshold) {
-                                random_active(leftactive, leftprob, left, mid, tp->children);
-                                tp->children.push_back(random_inactive(rightinactive, rightprob, mid, right));
+                                random_active(leftactive, leftprob, left, mid, tp->children());
+                                tp->add_child(random_inactive(rightinactive, rightprob, mid, right));
                                 return tp;
                             }
                         }
@@ -426,7 +424,7 @@ public:
     }  // pycky::random_inactive()
 
     void random_active(const Stit parent, F parentprob, const U left, const U right,
-                       tree::ptrs_type& siblings) const {
+                       tree::children_list_type& siblings) const {
         F probthreshold = random1() * parentprob;
         F probsofar = 0;
 
@@ -476,7 +474,7 @@ public:
 }; // pycky{}
 
 struct resample_pycache_helper {
-    typedef catcounttree_type tree;
+    typedef catcount_tree tree;
 
     pycfg_type& g;
     pycky& p;
@@ -490,7 +488,7 @@ struct resample_pycache_helper {
             tree* tp0 = *tit;
             Ss words;
             tp0->terminals(words);
-            S start = tp0->category();
+            S start = tp0->label();
             F old_pya = g.set_pya(start, 1.0);
             F pi0 = g.decrtree(tp0);
             if (pi0 < 0)
@@ -528,17 +526,17 @@ struct resample_pycache_helper {
                     tp1->selective_delete();
                 }
             }
-            g.set_pya(tp0->category(), old_pya);
+
+            g.set_pya(tp0->label(), old_pya);
         }
-    }  // resample_pycache_helper::operator()
+    }
+};
 
-};  // resample_pycache_helper{}
 
-//! resample_pycache() resamples the strings associated with each cache
-//
+// resamples the strings associated with each cache
 inline void resample_pycache(pycfg_type& g, pycky& p) {
     resample_pycache_helper h(g, p);
     p.g.terms_pytrees.for_each(h);
-}  // resample_pycache()
+}
 
 #endif // PYCKY_H

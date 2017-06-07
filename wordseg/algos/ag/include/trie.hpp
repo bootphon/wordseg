@@ -20,7 +20,6 @@
 //
 template <class key_type_, class data_type_>
 class trie {
-
 public:
 
   typedef unsigned int size_type;

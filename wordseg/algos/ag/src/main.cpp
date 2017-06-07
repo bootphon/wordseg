@@ -167,7 +167,7 @@ int main(int argc, char** argv)
         ("print-last-nanalysis,N", po::value<unsigned>(&nparses_iterations),
          "print analyses during last nanal-its iterations")
 
-        ("print-compact-trees,C", po::value<bool>(&catcounttree_type::compact_trees)->implicit_value(true),
+        ("print-compact-trees,C", po::value<bool>()->implicit_value(true),
          "print compact trees omitting uncached categories")
 
         ("delay-init,D", po::value<bool>(&delayed_initialization)->implicit_value(true),
@@ -268,6 +268,7 @@ int main(int argc, char** argv)
     po::notify(vm);
 
     // TODO better if we trigger that directly in the argument parser...
+    catcount_tree::set_compact_trees(vm["compact-trees"].as<bool>());
     anneal_start = 1.0 / anneal_start;
     anneal_stop = 1.0 / anneal_stop;
     for (const auto& cmd : evalcmdstrs)

@@ -26,7 +26,7 @@
 
 #include "symbol.hh"
 #include "earley.hh"
-#include "xtree.hh"
+#include "catcount_tree.hh"
 #include "trie.hpp"
 
 
@@ -84,7 +84,7 @@ public:
     typedef tr1::unordered_map<symbol, S_F> S_S_F;
     typedef trie<symbol, symbol_map<F> > St_S_F;
     typedef St_S_F::const_iterator Stit;
-    typedef catcounttree_type tree;
+    typedef catcount_tree tree;
     typedef std::set<tree*> sT;
     typedef trie<symbol,sT> St_sT;
     typedef std::vector<tree*> Ts;
@@ -344,7 +344,7 @@ public:
         void operator() (const Words& words, const TreePtrs& tps)
             {
                 for (const auto& tpit: tps)
-                    if (tpit->cat == parent)
+                    if (tpit->label() == parent)
                         os << tpit << std::endl;
             }
     };
@@ -365,8 +365,8 @@ public:
             {
                 for (const auto& it: tps)
                 {
-                    F pya = g.get_pya(it->cat);
-                    logP += lgamma(it->count - pya) - lgamma(1 - pya);
+                    F pya = g.get_pya(it->label());
+                    logP += lgamma(it->count() - pya) - lgamma(1 - pya);
                 }
             }
     };
@@ -413,7 +413,7 @@ public:
         void operator() (const Words& words, const TreePtrs& tps)
             {
                 for (const auto& it: tps)
-                    parent_trees[it->cat].push_back(it);
+                    parent_trees[it->label()].push_back(it);
             }
     };
 
@@ -452,7 +452,6 @@ namespace std
         };
     }
 }
-
 
 
 #endif  // _PYCFG_TYPE_HH

@@ -78,29 +78,29 @@ std::size_t pycfg_type::terms_pytrees_size() const
 
 F pycfg_type::tree_prob(const tree* tp) const
 {
-    if (tp->children.empty())
+    if (tp->children().empty())
         return 1;
 
-    F pya = get_pya(tp->cat);
+    F pya = get_pya(tp->label());
     if (pya == 1)
     { // no cache
         F prob = 1;
         Ss children;
-        for(const auto& it: tp->children)
+        for(const auto& it: tp->children())
         {
-            children.push_back(it->cat);
+            children.push_back(it->label());
             prob *= tree_prob(it);
         }
-        prob *= rule_prob(tp->cat, children);
+        prob *= rule_prob(tp->label(), children);
         return prob;
     }
-    F pyb = get_pyb(tp->cat);
-    std::size_t pym = dfind(parent_pym, tp->cat);
-    std::size_t pyn = dfind(parent_pyn, tp->cat);
-    if (tp->count > 0) { // existing node
-        assert(tp->count <= pyn);
+    F pyb = get_pyb(tp->label());
+    std::size_t pym = dfind(parent_pym, tp->label());
+    std::size_t pyn = dfind(parent_pyn, tp->label());
+    if (tp->count() > 0) { // existing node
+        assert(tp->count() <= pyn);
         assert(pym > 0);
-        F prob = (tp->count - pya)/(pyn + pyb);
+        F prob = (tp->count() - pya)/(pyn + pyb);
         assert(finite(prob)); assert(prob > 0); assert(prob <= 1);
         return prob;
     }
@@ -109,12 +109,12 @@ F pycfg_type::tree_prob(const tree* tp) const
     F prob = (pym * pya + pyb)/(pyn + pyb);
     assert(finite(prob)); assert(prob > 0); assert(prob <= 1);
     Ss children;
-    for(const auto& it: tp->children)
+    for(const auto& it: tp->children())
     {
-        children.push_back(it->cat);
+        children.push_back(it->label());
         prob *= tree_prob(it);
     }
-    prob *= rule_prob(tp->cat, children);
+    prob *= rule_prob(tp->label(), children);
 
     if (prob < 0)
         LOG(error) << "pycfg_type::tree_prob(" << *tp << ") = " << prob;
@@ -129,39 +129,39 @@ F pycfg_type::tree_prob(const tree* tp) const
 
 F pycfg_type::incrtree(tree* tp, std::size_t weight)
 {
-    if (tp->children.empty())
+    if (tp->children().empty())
         return 1;  // terminal node
 
     assert(weight >= 0);
-    F pya = get_pya(tp->cat);    // PY cache statistics
-    F pyb = get_pyb(tp->cat);
+    F pya = get_pya(tp->label());    // PY cache statistics
+    F pyb = get_pyb(tp->label());
 
     if (pya == 1)
     { // don't table this category
         F prob = 1;
         Ss children;
-        for (const auto& it: tp->children)
-            children.push_back(it->cat);
+        for (const auto& it: tp->children())
+            children.push_back(it->label());
 
-        prob *= incrrule(tp->cat, children, estimate_theta_flag*weight);
+        prob *= incrrule(tp->label(), children, estimate_theta_flag*weight);
 
-        for (const auto& it: tp->children)
+        for (const auto& it: tp->children())
             prob *= incrtree(it, weight);
 
         return prob;
     }
 
-    else if (tp->count > 0)
+    else if (tp->count() > 0)
     {  // old PY table entry
-        std::size_t& pyn = parent_pyn[tp->cat];
-        F prob = (tp->count - pya) / (pyn + pyb);
+        std::size_t& pyn = parent_pyn[tp->label()];
+        F prob = (tp->count() - pya) / (pyn + pyb);
 
         assert(finite(prob));
         assert(prob > 0);
         assert(prob <= 1);
 
         // increment entry and PY counts
-        tp->count += weight;
+        tp->increment(weight);
         pyn += weight;
 
         return prob;
@@ -173,25 +173,25 @@ F pycfg_type::incrtree(tree* tp, std::size_t weight)
         bool inserted ATTRIBUTE_UNUSED = terms_pytrees[terms].insert(tp).second;
         assert(inserted);
 
-        std::size_t& pym = parent_pym[tp->cat];
-        std::size_t& pyn = parent_pyn[tp->cat];
+        std::size_t& pym = parent_pym[tp->label()];
+        std::size_t& pyn = parent_pyn[tp->label()];
         F prob = (pym*pya + pyb)/(pyn + pyb);  // select new table
 
         assert(finite(prob));
         assert(prob > 0);
         assert(prob <= 1);
 
-        tp->count += weight;              // increment count
+        tp->increment(weight);              // increment count
         pym += 1;                         // one more PY table entry
         pyn += weight;                    // increment PY count
 
         Ss children;
-        for (const auto& it: tp->children)
-            children.push_back(it->cat);
+        for (const auto& it: tp->children())
+            children.push_back(it->label());
 
-        prob *= incrrule(tp->cat, children, estimate_theta_flag*weight);
+        prob *= incrrule(tp->label(), children, estimate_theta_flag * weight);
 
-        for (const auto& it: tp->children)
+        for (const auto& it: tp->children())
             prob *= incrtree(it, weight);
 
         return prob;
@@ -201,42 +201,42 @@ F pycfg_type::incrtree(tree* tp, std::size_t weight)
 
 F pycfg_type::decrtree(tree* tp, std::size_t weight)
 {
-    if (tp->children.empty())
+    if (tp->children().empty())
         return 1;  // terminal node
 
     // PY cache statistics
-    F pya = get_pya(tp->cat);
+    F pya = get_pya(tp->label());
 
     if (pya == 1)
     {  // don't table this category
         F prob = 1;
 
         Ss children;
-        for (const auto& it: tp->children)
-            children.push_back(it->cat);
+        for (const auto& it: tp->children())
+            children.push_back(it->label());
 
-        F ruleprob = decrrule(tp->cat, children, estimate_theta_flag*weight);
+        F ruleprob = decrrule(tp->label(), children, estimate_theta_flag * weight);
 
         assert(ruleprob > 0);
         prob *= ruleprob;
 
-        for (const auto& it: tp->children)
+        for (const auto& it: tp->children())
             prob *= decrtree(it, weight);
 
         return prob;
     }
 
-    assert(weight <= tp->count);
-    tp->count -= weight;
+    assert(weight <= tp->count());
+    tp->decrement(weight);
 
-    assert(afind(parent_pyn, tp->cat) >= weight);
-    const std::size_t pyn = (parent_pyn[tp->cat] -= weight);
-    F pyb = get_pyb(tp->cat);
+    assert(afind(parent_pyn, tp->label()) >= weight);
+    const std::size_t pyn = (parent_pyn[tp->label()] -= weight);
+    F pyb = get_pyb(tp->label());
 
-    if (tp->count > 0)
+    if (tp->count() > 0)
     {  // old PY table entry
         assert(pyn > 0);
-        F prob = (tp->count - pya) / (pyn + pyb);
+        F prob = (tp->count() - pya) / (pyn + pyb);
 
         assert(finite(prob));
         assert(prob > 0);
@@ -257,16 +257,16 @@ F pycfg_type::decrtree(tree* tp, std::size_t weight)
 
         // Bug: when pym or pyn goes to zero and the parent is erased,
         // and then the reference to pym or pyn becomes a dangling reference
-        // std::size_t& pym = parent_pym[tp->cat];
+        // std::size_t& pym = parent_pym[tp->label()];
         // pym -= 1;                         // reduce cache count
-        assert(parent_pym.count(tp->cat) > 0);
-        const std::size_t pym = --parent_pym[tp->cat];
+        assert(parent_pym.count(tp->label()) > 0);
+        const std::size_t pym = --parent_pym[tp->label()];
 
         if (pym == 0)
-            parent_pym.erase(tp->cat);
+            parent_pym.erase(tp->label());
 
         if (pyn == 0)
-            parent_pyn.erase(tp->cat);
+            parent_pyn.erase(tp->label());
 
         F prob = (pym*pya + pyb)/(pyn + pyb);  // select new table
         assert(finite(prob));
@@ -274,13 +274,13 @@ F pycfg_type::decrtree(tree* tp, std::size_t weight)
         assert(prob <= 1);
 
         Ss children;
-        for (const auto& it: tp->children)
-            children.push_back(it->cat);
+        for (const auto& it: tp->children())
+            children.push_back(it->label());
 
-        prob *= decrrule(tp->cat, children, estimate_theta_flag*weight);
+        prob *= decrrule(tp->label(), children, estimate_theta_flag*weight);
         assert(prob > 0);
 
-        for (const auto& it: tp->children)
+        for (const auto& it: tp->children())
             prob *= decrtree(it, weight);
 
         return prob;
@@ -369,10 +369,10 @@ std::ostream& pycfg_type::write_rules(std::ostream& os, S parent) const
     }
 
     // save the compact_trees flag
-    bool old_compact_trees_flag = catcounttree_type::compact_trees;
-    catcounttree_type::compact_trees = false;
+    bool old_compact_trees_flag = catcount_tree::get_compact_trees();
+    catcount_tree::set_compact_trees(false);
     terms_pytrees.for_each(write_pycache(os, parent));
-    catcounttree_type::compact_trees = old_compact_trees_flag;
+    catcount_tree::set_compact_trees(old_compact_trees_flag);
 
     return os;
 }
@@ -511,7 +511,7 @@ struct pycfg_type::resample_pya_type
             F lgamma1a = lgamma(1-pya);
             for (const auto& it: trees)
             {
-                std::size_t count = it->count;
+                std::size_t count = it->count();
                 logProb += lgamma(count-pya) - lgamma1a;
             }
 

@@ -33,7 +33,7 @@ DEBUG   = no  # compile for debug
 QUAD    = no  # quad precision (float128, slow but avoid underflows)
 MP	= no  # OpenMP multi-threaded computation
 
-# TODO fix that... (use cmake? good idea for boost as well)
+# TODO fix that... (use cmake? good idea for boost and tests as well)
 # define CXXFLAGS and LDFLAGS according to the above flags
 ifeq ($(DEBUG),yes)
   CXXFLAGS = -Wall -g -I$(INCDIR)
@@ -52,7 +52,7 @@ endif
 
 
 # source files must be *.cpp files in $(SRCDIR)
-SOURCES	 = gammadist mt19937ar symbol logging gibbs xtree pycfg_type
+SOURCES	 = gammadist mt19937ar symbol logging gibbs cat_tree catcount_tree pycfg_type
 OBJECTS	 = $(SOURCES:%=$(BUILDDIR)/%.o)
 
 LDLIB	 = -pthread -lboost_program_options -lboost_date_time \
@@ -74,16 +74,10 @@ pycfg: $(OBJECTS) $(BUILDDIR)/main.o
 	$(CXX) -o $(BUILDDIR)/$@ $^ $(LDLIB) $(MPFLAG)
 
 
-# run-toy: pycfg pycfg-quad testengger.lt testeng.yld
+# run-toy: pycfg  testengger.lt testeng.yld
 # 	$(EXEC) pycfg -r 1234 -P -D -R -1 -d 100 -a 1e-2 -b 1 -e 1 -f 1 \
 # 		-g 1e2 -h 1e-2 -n 10 -C -E -A testeng.prs -N 10 \
 # 		-F testeng.trace -G testeng.wlt testengger.lt \
 # 		-X "cat > testeng.X1.prs" -X "cat > testeng.X2.prs" \
 # 		-u testeng1.yld -U "cat > testeng1.prs" -v testeng2.yld \
 # 		-V "cat > testeng2.prs" < testeng.yld
-# 	$(EXEC) pycfg-quad -r 1234 -P -D -R -1 -d 100 -a 1e-2 -b 1 -e 1 -f 1 \
-# 		-g 1e2 -h 1e-2 -n 10 -C -E -A q-testeng.prs -N 10 \
-# 		-F q-testeng.trace -G q-testeng.wlt testengger.lt \
-# 		-X "cat > q-testeng.X1.prs" -X "cat > q-testeng.X2.prs" \
-# 		-u testeng1.yld -U "cat > q-testeng1.prs" -v testeng2.yld \
-# 		-V "cat > q-testeng2.prs" < testeng.yld
