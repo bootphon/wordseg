@@ -69,33 +69,13 @@ nonterminal is not adapted.
 """
 
 import collections
+import joblib
+import logging
 import os
-import pkg_resources
-
+import shlex
+import subprocess
 
 from wordseg import utils
-
-
-def get_ag_binary():
-    """Return the path to the pycfg program
-
-    :return: path to the pycfg binary (which has been compiled during
-      the wordseg installation).
-
-    :raise: AssertionError if the binary is not found
-
-    """
-    pkg = pkg_resources.Requirement.parse('wordseg')
-
-    # case of 'python setup.py install'
-    ag = pkg_resources.resource_filename(pkg, 'bin/ag')
-
-    # case of 'python setup.py develop' or 'make'
-    if not os.path.isfile(ag):
-        ag = pkg_resources.resource_filename(pkg, 'build/ag/ag')
-
-    assert os.path.isfile(ag), 'ag binary not found: {}'.format(ag)
-    return ag
 
 
 def get_grammar_files():
@@ -114,7 +94,7 @@ def get_grammar_files():
     # case of 'python setup.py develop' or local install
     if not os.path.isdir(grammar_dir):
         grammar_dir = pkg_resources.resource_filename(
-            pkg, 'wordseg/algos/ag/config')
+            pkg, 'ag/config')
 
     assert os.path.isdir(grammar_dir), 'grammar directory not found: {}'.format(grammar_dir)
 
@@ -124,9 +104,25 @@ def get_grammar_files():
     return [os.path.join(grammar_dir, f) for f in grammar_files]
 
 
-def _ag(args):
-    # TODO
-    pass
+def _ag(text, grammar, args, log_level=logging.ERROR):
+    log = utils.get_logger(name='wordseg-ag', level=log_level)
+
+    # generate the command to run as a subprocess
+    command = '{binary} {grammar} {args}'.format(
+        binary=utils.get_binary('dpseg'), grammar=grammar, args=args)
+
+    log.debug('running "%s"', command)
+
+    process = subprocess.Popen(
+        shlex.split(command),
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=None)
+
+    parses = process.communicate('\n'.join(text).encode('utf8'))
+    if process.returncode:
+        raise RuntimeError(
+            'failed with error code {}'.format(process.returncode))
+
+    return parses.decode('utf8').split('\n')
 
 
 def yield_parses(raw_parses, ignore_firsts=0):
@@ -173,7 +169,8 @@ def segment(text, grammar_file, njobs=1, ignore_first_parses=0, args='',
     log.info('%s utterances loaded for segmentation', len(text))
 
     segmented_texts = joblib.Parallel(n_jobs=njobs, verbose=0)(
-        joblib.delayed(_ag)(args) for _ in range(njobs))
+        joblib.delayed(_ag)(text, grammar_file, args, log_level=log.getEffectiveLevel())
+        for _ in range(njobs))
 
     return most_frequent_parse(
         (parses for text in segmented_texts
@@ -185,7 +182,7 @@ def add_arguments(parser):
     parser.add_argument(
         'grammar-file', type=str, metavar='<grammar-file>',
         help='grammar file to use for segmentation, for exemple grammars see {}'
-        .format(os.path.dirname(get_grammar_files()[0])))
+        .format(os.path.dirname(utils.get_config_files('ag', extension='.lt')[0])))
 
     parser.add_argument(
         '-j', '--njobs', type=int, metavar='<int>', default=1,
@@ -200,7 +197,7 @@ def add_arguments(parser):
     excluded = ['--help']
 
     group = parser.add_argument_group('algorithm options')
-    for arg in utils.yield_binary_arguments(get_ag_binary(), excluded=excluded):
+    for arg in utils.yield_binary_arguments(utils.get_binary('ag'), excluded=excluded):
         arg.add(group)
 
 
@@ -212,13 +209,12 @@ def main():
         description=__doc__,
         add_arguments=add_arguments)
 
-    ignored_args = ['verbose', 'quiet', 'input', 'output', 'njobs']
+    ignored_args = ['verbose', 'quiet', 'input', 'output', 'njobs', 'grammar-file']
     ag_args = {k: v for k, v in vars(args).items() if k not in ignored_args and v}
     ag_args = ' '.join('--{} {}'.format(k, v) for k, v in ag_args.items()).replace('_', '-')
 
     segmented = segment(
-        streamin, njobs=args.njobs,
-        grammar_file=args.grammar_file,
+        streamin, args.grammar_file, njobs=args.njobs,
         ignore_first_parses=args.ignore_first_parses,
         args=ag_args, log=log)
 

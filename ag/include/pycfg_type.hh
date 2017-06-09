@@ -19,11 +19,13 @@
 #ifndef _PYCFG_TYPE_HH
 #define _PYCFG_TYPE_HH
 
+#include <math.h>
 #include <map>
 #include <set>
 #include <utility>
 #include <vector>
 
+#include "quadmath.hh"
 #include "symbol.hh"
 #include "earley.hh"
 #include "catcount_tree.hh"
@@ -56,13 +58,6 @@
 inline float power(float x, float y) { return y == 1 ? x : powf(x, y); }
 inline double power(double x, double y) { return y == 1 ? x : pow(x, y); }
 
-#ifndef QUADPREC
-typedef double F;
-#else
-#include "quadmath.hh"
-typedef __float128 F;
-inline __float128 power(__float128 x, __float128 y) { return y == 1 ? x : pow(double(x), double(y)); }
-#endif
 
 //typedef symbol S;
 typedef std::vector<symbol> Ss;
@@ -366,7 +361,7 @@ public:
                 for (const auto& it: tps)
                 {
                     F pya = g.get_pya(it->label());
-                    logP += lgamma(it->count() - pya) - lgamma(1 - pya);
+                    logP += std::lgamma(it->count() - pya) - std::lgamma(static_cast<double>(1 - pya));
                 }
             }
     };

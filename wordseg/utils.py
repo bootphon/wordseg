@@ -87,6 +87,67 @@ class CatchExceptions(object):
         sys.exit(1)
 
 
+def get_binary(name):
+    """Return the path to the program `name`
+
+    :param str name: name of the binary file to be searched in the
+      wordseg installation directory.
+
+    :return: path to the binary (which has been compiled during
+      the wordseg installation).
+
+    :raise: AssertionError if the binary is not found
+
+    """
+    pkg = pkg_resources.Requirement.parse('wordseg')
+
+    # case of 'python setup.py install'
+    binary = pkg_resources.resource_filename(pkg, 'bin/{}'.format(name))
+
+    # case of 'python setup.py develop' or 'make'
+    if not os.path.isfile(binary):
+        binary = pkg_resources.resource_filename(pkg, 'build/{name}/{name}'.format(name=name))
+
+    assert os.path.isfile(binary), 'binary "{}" not found: {}'.format(name, binary)
+    return binary
+
+
+def get_config_files(name, extension=None):
+    """Return a list of example configuration files bundled with wordseg
+
+    :param str name: the name of the algorithm (only ag and dpseg have
+       config files)
+
+    :param str extension: If specified, return only the files mathcing
+       this extension
+
+    :return: a list of abspath to configuration files
+
+    :raise: AssertionError if no configuration files found
+
+    """
+    pkg = pkg_resources.Requirement.parse('wordseg')
+
+    # case of 'python setup.py install'
+    config_dir = pkg_resources.resource_filename(pkg, 'config/{}'.format(name))
+
+    # case of 'python setup.py develop' or local install
+    if not os.path.isdir(config_dir):
+        config_dir = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), '..', 'config', name))
+
+    assert os.path.isdir(config_dir), 'directory not found: {}'.format(config_dir)
+
+    config_files = [f for f in os.listdir(config_dir)]
+    if extension:
+        config_files = [f for f in config_files if f.endswith(extension)]
+
+    assert len(config_files) > 0, 'no {}files found in {}'.format(
+        '*{} '.format(extension) if extension else '', config_dir)
+
+    return [os.path.join(config_dir, f) for f in config_files]
+
+
 class Argument(object):
     """Commandline argument adpater class
 

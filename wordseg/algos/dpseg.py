@@ -61,54 +61,6 @@ import threading
 from wordseg import utils, folding
 
 
-def get_dpseg_binary():
-    """Return the path to the dpseg program
-
-    :return: path to the dpseg binary (which has been compiled during
-      the wordseg installation).
-
-    :raise: AssertionError if the binary is not found
-
-    """
-    pkg = pkg_resources.Requirement.parse('wordseg')
-
-    # case of 'python setup.py install'
-    dpseg = pkg_resources.resource_filename(pkg, 'bin/dpseg')
-
-    # case of 'python setup.py develop' or 'make'
-    if not os.path.isfile(dpseg):
-        dpseg = pkg_resources.resource_filename(pkg, 'build/dpseg/dpseg')
-
-    assert os.path.isfile(dpseg), 'dpseg binary not found: {}'.format(dpseg)
-    return dpseg
-
-
-def get_dpseg_conf_files():
-    """Return a list of dpseg example configuration files
-
-    :return: a list of example configuration files bundled with wordseg
-
-    :raise: AssertionError if no configuration files found
-
-    """
-    pkg = pkg_resources.Requirement.parse('wordseg')
-
-    # case of 'python setup.py install'
-    config_dir = pkg_resources.resource_filename(pkg, 'config/dpseg')
-
-    # case of 'python setup.py develop' or local install
-    if not os.path.isdir(config_dir):
-        config_dir = pkg_resources.resource_filename(
-            pkg, 'wordseg/algos/dpseg/config')
-
-    assert os.path.isdir(config_dir), 'dpseg configuration directory not found'
-
-    config_files = os.listdir(config_dir)
-    assert len(config_files) > 0, 'no files in {}'.format(config_dir)
-
-    return [os.path.join(config_dir, f) for f in config_files]
-
-
 class UnicodeGenerator(object):
     """Iterate on unicode characters starting at code `start`
 
@@ -135,14 +87,14 @@ class UnicodeGenerator(object):
         return char
 
 
-def _dpseg(text, args, log_level=logging.ERROR, log_name='wordseg-dpseg'):
-
-    log = utils.get_logger(name=log_name, level=log_level)
+def _dpseg(text, args, log_level=logging.ERROR):
+    log = utils.get_logger(name='wordseg-dpseg', level=log_level)
 
     with tempfile.NamedTemporaryFile() as tmp_output:
-        command = (
-            '{} --output-file {} {}'
-            .format(get_dpseg_binary(), tmp_output.name, args))
+        command = '{binary} --output-file {output} {args}'.format(
+            binary=utils.get_binary('dpseg'),
+            output=tmp_output.name,
+            args=args)
 
         log.debug('running "%s"', command)
 
@@ -236,10 +188,10 @@ def add_arguments(parser):
                 '--eval-num-sents', '--output-file', '--nsubjects']
 
     group = parser.add_argument_group('algorithm options')
-    for arg in utils.yield_binary_arguments(get_dpseg_binary(), excluded=excluded):
+    for arg in utils.yield_binary_arguments(utils.get_binary('dpseg'), excluded=excluded):
         if arg.name == '--config-file':
             arg.help += ', for example configuration files see {}'.format(
-                os.path.dirname(get_dpseg_conf_files()[0]))
+                os.path.dirname(utils.get_config_files('dpseg')[0]))
         arg.add(group)
 
 

@@ -1,5 +1,6 @@
 #include "gibbs.hh"
 
+#include "quadmath.hh"
 #include "logging.hh"
 
 struct S_F_incrementer {
@@ -154,7 +155,7 @@ F gibbs_estimate(pycfg_type& g, const std::vector<std::vector<symbol> >& trains,
         else
             p.anneal = anneal_stop;
 
-        assert(finite(p.anneal));
+        assert(std::isfinite(p.anneal));
 
         if (debug >= 100) {
             std::cerr << "# Iteration " << iteration << ", "
@@ -175,14 +176,14 @@ F gibbs_estimate(pycfg_type& g, const std::vector<std::vector<symbol> >& trains,
             F nlogPcorpus = -g.logPcorpus();
             F nlogPrior = -g.logPrior();
             LOG(trace) << iteration << '\t'            // iteration
-                       << 1.0/p.anneal << '\t'         // temperature
+                       << 1.0 / p.anneal << '\t'         // temperature
                        << runtime() << '\t'            // cpu time used
-                       << nlogPcorpus+nlogPrior << '\t' // - log P(corpus,parameters)
+                       << nlogPcorpus + nlogPrior << '\t' // - log P(corpus,parameters)
                        << nlogPcorpus << '\t'          // -log P(corpus|parameters)
                        << nlogPrior << '\t'            // -log P(parameters)
                        << g.sum_pym() << '\t'          // # of tables
                        << unchanged << '\t'            // # unchanged parses
-                       << n-unchanged << '\t'          // # changed parses
+                       << n - unchanged << '\t'          // # changed parses
                        << rejected << '\t'             // # parses rejected
                        << g.default_pya;               // default pya parameter
             if (g.pyb_gamma_s > 0 && g.pyb_gamma_c > 0 && debug >= 10)

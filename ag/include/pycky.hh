@@ -17,6 +17,7 @@
 #include <vector>
 //#include <tr1/unordered_map>
 
+#include "quadmath.hh"
 #include "earley.hh"
 #include "gammadist.hh"
 #include "mt19937ar.hh"

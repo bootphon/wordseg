@@ -1,0 +1,7 @@
+- [X] use cmake instead of make
+- [] parse short options from binaries to pyton
+- [] test AG from pytest
+- [] add AG/dpseg tests in C++
+- [] make sure we really want to run AG 8 times on the same input
+- [] implement log.trace in python
+- [] make a wordseg.so for dpseg/ag common code
