@@ -43,6 +43,8 @@ int debug = 0;
 
 int main(int argc, char** argv)
 {
+    logging::init();
+
     pycfg_type g;
 
     bool hastings_correction = true;
@@ -72,13 +74,13 @@ int main(int argc, char** argv)
 
     // define the command line arguments
     namespace po = boost::program_options;
-    po::positional_options_description gram_desc;
-    gram_desc.add("grammar-file", 1);
-
     po::options_description desc("program options");
     desc.add_options()
         ("help,h",
          "produce help message")
+
+        ("grammar-file,g", po::value<std::string>(),
+         "read the grammar from this file")
 
         ("config-file,c", po::value<std::string>(),
          "read options from this file")
@@ -101,7 +103,7 @@ int main(int argc, char** argv)
         ("dirichlet-prior,E", po::value<bool>(&g.estimate_theta_flag)->implicit_value(true),
          "estimate rule prob (theta) using Dirichlet prior")
 
-        ("grammar-file,G", po::value<std::string>(&grammar_filename),
+        ("print-grammar-file,G", po::value<std::string>(&grammar_filename),
          "print grammar at termination to a file")
 
         ("skip-hastings,H", po::value<bool>(&hastings_correction)->implicit_value(false),
@@ -134,17 +136,16 @@ int main(int argc, char** argv)
         ("pya-beta-b,f", po::value<F>(&g.pya_beta_b),
          "if positive, parameter of Beta prior on pya")
 
-        ("pyb-gamma-s,g", po::value<F>(&g.pyb_gamma_s),
+        ("pyb-gamma-s,s", po::value<F>(&g.pyb_gamma_s),
          "if non-zero, parameter of Gamma prior on pyb")
 
-        // i was h on MJ version (but conflict with -help)
         ("pyb-gamma-c,i", po::value<F>(&g.pyb_gamma_c),
          "parameter of Gamma prior on pyb")
 
         ("weight,w", po::value<F>(&g.default_weight),
          "default value of theta (or Dirichlet prior) in generator")
 
-        ("train-sentences,s", po::value<F>(&train_frac),
+        ("train-sentences,W", po::value<F>(&train_frac),
          "train only on train_frac percentage of training sentences (ignore remainder)")
 
         ("random-training-fraction,S", po::value<bool>(&train_frac_randomise),
@@ -189,74 +190,84 @@ int main(int argc, char** argv)
 
     // parse the command line arguments and store them in vm
     po::variables_map vm;
-    po::store(po::command_line_parser(argc, argv).options(desc).positional(gram_desc).run(), vm);
-    po::notify(vm);
-
-    // TODO better if we trigger that directly in the argument parser...
-    anneal_start = 1.0 / anneal_start;
-    anneal_stop = 1.0 / anneal_stop;
-    for (const auto& cmd : evalcmdstrs)
-        evalcmds.push_back(new pstream::ostream(cmd));
-    for (const auto& cmd : grammarcmdstrs)
-        grammarcmds.push_back(new pstream::ostream(cmd));
-    for (const auto& cmd : test1cmdstrs)
-        test1cmds.push_back(new pstream::ostream(cmd));
-    for (const auto& cmd : test2cmdstrs)
-        test2cmds.push_back(new pstream::ostream(cmd));
-
-    // if --help given, display the help message and exit
-    if (vm.count("help"))
+    try
     {
-        std::cerr << desc << std::endl;
-        exit(0);
-    }
+        po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
+        po::notify(vm);
 
-    // init the logger at the requested severity level
-    logging::init(vm["log-level"].as<std::string>());
+        // TODO better if we trigger that directly in the argument parser...
+        anneal_start = 1.0 / anneal_start;
+        anneal_stop = 1.0 / anneal_stop;
+        for (const auto& cmd : evalcmdstrs)
+            evalcmds.push_back(new pstream::ostream(cmd));
+        for (const auto& cmd : grammarcmdstrs)
+            grammarcmds.push_back(new pstream::ostream(cmd));
+        for (const auto& cmd : test1cmdstrs)
+            test1cmds.push_back(new pstream::ostream(cmd));
+        for (const auto& cmd : test2cmdstrs)
+            test2cmds.push_back(new pstream::ostream(cmd));
 
-    // if --config-file given, parse the argument specified in that file
-    if (vm.count("config-file") > 0)
-    {
-        const std::string config = vm["config-file"].as<std::string>();
-        LOG(info) << "loading configuration from '" << config << "'";
-
-        std::ifstream is(config.c_str());
-        if (not is)
+        // if --help given, display the help message and exit
+        if (vm.count("help"))
         {
-            LOG(fatal) << "cannot open configuration file '" << config << "', exiting";
-            exit(1);
+            std::cerr << desc << std::endl;
+            exit(0);
         }
 
-        po::store(po::parse_config_file(is, desc), vm);
-        po::notify(vm);
-    }
+        // set the logger at the requested severity level
+        if (vm.count("log-level"))
+            logging::set_level(vm["log-level"].as<std::string>());
 
-    // read the grammar file
-    if (vm.count("grammar-file") == 0)
+        // if --config-file given, parse the argument specified in that file
+        if (vm.count("config-file") > 0)
+        {
+            const std::string config = vm["config-file"].as<std::string>();
+            LOG(info) << "loading configuration from '" << config << "'";
+
+            std::ifstream is(config.c_str());
+            if (not is)
+            {
+                LOG(fatal) << "cannot open configuration file '" << config << "', exiting";
+                exit(1);
+            }
+
+            po::store(po::parse_config_file(is, desc), vm);
+            po::notify(vm);
+        }
+
+        // read the grammar file
+        if (vm.count("grammar-file") == 0)
+        {
+            LOG(fatal) << "grammar-file not specified, exiting";
+            exit(1);
+        }
+        const std::string grammar_file = vm["grammar-file"].as<std::string>();
+        LOG(info) << "loading grammar from '" << grammar_file << "'";
+        std::ifstream is(grammar_file.c_str());
+        if (not is)
+        {
+            LOG(fatal) << "cannot open grammar file '" << grammar_file << "', exiting";
+            exit(1);
+        }
+        is >> g;
+
+        // setup compact trees display if asked
+        if (vm.count("print-compact-trees"))
+        {
+            bool compact_trees = vm["print-compact-trees"].as<bool>();
+            catcount_tree::set_compact_trees(compact_trees);
+            if (compact_trees)
+                LOG(info) << "compact tree display enabled";
+            else
+                LOG(info) << "compact tree display disabled";
+        }
+    }
+    catch(po::error& e)
     {
-        LOG(fatal) << "grammar-file not specified, exiting";
+        LOG(fatal) << e.what() << ", exiting";
         exit(1);
     }
-    const std::string grammar_file = vm["grammar-file"].as<std::string>();
-    LOG(info) << "loading grammar from '" << grammar_file << "'";
-    std::ifstream is(grammar_file.c_str());
-    if (not is)
-    {
-        LOG(fatal) << "cannot open grammar file '" << grammar_file << "', exiting";
-        exit(1);
-    }
-    is >> g;
-
-    // setup compact trees display if asked
-    if (vm.count("print-compact-trees"))
-    {
-        bool compact_trees = vm["print-compact-trees"].as<bool>();
-        catcount_tree::set_compact_trees(compact_trees);
-        if (compact_trees)
-            LOG(info) << "compact tree display enabled";
-        else
-            LOG(info) << "compact tree display disabled";
-    }
+    LOG(debug) << vm.size() << " argument parsed";
 
     // log the eval commands if there are ones
     if (evalcmds.size())

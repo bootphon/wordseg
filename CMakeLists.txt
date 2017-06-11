@@ -94,7 +94,7 @@ add_custom_target(wordseg ALL
 
 
 # make install -> python setup.py install
-install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY} install --optimize)")
+install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY} install)")
 
 # make develop -> python setup.py develop
 add_custom_target(develop

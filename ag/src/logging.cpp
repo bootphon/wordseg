@@ -64,7 +64,7 @@ void logging::init(const logging::severity level)
         % timestamp % thread % severity % boost::log::expressions::smessage;
 
     // output to stderr
-    auto console_sink = boost::log::add_console_log(std::cerr);
+    auto console_sink = boost::log::add_console_log();
     console_sink->set_formatter(formatter);
     set_level(level);
 }
@@ -89,6 +89,22 @@ void logging::set_level(const logging::severity level)
 {
     m_level = level;
     LOG(info) << "set log level to " << m_level;
+}
+
+
+void logging::set_level(const std::string level)
+{
+    try
+    {
+        m_level = m_level_name.at(level);
+        LOG(info) << "set log level to " << m_level;
+    }
+    catch (std::out_of_range)
+    {
+        init(severity::debug);
+        LOG(error) << "error in logging::init, " << level
+                   << " is not a valid severity level, fall back to debug";
+    }
 }
 
 

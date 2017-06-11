@@ -53,10 +53,11 @@ public:
     static void init(const severity level = logging::severity::warning);
 
     // initialize the logger at the given `level`
-    static void init(const std::string level = "warning");
+    static void init(const std::string level);
 
     // set the severity level
     static void set_level(const severity level);
+    static void set_level(const std::string level);
 
     // get the severity level
     static severity get_level();

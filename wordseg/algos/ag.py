@@ -74,6 +74,7 @@ import logging
 import os
 import shlex
 import subprocess
+import sys
 
 from wordseg import utils
 
@@ -104,12 +105,10 @@ def get_grammar_files():
     return [os.path.join(grammar_dir, f) for f in grammar_files]
 
 
-def _ag(text, grammar, args, log_level=logging.ERROR):
-    log = utils.get_logger(name='wordseg-ag', level=log_level)
-
+def _ag(text, grammar, args, log=utils.null_logger()):
     # generate the command to run as a subprocess
     command = '{binary} {grammar} {args}'.format(
-        binary=utils.get_binary('dpseg'), grammar=grammar, args=args)
+        binary=utils.get_binary('ag'), grammar=grammar, args=args)
 
     log.debug('running "%s"', command)
 
@@ -120,7 +119,8 @@ def _ag(text, grammar, args, log_level=logging.ERROR):
     parses = process.communicate('\n'.join(text).encode('utf8'))
     if process.returncode:
         raise RuntimeError(
-            'failed with error code {}'.format(process.returncode))
+            'segmentation failed with error code {}'.format(
+                process.returncode))
 
     return parses.decode('utf8').split('\n')
 
@@ -168,9 +168,13 @@ def segment(text, grammar_file, njobs=1, ignore_first_parses=0, args='',
     text = list(text)
     log.info('%s utterances loaded for segmentation', len(text))
 
-    segmented_texts = joblib.Parallel(n_jobs=njobs, verbose=0)(
-        joblib.delayed(_ag)(text, grammar_file, args, log_level=log.getEffectiveLevel())
-        for _ in range(njobs))
+    try:
+        segmented_texts = joblib.Parallel(n_jobs=njobs, verbose=100)(
+            joblib.delayed(_ag)(text, grammar_file, args, log=log)
+            for _ in range(njobs))
+    except RuntimeError as err:
+        log.fatal('%s, exiting', err)
+        sys.exit(1)
 
     return most_frequent_parse(
         (parses for text in segmented_texts
@@ -179,11 +183,6 @@ def segment(text, grammar_file, njobs=1, ignore_first_parses=0, args='',
 
 def add_arguments(parser):
     """Add algorithm specific options to the parser"""
-    parser.add_argument(
-        'grammar-file', type=str, metavar='<grammar-file>',
-        help='grammar file to use for segmentation, for exemple grammars see {}'
-        .format(os.path.dirname(utils.get_config_files('ag', extension='.lt')[0])))
-
     parser.add_argument(
         '-j', '--njobs', type=int, metavar='<int>', default=1,
         help='number of parallel jobs to use, default is %(default)s')
@@ -198,25 +197,30 @@ def add_arguments(parser):
 
     group = parser.add_argument_group('algorithm options')
     for arg in utils.yield_binary_arguments(utils.get_binary('ag'), excluded=excluded):
+        if arg.name == '--grammar-file':
+            arg.help += ', for example grammar files see {}/*.lt'.format(
+                os.path.dirname(utils.get_config_files('ag', extension='.lt')[0]))
         arg.add(group)
 
 
 @utils.CatchExceptions
 def main():
-    """Entry point of the 'wordseg-dpseg' command"""
+    """Entry point of the 'wordseg-ag' command"""
     streamin, streamout, _, log, args = utils.prepare_main(
         name='wordseg-ag',
         description=__doc__,
         add_arguments=add_arguments)
 
-    ignored_args = ['verbose', 'quiet', 'input', 'output', 'njobs', 'grammar-file']
+    ignored_args = ['verbose', 'quiet', 'input', 'output', 'njobs']
     ag_args = {k: v for k, v in vars(args).items() if k not in ignored_args and v}
     ag_args = ' '.join('--{} {}'.format(k, v) for k, v in ag_args.items()).replace('_', '-')
 
+    log.debug('call segment on grammar %s', args.grammar_file)
     segmented = segment(
         streamin, args.grammar_file, njobs=args.njobs,
         ignore_first_parses=args.ignore_first_parses,
         args=ag_args, log=log)
+    log.debug('segment done')
 
     streamout.write('\n'.join(segmented) + '\n')
 
