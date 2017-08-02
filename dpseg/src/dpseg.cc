@@ -158,7 +158,8 @@ Model* get_sampler(CorpusData* data,
 }
 
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
     // Set a new global UTF8 locale to make output streams handle utf8.
     // Otherwise we'll get aborts when trying to output large character
     // values.

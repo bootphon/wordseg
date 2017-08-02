@@ -58,15 +58,6 @@ wordseg\.prepare
     :show-inheritance:
 
 
-wordseg\.gold
--------------
-
-.. automodule:: wordseg.gold
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
 wordseg\.evaluate
 -----------------
 

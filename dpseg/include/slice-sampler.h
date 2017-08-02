@@ -163,7 +163,7 @@ inline double lbetadist(double x, double alpha, double beta)
     assert(alpha > 0);
     assert(beta > 0);
     return (alpha - 1) * std::log(x) + (beta - 1) * std::log(1 - x)
-        + std::lgamma(alpha + beta) - lgamma(alpha) - lgamma(beta);
+        + std::lgamma(alpha + beta) - std::lgamma(alpha) - std::lgamma(beta);
 }
 
 

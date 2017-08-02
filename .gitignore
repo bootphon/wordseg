@@ -7,3 +7,4 @@ wordseg.egg-info/*
 wordseg/algos/*/build/*
 *.pyc
 wordseg_tutorial/*
+test/.cache/*

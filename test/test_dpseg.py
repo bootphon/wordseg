@@ -57,7 +57,7 @@ def test_dpseg_args(prep, args):
 
 
 def test_config_files_are_here():
-    confs = wordseg.algos.dpseg.get_dpseg_conf_files()
+    confs = wordseg.utils.get_config_files('dpseg')
     assert len(confs) > 0
     for conf in confs:
         assert os.path.isfile(conf)
@@ -65,7 +65,7 @@ def test_config_files_are_here():
         assert 'dpseg' in conf
 
 
-@pytest.mark.parametrize('conf', wordseg.algos.dpseg.get_dpseg_conf_files())
+@pytest.mark.parametrize('conf', wordseg.utils.get_config_files('dpseg'))
 def test_dpseg_from_config_file(prep, conf):
     segmented = segment(prep[:5], nfolds=1, args='--config-file {}'.format(conf))
     assert len(list(segmented)) == 5

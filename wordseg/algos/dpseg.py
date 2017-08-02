@@ -61,55 +61,6 @@ import threading
 from wordseg import utils, folding
 
 
-def get_dpseg_binary():
-    """Return the path to the dpseg program
-
-    :return: path to the dpseg binary (which has been compiled during
-      the wordseg installation).
-
-    :raise: AssertionError if the binary is not found
-
-    """
-    pkg = pkg_resources.Requirement.parse('wordseg')
-
-    # case of 'python setup.py install'
-    dpseg = pkg_resources.resource_filename(pkg, 'bin/dpseg')
-
-    # case of 'python setup.py develop' or 'make'
-    if not os.path.isfile(dpseg):
-        dpseg = pkg_resources.resource_filename(pkg, 'build/dpseg/dpseg')
-
-    assert os.path.isfile(dpseg), 'dpseg binary not found: {}'.format(dpseg)
-    return dpseg
-
-
-def get_dpseg_conf_files():
-    """Return a list of dpseg example configuration files
-
-    :return: a list of example configuration files bundled with
-        wordseg-dpseg
-
-    :raise: AssertionError if no configuration files found
-
-    """
-    pkg = pkg_resources.Requirement.parse('wordseg')
-
-    # case of 'python setup.py install'
-    config_dir = pkg_resources.resource_filename(pkg, 'config/dpseg')
-
-    # case of 'python setup.py develop' or local install
-    if not os.path.isdir(config_dir):
-        config_dir = pkg_resources.resource_filename(
-            pkg, 'wordseg/algos/dpseg/config')
-
-    assert os.path.isdir(config_dir), 'dpseg configuration directory not found'
-
-    config_files = os.listdir(config_dir)
-    assert len(config_files) > 0, 'no files in {}'.format(config_dir)
-
-    return [os.path.join(config_dir, f) for f in config_files]
-
-
 class UnicodeGenerator(object):
     """Iterate on unicode characters starting at code `start`
 
@@ -136,14 +87,14 @@ class UnicodeGenerator(object):
         return char
 
 
-def _dpseg(text, args, log_level=logging.ERROR, log_name='wordseg-dpseg'):
-
-    log = utils.get_logger(name=log_name, level=log_level)
+def _dpseg(text, args, log_level=logging.ERROR):
+    log = utils.get_logger(name='wordseg-dpseg', level=log_level)
 
     with tempfile.NamedTemporaryFile() as tmp_output:
-        command = (
-            '{} --output-file {} {}'
-            .format(get_dpseg_binary(), tmp_output.name, args))
+        command = '{binary} --output-file {output} {args}'.format(
+            binary=utils.get_binary('dpseg'),
+            output=tmp_output.name,
+            args=args)
 
         log.debug('running "%s"', command)
 
@@ -221,84 +172,6 @@ def segment(text, nfolds=5, njobs=1,
     return (utt for utt in segmented_text if utt)
 
 
-class Argument(object):
-    """Argument read from a binary and sent to argparse"""
-    # a list of dpseg options we don't want to expose in wordseg-dpseg
-    excluded = ['--help', '--data-file', '--data-start-index',
-                '--data-num-sents', '--eval-start-index',
-                '--eval-num-sents', '--output-file', '--nsubjects']
-
-    def __init__(self, name=None, default=None,  help=''):
-        self.name = name
-        self.default = default
-        self.help = help
-
-    def is_valid(self):
-        if not self.name:
-            return False
-        if self.name in self.excluded:
-            return False
-        return True
-
-    def send(self):
-        # adapting help message for some options
-        if self.name == '--debug-level':
-            self.help = (
-                'increase the amount of debug messages, use together with -vv '
-                '(a reasonable value is 1000)')
-
-        if self.name == '--config-file':
-            self.help += (
-                ' (in case of duplicates, precedence goes to the command line option)'
-                ', for example configuration files see {}'.format(
-                    os.path.dirname(get_dpseg_conf_files()[0])))
-
-        # adding the default argument value in help
-        if self.default:
-            self.help += ', default is "%(default)s"'
-        return self
-
-    def add(self, parser):
-        parser.add_argument(self.name, default=self.default,
-                            help=self.help, metavar='<arg>')
-
-
-def yield_dpseg_arguments():
-    # get the help message of the dpseg program
-    help_msg= subprocess.Popen(
-        [get_dpseg_binary(), '--help'],
-        stderr=subprocess.PIPE).communicate()[1].decode()
-
-    # parse the message line by line to build arguments for argparse
-    short_opts = '\s+-\w \[ (--[\w_\-]+) \]'
-    long_opts = '\s+(--[\w_\-]+)'
-    argument_re = ('({}|{})\s*'
-                   '(arg)?\s*(\(\=([a-zA-Z0-9\._\-\s]+)\))?(.*)'
-                   .format(short_opts, long_opts))
-
-    argument = Argument()
-    for line in help_msg.split('\n'):
-        m = re.match(argument_re, line)
-        if m:  # continuation of the previous help message
-            # yield the previous argument
-            if argument.is_valid():
-                yield argument.send()
-            argument = Argument()
-
-            argument.name = m.group(2) if m.group(2) else m.group(3)
-            argument.default = (m.group(6).replace('(=', '').replace(')', '')
-                                if m.group(6) else None)
-            argument.help = m.group(7).strip()
-        else:  # the regext is not matched: this is the continuation
-               # of a help message
-            assert '--' not in line
-            argument.help += ' ' + line.strip()
-
-    if argument.is_valid():
-        argument.help += ', default is %(default)s'
-        yield argument.send()
-
-
 def add_arguments(parser):
     """Add algorithm specific options to the parser"""
     parser.add_argument(
@@ -309,8 +182,16 @@ def add_arguments(parser):
         '-j', '--njobs', type=int, metavar='<int>', default=1,
         help='number of parallel jobs to use, default is %(default)s')
 
+    # a list of dpseg options we don't want to expose in wordseg-dpseg
+    excluded = ['--help', '--data-file', '--data-start-index',
+                '--data-num-sents', '--eval-start-index',
+                '--eval-num-sents', '--output-file', '--nsubjects']
+
     group = parser.add_argument_group('algorithm options')
-    for arg in yield_dpseg_arguments():
+    for arg in utils.yield_binary_arguments(utils.get_binary('dpseg'), excluded=excluded):
+        if arg.name == '--config-file':
+            arg.help += ', for example configuration files see {}'.format(
+                os.path.dirname(utils.get_config_files('dpseg')[0]))
         arg.add(group)
 
 
@@ -325,12 +206,11 @@ def main():
     assert args.nfolds > 0
 
     ignored_args = ['verbose', 'quiet', 'input', 'output', 'nfolds', 'njobs']
-    dpseg_args = {k: v for k, v in vars(args).items() if k not in ignored_args and v}
-    dpseg_args = ' '.join(
-        '--{} {}'.format(k, v) for k, v in dpseg_args.items()).replace('_', '-')
+    _args = {k: v for k, v in vars(args).items() if k not in ignored_args and v}
+    _args = ' '.join('--{} {}'.format(k, v) for k, v in _args.items()).replace('_', '-')
 
     segmented = segment(
-        streamin, nfolds=args.nfolds, njobs=args.njobs, args=dpseg_args, log=log)
+        streamin, nfolds=args.nfolds, njobs=args.njobs, args=_args, log=log)
     streamout.write('\n'.join(segmented) + '\n')
 
 

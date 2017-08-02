@@ -1,0 +1,28 @@
+1 1 S --> NP VP
+NP --> Det N
+VP --> V
+VP --> V NP
+VP --> NP V
+VP --> V NP NP
+VP --> NP NP V
+1 1 Det --> the
+1 1 N --> the
+1 1 V --> the
+1 1 Det --> a
+1 1 N --> a
+1 1 V --> a
+1 1 Det --> dog
+1 1 N --> dog
+1 1 V --> dog
+1 1 Det --> man
+1 1 N --> man
+1 1 V --> man
+1 1 Det --> bone
+1 1 N --> bone
+1 1 V --> bone
+1 1 Det --> bites
+1 1 N --> bites	
+1 1 V --> bites
+1 1 Det --> gives
+1 1 N --> gives
+1 1 V --> gives
