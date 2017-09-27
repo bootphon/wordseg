@@ -33,7 +33,7 @@ Dependencies
 
   - on **Ubuntu/Debian**::
 
-      sudo apt-get install python3 python3-pip libboost-dev
+      sudo apt-get install python3 python3-pip libboost-dev libboost-program-options-dev
 
   - on **Mac OSX**::
 
