@@ -31,7 +31,7 @@ LDLIB	 = -lboost_program_options
 
 # source files must be *.cc files in $(SRCDIR)
 SOURCES	 = Data Estimators Scoring Sentence
-OBJECTS	 = $(SOURCES:%=$(BUILDDIR)/%.o)
+OBJECTS	 = $(SOURCES:%=%.o)
 
 
 .PHONY: all clean
@@ -41,8 +41,8 @@ all: dpseg
 clean:
 	rm -f $(BUILDDIR)/*.o $(BUILDDIR)/dpseg
 
-$(BUILDDIR)/%.o: $(SRCDIR)/%.cc
-	$(CXX) -o $@ -c $? $(CXXFLAGS) -I$(INCDIR)
+%.o: $(SRCDIR)/%.cc
+	$(CXX) -o $(BUILDDIR)/$@ -c $^ $(CXXFLAGS) -I$(INCDIR)
 
-dpseg: $(OBJECTS) $(BUILDDIR)/dpseg.o
-	$(CXX) -o $(BUILDDIR)/$@ $^ $(LDLIB)
+dpseg: $(OBJECTS) dpseg.o
+	$(CXX) -o $(BUILDDIR)/$@ $(^:%=$(BUILDDIR)/%) $(LDLIB)
