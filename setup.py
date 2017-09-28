@@ -51,14 +51,9 @@ class WordsegBuild(distutils.command.build.build):
             if not os.path.exists(build_dir):
                 os.makedirs(build_dir)
 
-            # inform make about the build dir
-            env = os.environ.copy()
-            env['BUILDDIR'] = os.path.abspath(build_dir)
-
             # call make
             subprocess.call(
-                ['make'], env=env,
-                cwd=os.path.join('wordseg', 'algos', target))
+                ['make'], cwd=os.path.join('wordseg', 'algos', target))
 
     @classmethod
     def bin_targets(cls):

@@ -14,15 +14,12 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
-# The following variable are defined in the setup.py: BUILDDIR is the
-# output directory with object code and binaries
-#
-# BUILDDIR  = ./build
-
-
-# directory with C++ sources (must be *.cc extension) and headers
+# input directories with C++ sources (must be *.cc extension) and headers
 SRCDIR	 = ./src
 INCDIR	 = ./include
+
+# output directory with object code and binaries
+BUILDDIR = ../../../build/dpseg
 
 # C++ compiler to use and option passed during compilation and link
 # (DNDEBUG flag disable some debug related code)
