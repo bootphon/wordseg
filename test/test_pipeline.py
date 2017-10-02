@@ -1,26 +1,18 @@
 # coding: utf-8
 
-# Copyright 2017 Mathieu Bernard, Elin Larsen
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-
 """Test of the segmentation pipeline from raw text to eval"""
 
 import pytest
-import wordseg
+import wordseg.evaluate
+import wordseg.prepare
+import wordseg.algos.dibs
+import wordseg.algos.dpseg
+import wordseg.algos.puddle
+import wordseg.algos.tp
 
+from wordseg.separator import Separator
 from . import tags
+
 
 algos = {
     'dibs': wordseg.algos.dibs,
@@ -34,7 +26,7 @@ params = [(a, e) for a in algos.keys() for e in ('ascii', 'unicode')]
 @pytest.mark.parametrize('algo, encoding', params)
 def test_pipeline(algo, encoding, tags):
     # the token separator we use in the whole pipeline
-    separator = wordseg.Separator(phone=' ', syllable=';esyll', word=';eword')
+    separator = Separator(phone=' ', syllable=';esyll', word=';eword')
 
     # add some unicode chars in the input text
     if encoding == 'unicode':
@@ -43,13 +35,13 @@ def test_pipeline(algo, encoding, tags):
                 for line in tags]
 
     # build the gold version from the tags
-    gold = list(wordseg.gold(tags, separator=separator))
+    gold = list(wordseg.prepare.gold(tags, separator=separator))
     assert len(gold) == len(tags)
     for a, b in zip(gold, tags):
         assert separator.remove(a) == separator.remove(b)
 
     # prepare the text for segmentation
-    prepared_text = list(wordseg.prepare(tags, separator=separator))
+    prepared_text = list(wordseg.prepare.prepare(tags, separator=separator))
     assert len(prepared_text) == len(tags)
     for a, b in zip(prepared_text, tags):
         assert separator.remove(a) == separator.remove(b)
@@ -66,7 +58,7 @@ def test_pipeline(algo, encoding, tags):
     for n, (a, b) in enumerate(zip(segmented, tags)):
         assert s(a) == s(b), 'line {}: "{}" != "{}"'.format(n+1, s(a), s(b))
 
-    results = wordseg.evaluate(segmented, gold)
+    results = wordseg.evaluate.evaluate(segmented, gold)
     assert len(results.keys()) % 3 == 0
     for v in results.values():
         assert v >= 0

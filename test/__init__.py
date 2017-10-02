@@ -1,20 +1,8 @@
-# Copyright 2017 Mathieu Bernard
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
+"""Defines input data and fixtures common to all wordseg tests"""
 
 import pytest
-import wordseg
+import wordseg.prepare
+import wordseg.separator
 
 
 _tags = '''
@@ -42,9 +30,9 @@ def tags():
 
 @pytest.yield_fixture(scope='session')
 def prep():
-    return list(wordseg.prepare(tags(), wordseg.Separator()))
+    return list(wordseg.prepare.prepare(tags(), wordseg.separator.Separator()))
 
 
 @pytest.yield_fixture(scope='session')
 def gold():
-    return list(wordseg.gold(tags(), wordseg.Separator()))
+    return list(wordseg.prepare.gold(tags(), wordseg.separator.Separator()))

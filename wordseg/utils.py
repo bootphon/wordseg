@@ -1,18 +1,3 @@
-# Copyright 2017 Mathieu Bernard
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-
 """Provide utility functions to the wordseg package"""
 
 import argparse
@@ -24,42 +9,62 @@ import re
 import subprocess
 import sys
 
-from wordseg import Separator
+from wordseg.separator import Separator
 
 
 class CountingIterator(object):
     """A class for counting elements in a generator
 
     Usefull because this avoid to convert a generator to list
-    (preserving time and memory) to count it's elements. Use it as
-    follows:
+    (preserving time and memory) to count it's elements.
 
-    >>> counter = CountingIterator(range(10))
-    >>> for c in counter: pass
+    Parameters
+    ----------
+    elements: sequence
+        The sequence on which we are counting elements while
+        iterating on it. Can be a list or a generator.
+
+    Raises
+    ------
+    TypeError
+        If `elements` is not a sequence.
+
+    Example
+    -------
+    >>> counter = CountingIterator(range(1, 11))
+    >>> sum(counter)
+    55
     >>> counter.count
     10
 
     """
-    def __init__(self, generator):
-        self.generator = generator
+    def __init__(self, elements):
+        self.elements = iter(elements)
         self.count = 0
 
     def __iter__(self):
         return self
 
-    def next(self):
-        nxt = next(self.generator)
+    def __next__(self):
+        nxt = next(self.elements)
         self.count += 1
         return nxt
-
-    __next__ = next
 
 
 class CatchExceptions(object):
     """Decorator wrapping a function in a try/except block
 
-    When an exception occurs, log a critical message before
-    exiting with error code 1.
+    When an exception occurs, display a user friendly message on
+    standard output before exiting with error code 1.
+
+    The detected exceptions are ValueError, OSError, RuntimeError,
+    AssertionError, KeyboardInterrupt and
+    pkg_resources.DistributionNotFound.
+
+    Parameters
+    ----------
+    function :
+        The function to wrap in a try/except block
 
     """
     def __init__(self, function):
@@ -87,73 +92,106 @@ class CatchExceptions(object):
         sys.exit(1)
 
 
-def get_binary(name):
-    """Return the path to the program `name`
+def get_binary(binary):
+    """Returns the path to the program `binary`
 
-    :param str name: name of the binary file to be searched in the
-      wordseg installation directory.
+    This function searchs for the `binary` program in the installation
+    path of the wordseg package. This concerns only the C++ programs
+    bundled with wordseg (namely ag and dpseg) which have been
+    compiled during the wordseg installation.
 
-    :return: path to the binary (which has been compiled during
-      the wordseg installation).
+    Parameters
+    ----------
+    binary : str
+        Name of the binary file to be searched in the wordseg
+        installation directory.
 
-    :raise: AssertionError if the binary is not found
+    Returns
+    -------
+    str
+        The absolute path to the `binary`
+
+    Raises
+    ------
+    RuntimeError
+        If the `binary` is not found in the wordseg installation path
+        or if it's not an executable file.
 
     """
     pkg = pkg_resources.Requirement.parse('wordseg')
 
     # case of 'python setup.py install'
-    binary = pkg_resources.resource_filename(pkg, 'bin/{}'.format(name))
+    binary_path = pkg_resources.resource_filename(
+        pkg, 'bin/{}'.format(binary))
 
     # case of 'python setup.py develop' or 'make'
-    if not os.path.isfile(binary):
-        binary = pkg_resources.resource_filename(pkg, 'build/{name}/{name}'.format(name=name))
+    if not os.path.isfile(binary_path):
+        binary_path = pkg_resources.resource_filename(
+            pkg, 'build/wordseg/algos/{binary}/{binary}'.format(binary=binary))
 
-    assert os.path.isfile(binary), 'binary "{}" not found: {}'.format(name, binary)
-    return binary
+    if not os.path.isfile(binary_path):
+        raise RuntimeError('binary "{}" not found: {}'.format(binary, binary_path))
+
+    if not os.access(binary_path, os.X_OK):
+        raise RuntimeError('binary "{}" not executable: {}'.format(binary_path))
+
+    return binary_path
 
 
-def get_config_files(name, extension=None):
-    """Return a list of example configuration files bundled with wordseg
+def get_config_files(algorithm, extension=None):
+    """Returns the example configuration files bundled with algorithms
 
-    :param str name: the name of the algorithm (only ag and dpseg have
-       config files)
+    Only *ag* and *dpseg* have configuration files.
 
-    :param str extension: If specified, return only the files mathcing
-       this extension
+    Parameters
+    ----------
+    algorithm : str
+        Name of the algorithm to look for config files.
+    extension : str, optional
+        If specified, return only the files mathcing this
+        extension. Otherwise return all the configuration files.
 
-    :return: a list of abspath to configuration files
+    Returns
+    -------
+    list
+        The absolute paths to the requested configuration files.
 
-    :raise: AssertionError if no configuration files found
+    Raises
+    ------
+    RuntimeError
+        If no configuration files found for the requested `algorithm`.
 
     """
     pkg = pkg_resources.Requirement.parse('wordseg')
 
     # case of 'python setup.py install'
-    config_dir = pkg_resources.resource_filename(pkg, 'config/{}'.format(name))
+    config_dir = pkg_resources.resource_filename(pkg, 'config/{}'.format(algorithm))
 
     # case of 'python setup.py develop' or local install
     if not os.path.isdir(config_dir):
         config_dir = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), '..', 'config', name))
+            os.path.join(os.path.dirname(__file__), '..', 'config', algorithm))
 
-    assert os.path.isdir(config_dir), 'directory not found: {}'.format(config_dir)
+    if not os.path.isdir(config_dir):
+        raise RuntimeError('directory not found: {}'.format(config_dir))
 
     config_files = [f for f in os.listdir(config_dir)]
     if extension:
         config_files = [f for f in config_files if f.endswith(extension)]
 
-    assert len(config_files) > 0, 'no {}files found in {}'.format(
-        '*{} '.format(extension) if extension else '', config_dir)
+    if len(config_files) == 0:
+        raise RuntimeError('no {}files found in {}'.format(
+        '*{} '.format(extension) if extension else '', config_dir))
 
     return [os.path.join(config_dir, f) for f in config_files]
 
 
 class Argument(object):
-    """Commandline argument adpater class
+    """Command line argument adapter class
 
-    Read argument from a C++ binary (argument parsing must be handled
-    by boost::program_options) and convert it to a python argparse
-    argument.
+    Read a command line argument from a C++ binary (argument parsing
+    must be handled by boost::program_options) and convert it to a
+    python argparse argument.
 
     """
     def __init__(self, name=None, default=None,  help='', excluded=[]):
@@ -226,18 +264,29 @@ def yield_binary_arguments(binary, excluded=[]):
 
 
 def strip(utt):
-    """Return the string `utt` with undesirable spaces removed
+    """Strips the `string` from undesirable spaces
 
-    This function is an extension of string.strip(), by so removing
-    begining and ending spaces, that also subsitutes multiple spaces
-    by a single one inside the string
+    Removes begining and ending spaces and subsitutes multiple spaces
+    by a single one. All the space characters are replaced by a single
+    ' '. Spaces characters include newlines (*\\n*) and tabulations
+    (*\\t*).
 
-    >>> strip(" a   b\\n")
+    Parameters
+    ----------
+    string: str
+        The string on which to eliminate multiple spaces
+
+    Returns
+    -------
+    str
+        The input `string` with multiple spaces removed.
+
+    Example
+    -------
+    >>> strip(" a\\t  b\\n")
     a b
-
     >>> strip("ab   c ")
     ab c
-
     >>> strip("ab\\n c ")
     ab c
 
@@ -246,9 +295,14 @@ def strip(utt):
 
 
 def null_logger():
-    """Return a logger sending log messages to nowhere
+    """Configures and returns a logger sending messages to nowhere
 
     This is used as default logger for some functions.
+
+    Returns
+    -------
+    logging.Logger
+        Logging instance ignoring all the messages.
 
     """
     log = logging.getLogger()
@@ -257,13 +311,22 @@ def null_logger():
 
 
 def get_logger(name=None, level=logging.WARNING):
-    """Return a logger sending messages to stderr
+    """Configures and returns a logger sending messages to standard error
 
-    :param str name: The name of the logger, to be displayed in log
-      messages
+    Parameters
+    ----------
+    name : str
+        Name of the created logger, to be displayed in the header of
+        log messages.
+    level : logging.level
+        The minimum log level handled by the logger (any message above
+        this level will be ignored).
 
-    :param logging.level level: The minimum log level handled by the
-      logger (any message above this level will be ignored)
+    Returns
+    -------
+    logging.Logger
+        Logging instance displaying messages to the standard error
+        stream.
 
     """
     log = logging.getLogger(name)
@@ -279,11 +342,25 @@ def get_logger(name=None, level=logging.WARNING):
 
 
 def get_parser(description=None, separator=Separator()):
-    """Return an argument parser initiliazed with common options
+    """Returns an argument parser initiliazed with wordseg's common options
 
-    Provide --verbose/--quiet options regulating the logger,
-    --phone/--word/--syllable setting the separator, and define
-    input/output arguments for opening files/streams
+    Provides --verbose / --quiet options regulating the logger,
+    --phone / --word / --syllable setting the separator, and define
+    input/output arguments for opening files/streams.
+
+    Parameters
+    ----------
+    description : str
+        Description string displayed on the parser's help message.
+    separator : wordseg.separator.Separator
+        The default token separation as displayed in the parser's help
+        message.
+
+    Returns
+    -------
+    argparse.ArgumentParser
+        Argument parser initialized with common options for wordseg
+        executables.
 
     """
     parser = argparse.ArgumentParser(
@@ -341,27 +418,37 @@ def prepare_main(name=None,
                  add_arguments=None):
     """Initialize a binary program from the wordseg package
 
-    This method provides an easy way to setup a command for the
-    wordseg package. It defines an argument parser, parse the
-    arguments and initialize a logger, a token separator and
-    input/output streams to be used by the command itself.
+    Provides an easy way to setup a command for the wordseg
+    package. It defines an argument parser, parse the arguments and
+    initialize a logger, a token separator and input/output streams to
+    be used by the command itself.
 
-    :param str name: the name of the command (shown on log messages)
-
-    :param str description: the description of the command (shown with
-      command --help option)
-
-    :param Separator separator: Default value of the parsed separators
-      at phone, syllable and word levels. Set any level to None to
+    Parameters
+    ----------
+    name : str
+        Name of the command displayed on log messages
+    description : str
+        Description string displayed on the command help message.
+    separator : wordseg.separator.Separator
+        The default token separation as displayed in the command help
+        message at phone, syllable and word levels. Set any level to None to
       disable this token for the command.
+    add_arguments : function
+        function of prototype (argparse.ArgumentParser: None) adding
+        optional arguments to the parser.
 
-    :param function(argparse.ArgumentParser) -> None add_argument: A
-      function adding optional arguments to the parser.
-
-    :return: A tuple that makes wordseg commands easy and homogeneous.
-      The returned values are initialized from the command line
-      arguments. They are: opened input and output streams, token
-      separator, logger and extra arguments parsed from command line.
+    Returns
+    -------
+    streamin : stream
+        Opened input stream encoded in utf8.
+    streamout : stream
+        Opened output stream encoded in utf8.
+    separator : wordseg.separator.Separator
+        Token separation in input and output streams.
+    log : logging.Logger
+        Logger for displaying messages during the execution flow.
+    args : list
+        Extra arguments parsed from the command line.
 
     """
     # define a basic command line parser

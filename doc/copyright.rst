@@ -4,20 +4,25 @@ License and copyright
 This package is developed in the `Laboratory for Cognitive Sciences
 and Psycholinguistics <http://www.lscp.net/index.php?lang=en>`_ within
 word segmentation studies leaded by Alex Cristia. It is built on the
-work of several contributors:
+work of several contributors.
 
-* Mathieu Bernard
-* Alex Cristia
-* Robert Daland
-* Sharon Goldwater
-* Mark Jonhson
-* Elin Larsen
-* Lisa Pearl
-* Lawrence Phillips
-* Amanda Saksida
+* Within the LSCP:
+
+  * Mathieu Bernard (main package development)
+  * Alex Cristia (project coordination)
+  * Elin Larsen (puddle, evaluation)
+
+* Outside contributors:
+
+  * Robert Daland (dibs)
+  * Sharon Goldwater (dpseg)
+  * Mark Jonhson (ag, dpseg, evaluation)
+  * Lisa Pearl (dpseg)
+  * Lawrence Phillips (dpseg)
+  * Amanda Saksida (tp)
 
 
-**Copyright 2015-2017 Alex Cristia, Mathieu Bernard, Elin Larsen**
+**Copyright 2015-2017 LSCP (EHESS, ENS, CNRS, PSL Research University)**
 
 wordseg is free software: you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the

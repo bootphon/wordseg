@@ -1,20 +1,3 @@
-#!/usr/bin/env python
-#
-# Copyright 2015-2017 Mathieu Bernard
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-
 """Bayesian word segmentation algorithm.
 
 See Goldwater, Griffiths, Johnson (2010) and Phillips & Pearl (2014).
@@ -87,8 +70,8 @@ class UnicodeGenerator(object):
         return char
 
 
-def _dpseg(text, args, log_level=logging.ERROR):
-    log = utils.get_logger(name='wordseg-dpseg', level=log_level)
+def _dpseg(text, args, log_level=logging.ERROR, log_name='wordseg-dpseg'):
+    log = utils.get_logger(name=log_name, level=log_level)
 
     with tempfile.NamedTemporaryFile() as tmp_output:
         command = '{binary} --output-file {output} {args}'.format(
