@@ -40,8 +40,8 @@ def bin_targets():
     if on_readthedocs():
         return []
     else:
-        return ['${CMAKE_CURRENT_BINARY_DIR}/{}/{}'.format(t, t)
-                for t in ('ag', 'dpseg')]
+        return [os.path.join('${CMAKE_CURRENT_BINARY_DIR}', 'wordseg', algo)
+                for algo in ('ag', 'dpseg')]
 
 
 def data_files(binary):
@@ -57,13 +57,15 @@ setup(
     description='tools for text based word segmentation',
     long_description=long_description,
     author='Alex Cristia, Mathieu Bernard, Elin Larsen',
-    url='https://github.com/mmmaat/wordseg',
+    url='https://github.com/bootphon/wordseg',
     license='GPL3',
     zip_safe=True,
 
-    package_dir={'wordseg': '${CMAKE_CURRENT_SOURCE_DIR}/wordseg',
-                 'wordseg.algos': '${CMAKE_CURRENT_SOURCE_DIR}/wordseg/algos'},
+    package_dir={
+        'wordseg': '${CMAKE_CURRENT_SOURCE_DIR}/wordseg',
+        'wordseg.algos': '${CMAKE_CURRENT_SOURCE_DIR}/wordseg/algos'},
     packages=['wordseg', 'wordseg.algos'],
+
     install_requires=(['six', 'joblib'] if on_readthedocs() else
                       ['six', 'joblib', 'numpy', 'pandas']),
     tests_require=['pytest'],

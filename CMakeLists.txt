@@ -29,21 +29,18 @@
 #   [sudo] make install
 
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 2.4)
 
 
+# Project-wide configuration.
 #
-# project-wide configuration
-#
+# Setup project name, authorship, version and build type.
 
-# define the project, authors and its version from the VERSION file
 project(wordseg)
 set(PROJECT_AUTHOR "Alex Cristia, Mathieu Bernard, Elin Larsen")
-file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" PROJECT_VERSION)
-message(STATUS "Project is wordseg-${PROJECT_VERSION}")
 
-# enable "make test"
-include(CTest)
+# Read the project version from the VERSION file
+file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" PROJECT_VERSION)
 
 # Set the build type if none was specified
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -54,23 +51,24 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     CACHE CMAKE_BUILD_TYPE
     PROPERTY STRINGS "Debug" "Release" "RelWithDebInfo")
 endif()
+
+message(STATUS "Project is wordseg-${PROJECT_VERSION}")
 message(STATUS "Setting build type to ${CMAKE_BUILD_TYPE}")
 
 
+# C++ part.
 #
-# C++ part
-#
+# Compilation of the wordseg algorithms implemented in C++. See the
+# CMakeLists.txt in their subdirectories.
 
-# make ag
-add_subdirectory(ag)
-
-# make dpseg
-add_subdirectory(dpseg)
+add_subdirectory(wordseg/algos/ag)
+add_subdirectory(wordseg/algos/dpseg)
 
 
+# Python part.
 #
-# Python part
-#
+# Create setup.py from setup.py.in and links 'make wordseg' to a call
+# to setup.py.
 
 find_package(PythonInterp REQUIRED)
 find_package(PythonLibs REQUIRED)
@@ -102,11 +100,11 @@ add_custom_target(develop
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
   DEPENDS wordseg)
 
-#
+
 # Documentation part
 #
+# Build the HTML pages from the doc/ directory, defines the 'make doc' target
 
-# make doc
 find_program(PYTHON_SPHINX "sphinx-build")
 if(PYTHON_SPHINX)
   message(STATUS "Found Sphinx as ${PYTHON_SPHINX}")
@@ -138,11 +136,13 @@ if(PYTHON_SPHINX)
 endif()
 
 
-#
 # Tests part
 #
+# Defines the "make test" target and bound it to pytest.
 
-# make test
+
+include(CTest)
+
 if(BUILD_TESTING)
   find_program(PYTHON_PYTEST "pytest" REQUIRED)
   set(CTEST_BUILD_COMMAND "${CTEST_BUILD_COMMAND} -V")
