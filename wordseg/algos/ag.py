@@ -63,11 +63,21 @@ from wordseg import utils
 
 
 def get_grammar_files():
-    """Return a list of example grammar files
+    """Returns a list of example grammar files bundled with wordseg
 
-    :return: a list of example grammar files bundled with wordseg
+    Grammar files have the *.lt extension and are stored in the
+    directory `wordseg/config/ag`.
 
-    :raise: AssertionError if no grammar files found
+    Returns
+    -------
+    list
+        Examples of grammar files
+
+    Raises
+    ------
+    RuntimeError
+        If the configuration directory is not found or if there is no
+        grammar files in it.
 
     """
     pkg = pkg_resources.Requirement.parse('wordseg')
@@ -77,13 +87,16 @@ def get_grammar_files():
 
     # case of 'python setup.py develop' or local install
     if not os.path.isdir(grammar_dir):
-        grammar_dir = pkg_resources.resource_filename(
-            pkg, 'ag/config')
+        grammar_dir = pkg_resources.resource_filename(pkg, 'ag/config')
 
-    assert os.path.isdir(grammar_dir), 'grammar directory not found: {}'.format(grammar_dir)
+    if not os.path.isdir(grammar_dir):
+        raise RuntimeError(
+            'grammar directory not found: {}'.format(grammar_dir))
 
     grammar_files = [f for f in os.listdir(grammar_dir) if f.endswith('lt')]
-    assert len(grammar_files) > 0, 'no *.lt files in {}'.format(grammar_dir)
+
+    if len(grammar_files) == 0:
+        raise RuntimeError('no *.lt files in {}'.format(grammar_dir))
 
     return [os.path.join(grammar_dir, f) for f in grammar_files]
 
@@ -102,8 +115,9 @@ def _ag(text, grammar, args, log=utils.null_logger()):
     parses = process.communicate('\n'.join(text).encode('utf8'))
     if process.returncode:
         raise RuntimeError(
-            'segmentation failed with error code {}'.format(
-                process.returncode))
+            'fails with error code {}'.format(process.returncode))
+
+    print(parses)
 
     return parses.decode('utf8').split('\n')
 
@@ -123,12 +137,11 @@ def yield_parses(raw_parses, ignore_firsts=0):
     # read input line per line, yield at each empty line
     for line in raw_parses:
         line = line.strip()
-        if len(line) == 0:
-            if len(parse) > 0:
-                nparses += 1
-                if ignore_firsts > 0 and nparses > ignore_firsts:
-                    yield parse
-                    parse = []
+        if len(line) == 0 and len(parse) > 0:
+            nparses += 1
+            if ignore_firsts > 0 and nparses > ignore_firsts:
+                yield parse
+                parse = []
         else:
             parse.append(line)
 
@@ -142,7 +155,6 @@ def most_frequent_parse(data):
     """Counts the number of times each parse appears, and returns the
     one that appears most frequently"""
     return collections.Counter(("\n".join(d) for d in data)).most_common(1)[0][0]
-
 
 
 def segment(text, grammar_file, njobs=1, ignore_first_parses=0, args='',
@@ -195,8 +207,10 @@ def main():
         add_arguments=add_arguments)
 
     ignored_args = ['verbose', 'quiet', 'input', 'output', 'njobs']
-    ag_args = {k: v for k, v in vars(args).items() if k not in ignored_args and v}
-    ag_args = ' '.join('--{} {}'.format(k, v) for k, v in ag_args.items()).replace('_', '-')
+    ag_args = {k: v for k, v in vars(args).items()
+               if k not in ignored_args and v}
+    ag_args = ' '.join('--{} {}'.format(k.replace('_', '-'), v)
+                       for k, v in ag_args.items())
 
     log.debug('call segment on grammar %s', args.grammar_file)
     segmented = segment(

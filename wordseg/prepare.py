@@ -21,97 +21,138 @@ punctuation_re = re.compile('[%s]' % re.escape(string.punctuation))
 
 
 def _pairwise(l):
-    """l -> (l[0], l[1]), (l[1], l[2]), ..."""
+    """Yields paiwise elements of a sequence
+
+    Examples
+    --------
+    >>> list(pairwise([1, 2, 3]))
+    [(1, 2), (2, 3)]
+
+    """
     for a, b in zip(l[:-1], l[1:]):
         yield a, b
 
 
-def check_utterance(utt, separator):
-    """Raise ValueError if any error is detected on `utt`
+def check_utterance(utterance, separator=Separator()):
+    """Ensures an utterance is in a valid phonological form
 
-    The following errors are checked:
-      * `utt` is empty or is not a string
-      * `utt` contains any punctuation character (once separators removed)
-      * `utt` begins with a separator
-      * `utt` does not end with a word separator
-      * `utt` contains syllable tokens but a word does not end with a
-        syllable separator
+    Parameters
+    ----------
+    utterance : str
+        The utterance to be checked
+    separator : Separator, optional
+        The phonological levels separation in the `utterance`
 
-    Return True if no error detected
+    Returns
+    -------
+    bool
+        True if no error detected, raises otherwise
+
+    Raises
+    ------
+    ValueError
+        If one of the following errors is detected:
+        * `utt` is empty or is not a string
+        * `utt` contains any punctuation character (once the
+          separators are removed)
+        * `utt` begins with a separator
+        * `utt` does not end with a word separator
+        * `utt` contains syllable tokens but a word does not end with
+          a syllable separator
 
     """
     # utterance is empty or not a string (or unicode for python2)
-    if not utt or not isinstance(utt, six.string_types):
+    if not utterance or not isinstance(utterance, six.string_types):
         raise ValueError(
-            'utterance is not a string ({}): {}'.format(type(utt), utt))
+            'utterance is not a string ({}): {}'.format(
+                type(utterance), utterance))
 
-    if not len(utt):
+    if not len(utterance):
         raise ValueError('utterance is an empty string')
 
     # search any punctuation in utterance (take care to remove token
     # separators first)
-    clean_utt = separator.remove(utt)
-    if punctuation_re.sub('', clean_utt) != clean_utt:
+    cleaned_utterance = separator.remove(utterance)
+    if punctuation_re.sub('', cleaned_utterance) != cleaned_utterance:
         raise ValueError('punctuation found in utterance')
 
     # utterance begins with a separator
     for sep in separator.iterate():
-        if sep and re.match('^{}'.format(re.escape(sep)), utt):
+        if sep and re.match('^{}'.format(re.escape(sep)), utterance):
             raise ValueError(
-                'utterance begins with a separator: "{}"'.format(utt))
+                'utterance begins with a separator: "{}"'.format(utterance))
 
     # utterance ends with a word separator
-    if not utt.endswith(separator.word):
+    if not utterance.endswith(separator.word):
         raise ValueError(
-            'utterance does not end with a word separator: "{}"'.format(utt))
+            'utterance does not end with a word separator: "{}"'
+            .format(utterance))
 
     # a words does not finish with a syllable separator
-    if separator.syllable and separator.syllable in utt and not all(
+    if separator.syllable and separator.syllable in utterance and not all(
             a == separator.syllable
-            for a, b in _pairwise(utt.split(separator.phone))
+            for a, b in _pairwise(utterance.split(separator.phone))
             if b == separator.word):
         raise ValueError(
-            'a word does not end with a syllable separator: "{}"'.format(utt))
+            'a word does not end with a syllable separator: "{}"'
+            .format(utterance))
 
     return True
 
 
-def prepare(text, separator=Separator(), unit='phoneme', tolerant=False,
+def prepare(text, separator=Separator(), unit='phone', tolerant=False,
             log=utils.null_logger()):
-    """Return a text prepared for word segmentation from a tagged text
+    """Prepares a text in phonological form for word segmentation
 
-    Remove syllable and word separators from a sequence of tagged
-    utterances. Marks boundaries at a unit level defined by `unit`.
+    The returned text is ready to be segmented. It consists in a suite
+    of phonological symbols (can be phones or syllable depending on
+    `unit`) separated by spaces.
 
-    :param (sequence of str) text: is the input text to process, each
-      string in the sequence is an utterance
+    The function removes the word separators from all the lines in
+    `text` and replaces boundaries at the unit level defined by `unit`
+    by a space. If `unit` is 'phone' the syllable separators are
+    removed, and vice-versa if `unit` is 'syllable' the phone
+    separators are dicarded.
 
-    :param Separator separator: token separation in the `text`
+    Parameters
+    ----------
+    text : sequence
+        The input text to be prepared for segmentation. Each element
+        of the sequence is assumed to be a single and complete
+        utterance in valid phonological form.
+    separator : Separator, optional
+        Token separation in the `text`
+    unit : str, optional
+        The unit representation level to prepare the `text` at, must
+        be 'syllable' or 'phone'.
+    tolerant : bool, optional
+        If False, raise ValueError on the first format error detected
+        in the `text`. If True, the badly formated utterances are
+        filtered out from the output and a warning is issued.
+    log : logging.Logger, optional
+        The logger instance where to send messages.
 
-    :param str unit: the unit representation level, must be 'syllable'
-      or 'phoneme'. This put a space between two syllables or phonemes
-      respectively.
+    Returns
+    -------
+    generator
+        Utterances from the `text` with separators removed, prepared
+        for segmentation at a syllable or phoneme representation level
+        (separated by space).
 
-    :param bool tolerant: if False, raise ValueError on the first
-      format error detected in the `text`. If True, the badly formated
-      utterances are filtered out from the output.
-
-    :param logger log: a logger instance where to send messages
-
-    :raise: ValueError on the first format error in `text` (see the
-       prepare.check_utterance function), only if `tolerant` is False.
-
-    :return: a generator of utterances from the `text` with separators
-      removed, prepared for segmentation at a syllable or phoneme
-      representation level (separated by space).
+    Raises
+    ------
+    ValueError
+        On the first format error encountered in `text` (see the
+        prepare.check_utterance function), only if `tolerant` is
+        False.
 
     """
     # raise an error if unit is not valid
-    if unit != 'phoneme' and unit != 'syllable':
+    if unit != 'phone' and unit != 'syllable':
         raise ValueError(
-            "unit must be 'phoneme' or 'syllable', it is '{}'".format(unit))
+            "unit must be 'phone' or 'syllable', it is '{}'".format(unit))
 
-    if unit == 'phoneme':
+    if unit == 'phone':
         def func(line):
             return line.replace(separator.syllable, '')\
                        .replace(separator.word, '')
@@ -136,7 +177,7 @@ def prepare(text, separator=Separator(), unit='phoneme', tolerant=False,
             yield utils.strip(func(line))
         except ValueError as err:
             if tolerant:
-                log.debug('removing line %d: "%s"', n, line)
+                log.info('removing line %d: "%s"', n, line)
                 nremoved += 1
             else:
                 raise err
@@ -146,28 +187,37 @@ def prepare(text, separator=Separator(), unit='phoneme', tolerant=False,
 
 
 def gold(text, separator=Separator()):
-    """Return a gold text from a phonologized one
+    """Returns a gold text from a phonologized one
 
-    Remove syllable and word separators from a sequence of tagged
-    utterances. The returned text is the gold version, against which
-    the algorithms are evaluated.
+    The returned gold text is the ground-truth segmentationg. It has
+    phone and syllable separators removed and word separators replaced
+    by a single space ' '. It is used to evaluate the output of
+    segmentation algorithms.
 
-    :param sequence(str) text: the input sequence to process, each
-      string in the sequence is an utterance
+    Parameters
+    ----------
+    text : sequence
+        The input text to be prepared for segmentation. Each element
+        of the sequence is assumed to be a single and complete
+        utterance in valid phonological form.
+    separator : Separator, optional
+        Token separation in the `text`
 
-    :param Separator separator: token separation in the `text`
-
-    :return sequence(str): text with separators removed, with word
-      separated by spaces. The returned text is the gold version,
-      against which the algorithms are evaluated.
+    Returns
+    -------
+    generator
+        Gold text with separators removed and words separated by
+        spaces. The returned text is the gold version, against which
+        the algorithms are evaluated.
 
     """
-    # delete syllable and word separators
+    # delete phone and syllable separators. Replace word boundaries by
+    # a single space.
     gold = (line.replace(separator.syllable, '')
             .replace(separator.phone or '', '')
             .replace(separator.word, ' ') for line in text)
 
-    # delete any duplicate, begin or end spaces
+    # delete any duplicate, begin or end spaces.
     return (utils.strip(line) for line in gold)
 
 
@@ -183,9 +233,9 @@ def main():
 
         parser.add_argument(
             '-t', '--tolerant', action='store_true',
-            help='''tolerate the badly formated utterances in input, but ignore them in
-            output (default is to exit on the first encountered
-            error)''')
+            help='''tolerate the badly formated utterances in input,
+            but ignore them in output (default is to exit on the first
+            encountered error)''')
 
         parser.add_argument(
             '-g', '--gold', type=str, metavar='<gold-file>',
@@ -215,6 +265,7 @@ def main():
         log.info('generating gold text to %s', args.gold)
         gold_text = gold(streamin, separator=separator)
         open(args.gold, 'w').write('\n'.join(gold_text) + '\n')
+
 
 if __name__ == '__main__':
     main()

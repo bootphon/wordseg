@@ -63,5 +63,10 @@ def test_get_config_file_bad(binary):
 # strip
 
 @pytest.mark.parametrize('string', [' ab  c ', 'ab\nc', ' \t\tab\n c '])
-def test_strip(string):
+def test_strip_abc(string):
     assert wordseg.utils.strip(string) == 'ab c'
+
+def test_strip_misc():
+    assert wordseg.utils.strip('  ') == ''
+    assert wordseg.utils.strip('\na\ta   \t\naa a\n  ') == 'a a aa a'
+    assert wordseg.utils.strip('a  a \n') == 'a a'

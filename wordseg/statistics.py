@@ -3,7 +3,8 @@
 import collections
 import pandas as pd
 
-from wordseg import utils, Separator
+from wordseg import utils
+from wordseg.separator import Separator
 
 
 default_separator = Separator(phone=None, syllable=None, word=' ')

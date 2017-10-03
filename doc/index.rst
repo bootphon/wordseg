@@ -25,13 +25,13 @@ open science, we welcome all the contributions (see
 .. note::
 
    The source code of **wordseg** is available on it's `github page
-   <https://github.com/mmmaat/wordseg>`_
+   <https://github.com/bootphon/wordseg>`_
 
 .. note::
 
    This package is tested on `continuous integration
-   <https://travis-ci.org/mmmaat/wordseg>`_ to work on python 2.7 and
-   3.5, both on Linux and Mac OS.
+   <https://travis-ci.org/bootphon/wordseg>`_ to work on python 2.7
+   and 3.5, both on Linux and Mac OS.
 
 .. toctree::
    :maxdepth: 2

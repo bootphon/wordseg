@@ -125,15 +125,15 @@ def evaluate(text, gold, separator=DEFAULT_SEPARATOR):
                                _stringpos_boundarypos(gold_stringpos))
 
     return {
-        'type_f-score': type_eval.fscore(),
+        'type_fscore': type_eval.fscore(),
         'type_precision': type_eval.precision(),
         'type_recall': type_eval.recall(),
-        'token_f-score': token_eval.fscore(),
+        'token_fscore': token_eval.fscore(),
         'token_precision': token_eval.precision(),
         'token_recall': token_eval.recall(),
-        'bound_f-score': boundary_eval.fscore(),
-        'bound_precision': boundary_eval.precision(),
-        'bound_recall': boundary_eval.recall()}
+        'boundary_fscore': boundary_eval.fscore(),
+        'boundary_precision': boundary_eval.precision(),
+        'boundary_recall': boundary_eval.recall()}
 
 
 @utils.CatchExceptions

@@ -13,6 +13,16 @@ Python API Reference
 wordseg\.algos
 --------------
 
+
+wordseg\.algos\.ag
+~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: wordseg.algos.ag
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
 wordseg\.algos\.dibs
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -71,6 +81,15 @@ wordseg\.statistics
 -------------------
 
 .. automodule:: wordseg.statistics
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+wordseg\.utils
+--------------
+
+.. automodule:: wordseg.utils
     :members:
     :undoc-members:
     :show-inheritance:

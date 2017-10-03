@@ -16,7 +16,7 @@ matrix:
 addons:
   apt:
     packages:
-      - libboost-program-options-dev
+      - cmake libboost-program-options-dev
 
 # install python3 on osx
 before_install:
@@ -27,8 +27,10 @@ before_install:
 install:
   - pip install --upgrade pip
   - pip install pandas numpy joblib pytest
-  - python setup.py build
-  - python setup.py install
+  - mkdir -p build
+  - cmake ..
+  - make
+  - make install
 
 script:
   - pytest ./test

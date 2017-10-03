@@ -5,31 +5,39 @@
 import pytest
 from wordseg import utils
 from wordseg.separator import Separator
-from wordseg.prepare import check_utterance, prepare
+from wordseg.prepare import check_utterance, prepare, _pairwise
 
 
-def test_strip():
-    assert utils.strip('  ') == ''
-    assert utils.strip('\na\ta   \t\naa a\n  ') == 'a a aa a'
-    assert utils.strip('a  a \n') == 'a a'
+# correctly formatted phonological forms
+good_utterances = [
+    'a ;eword',
+    'a ;esyll ;eword',
+    'ˌʌ s ;eword t ə ;eword p l eɪ ;eword ð ə ;eword s oʊ l oʊ z ;eword']
 
-
+# badly formatted phonological forms
 bad_utterances = [
-        '',
-        ' ',
-        '\n\n',
-        'hello',
-        'ah ;esyll ah',
-        'ah ;esyll ah ;esyll',  # missing ;eword
-        'ah ;esyll ah ;eword',  # missing ;esyll
-        'ah ah ; eword',
-        ';eword',
-        ';eword a b ;esyll ;eword',
-        ';esyll a b ;esyll ;eword',
-        'a. ;eword',
-        'a! ;eword'
-        ' a b ;esyll ;eword',
+    '',
+    ' ',
+    '\n\n',
+    'hello',
+    'ah ;esyll ah',
+    'ah ;esyll ah ;esyll',  # missing ;eword
+    'ah ;esyll ah ;eword',  # missing ;esyll
+    'ah ah ; eword',
+    ';eword',
+    ';eword a b ;esyll ;eword',
+    ';esyll a b ;esyll ;eword',
+    'a. ;eword',
+    'a! ;eword'
+    ' a b ;esyll ;eword',
 ]
+
+
+def test_paiwise():
+    assert list(_pairwise([])) == []
+    assert list(_pairwise([1])) == []
+    assert list(_pairwise([1, 2])) == [(1, 2)]
+    assert list(_pairwise([1, 2, 3])) == [(1, 2), (2, 3)]
 
 
 @pytest.mark.parametrize('utt', bad_utterances)
@@ -38,21 +46,15 @@ def test_bad_utterances(utt):
         check_utterance(utt, separator=Separator())
 
 
-good_utterances = [
-    'a ;eword',
-    'a ;esyll ;eword',
-    'ˌʌ s ;eword t ə ;eword p l eɪ ;eword ð ə ;eword s oʊ l oʊ z ;eword']
-
-
 @pytest.mark.parametrize('utt', good_utterances)
 def test_good_utterances(utt):
     assert check_utterance(utt, separator=Separator())
 
 
-@pytest.mark.parametrize('level', ['phoneme', 'syllable'])
+@pytest.mark.parametrize('level', ['phone', 'syllable'])
 def test_prepare_text(level):
     p = {'raw': ['hh ax l ;esyll ow ;esyll ;eword w er l d ;esyll ;eword'],
-         'phoneme': ['hh ax l ow w er l d'],
+         'phone': ['hh ax l ow w er l d'],
          'syllable': ['hhaxl ow werld']}
 
     def f(u):

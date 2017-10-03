@@ -12,6 +12,83 @@ import sys
 from wordseg.separator import Separator
 
 
+def strip(string):
+    """Strips the `string` from undesirable spaces
+
+    Removes begining and ending spaces and subsitutes multiple spaces
+    by a single one. Spaces characters, including newlines (*\\n*) and
+    tabulations (*\\t*), are all substituted by ' '.
+
+    Parameters
+    ----------
+    string: str
+        The string on which to eliminate multiple spaces
+
+    Returns
+    -------
+    str
+        The input `string` with multiple spaces removed.
+
+    Examples
+    --------
+    >>> strip(" ab\\t  b\\n")
+    ab b
+    >>> strip(" \\n ab   c ")
+    ab c
+    >>> strip("ab\\n c ")
+    ab c
+
+    """
+    return re.sub(r'\s+', ' ', string.strip())
+
+
+def null_logger():
+    """Configures and returns a logger sending messages to nowhere
+
+    This is used as default logger for some functions.
+
+    Returns
+    -------
+    logging.Logger
+        Logging instance ignoring all the messages.
+
+    """
+    log = logging.getLogger()
+    log.addHandler(logging.NullHandler())
+    return log
+
+
+def get_logger(name=None, level=logging.WARNING):
+    """Configures and returns a logger sending messages to standard error
+
+    Parameters
+    ----------
+    name : str
+        Name of the created logger, to be displayed in the header of
+        log messages.
+    level : logging.level
+        The minimum log level handled by the logger (any message above
+        this level will be ignored).
+
+    Returns
+    -------
+    logging.Logger
+        Logging instance displaying messages to the standard error
+        stream.
+
+    """
+    log = logging.getLogger(name)
+    log.setLevel(level)
+
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler = logging.StreamHandler(sys.stderr)
+    handler.setFormatter(formatter)
+
+    log.addHandler(handler)
+    return log
+
+
 class CountingIterator(object):
     """A class for counting elements in a generator
 
@@ -29,8 +106,8 @@ class CountingIterator(object):
     TypeError
         If `elements` is not a sequence.
 
-    Example
-    -------
+    Examples
+    --------
     >>> counter = CountingIterator(range(1, 11))
     >>> sum(counter)
     55
@@ -71,6 +148,7 @@ class CatchExceptions(object):
         self.function = function
 
     def __call__(self):
+        """Executes the wrapped function and catch common exceptions"""
         try:
             self.function()
 
@@ -223,13 +301,37 @@ class Argument(object):
         return self
 
     def add(self, parser):
-        parser.add_argument(self.name, default=self.default,
-                            help=self.help, metavar='<arg>')
+        parser.add_argument(
+            self.name, default=self.default, help=self.help, metavar='<arg>')
 
 
 def yield_binary_arguments(binary, excluded=[]):
-    """Yields commandline arguments parsed from "`binary` --help" message"""
-    # get the help message of the binary
+    """Yields arguments as parsed from the "`binary` --help" message
+
+    The `binary` file must be a C++ program with command line options
+    implemented with the boost::program_options library.
+
+    This function is used in the *ag* and *dpseg* wrappers.
+
+    Parameters
+    ----------
+    binary : str
+        Executable to execute with the option "--help".
+    excluded : list
+        List of excluded options from the ones parsed from `binary`.
+
+    Yields
+    ------
+
+
+    Raises
+    ------
+    subprocess.SubprocessError
+        When exectution of the command "`binary` --help" fails.
+
+    """
+    # get the help message of the binary (raise a SubprocessError on
+    # failure)
     help_msg= subprocess.Popen(
         [binary, '--help'], stderr=subprocess.PIPE).communicate()[1].decode()
 
@@ -261,84 +363,6 @@ def yield_binary_arguments(binary, excluded=[]):
     if argument.is_valid():
         argument.help += ', default is %(default)s'
         yield argument.send()
-
-
-def strip(utt):
-    """Strips the `string` from undesirable spaces
-
-    Removes begining and ending spaces and subsitutes multiple spaces
-    by a single one. All the space characters are replaced by a single
-    ' '. Spaces characters include newlines (*\\n*) and tabulations
-    (*\\t*).
-
-    Parameters
-    ----------
-    string: str
-        The string on which to eliminate multiple spaces
-
-    Returns
-    -------
-    str
-        The input `string` with multiple spaces removed.
-
-    Example
-    -------
-    >>> strip(" a\\t  b\\n")
-    a b
-    >>> strip("ab   c ")
-    ab c
-    >>> strip("ab\\n c ")
-    ab c
-
-    """
-    return re.sub(r'\s+', ' ', utt.strip())
-
-
-def null_logger():
-    """Configures and returns a logger sending messages to nowhere
-
-    This is used as default logger for some functions.
-
-    Returns
-    -------
-    logging.Logger
-        Logging instance ignoring all the messages.
-
-    """
-    log = logging.getLogger()
-    log.addHandler(logging.NullHandler())
-    return log
-
-
-def get_logger(name=None, level=logging.WARNING):
-    """Configures and returns a logger sending messages to standard error
-
-    Parameters
-    ----------
-    name : str
-        Name of the created logger, to be displayed in the header of
-        log messages.
-    level : logging.level
-        The minimum log level handled by the logger (any message above
-        this level will be ignored).
-
-    Returns
-    -------
-    logging.Logger
-        Logging instance displaying messages to the standard error
-        stream.
-
-    """
-    log = logging.getLogger(name)
-    log.setLevel(level)
-
-    formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler = logging.StreamHandler(sys.stderr)
-    handler.setFormatter(formatter)
-
-    log.addHandler(handler)
-    return log
 
 
 def get_parser(description=None, separator=Separator()):

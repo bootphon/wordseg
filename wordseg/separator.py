@@ -6,8 +6,9 @@ import re
 class Separator(object):
     """Token separation at phone, syllable and word levels
 
-    A Separator is made of 3 entries 'phone', 'syllable' and 'word'
-    defining the token separators for each of these levels.
+    A Separator is made of 3 entries *phone*, *syllable* and *word*
+    defining the token separators for each of these levels within an
+    utterance.
 
     A token separator can be a simple string, a regular expression or
     None. If not None, the entries 'phone', 'syllable' and 'word' must
@@ -15,6 +16,7 @@ class Separator(object):
 
     """
     def __init__(self, phone=' ', syllable=';esyll', word=';eword'):
+        # check we have different separators, None excluded
         g1 = list(sep for sep in (phone, syllable, word) if sep)
         g2 = set(sep for sep in (phone, syllable, word) if sep)
         if len(g1) != len(g2):
@@ -27,12 +29,23 @@ class Separator(object):
         self.syllable = str(syllable) if syllable else None
         self.word = str(word) if word else None
 
+        # store the tokens as precompiled regular expressions for
+        # faster lookup in strings
         self._regexp = {
             'phone': re.compile(self.phone) if phone else None,
             'syllable': re.compile(self.syllable) if syllable else None,
             'word': re.compile(self.word) if word else None}
 
     def __str__(self):
+        """Returns a string representation of a separator
+
+        Examples
+        --------
+        >>> sep = Separator(phone='_', syllable=None, word=' ')
+        >>> print(sep)
+        (phone: "_", word: " ")
+
+        """
         return '({})'.format(
             ', '.join('{}: "{}"'.format(k, v) for k, v
                       in self.iterate(type='pair') if v))
@@ -40,19 +53,29 @@ class Separator(object):
     def split(self, utt, level, remove=True):
         """Split the string `utt` at a given token `level`
 
-        :param str utt: the string to split
+        Parameters
+        ----------
+        utt : str
+            The string to split in tokens.
+        level : str
+            Token level to split the string with. Must be 'phone',
+            'syllable' or 'word', raise ArgumentError otherwise.
+        remove : bool
+            If True, remove all the separators from the returned
+            sub-utterances.
 
-        :param str level: must be 'phone', 'syllable' or 'word', raise
-          ValueError otherwise.
+        Returns
+        -------
+        A sequence of substrings of `utt`.
 
-        :param bool remove: If True, remove all the separators from
-          the returned sub-utterances.
-
-        :return: A sequence of substrings of `utt`.
+        Raises
+        ------
+        ArgumentError
+            If the `level` is not 'phone', 'syllable' or 'word'.
 
         """
         if level not in self._regexp.keys():
-            raise ValueError(
+            raise ArgumentError(
                 "level must be 'phone', 'syllable' or 'word', "
                 "it is {}".format(level))
 
@@ -61,7 +84,11 @@ class Separator(object):
         return (self.remove(u) for u in utts) if remove else utts
 
     def remove(self, utt):
-        """Return the string `utt` with all separators removed"""
+        """Returns the string `utt` with all separators removed
+
+        Multiple spaces are removed.
+
+        """
         if self.phone:
             utt = re.sub(self._regexp['phone'], '', utt)
         if self.syllable:
@@ -71,11 +98,24 @@ class Separator(object):
         return re.sub(' +', ' ', utt)
 
     def iterate(self, type='value'):
-        """Return a generator on phone, syllable, word tokens (in that order)
+        """Returns a generator on phone, syllable and word tokens, in that order
 
-        :param str type: must be 'value' or 'pair'
+        Parameters
+        ----------
+        type : str, optional
+            Type of separator representation to be yield, must be
+            'value' or 'pair'.
 
-        :return:
+        Yields
+        ------
+        token : str or tuple
+            In the form *token_value* if `type` is 'value'. In the
+            form (*token_name*, *token_value*) if `type` is 'pair'.
+
+        Raises
+        ------
+        ArgumentError
+            If the `type` is not 'value' or 'pair'.
 
         """
         if type == 'value':

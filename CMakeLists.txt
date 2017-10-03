@@ -87,7 +87,8 @@ add_custom_target(develop
 
 # Documentation part
 #
-# Build the HTML pages from the doc/ directory, defines the 'make doc' target
+# Build the HTML pages from the doc/ directory, defines the 'make
+# html' target
 
 find_program(PYTHON_SPHINX "sphinx-build")
 if(PYTHON_SPHINX)
@@ -107,7 +108,7 @@ if(PYTHON_SPHINX)
     COMMAND ${CMAKE_COMMAND} -E touch ${DOC_BINARY_DIR}/timestamp
     DEPENDS ${DOC_SOURCES})
 
-  add_custom_target(doc DEPENDS ${DOC_BINARY_DIR}/timestamp)
+  add_custom_target(html DEPENDS ${DOC_BINARY_DIR}/timestamp)
 
   # dont use CMAKE_INSTALL_PREFIX but use the python path instead
   get_filename_component(DOC_DEST ${PYTHON_EXECUTABLE} DIRECTORY)

@@ -25,7 +25,7 @@ Dependencies
 
   - cmake_ for building,
   - the boost_ C++ libraries,
-  - python3 (python2 is supported but python3 prefered for it's native
+  - python3 (python2 is supported but python3 preferred for it's native
     unicode support),
   - a C++ compiler supporting the ``-std=c++11`` option (should be the
     case on most modern compilers),
@@ -49,12 +49,22 @@ your personal computer (and you do not want to modify/contribute to
 the code). In all other cases, consider installing ``wordseg`` in a
 virtual environment.
 
-* Build and install the ``wordseg`` package::
+* Create a directory where to store intermediate (built) files::
 
-    mkdir -p build
-    cmake ..    # for compilation options see below
-    make
-    [sudo] make install
+      mkdir -p build
+      cd build
+
+* Configure the installation with::
+
+    cmake ..
+
+  Or use ``cmake-gui ..`` for a graphical interface where you can
+  easily tune installation directories and options.
+
+* Finally compile and install ``wordseg``::
+
+      make
+      sudo make install
 
 
 Installation in a virtual environment
@@ -79,17 +89,11 @@ supported by conda (but you can virtualenv_ as well).
 
     source activate wordseg
 
-* Install the wordseg package (this will install the commandline tools
-  in your $CONDA_PREFIX and make them callable from the terminal)::
-
-    mkdir -p build
-    cmake ..    # for compilation options see below
-    make
-    [sudo] make install
+* Install the wordseg package by following
 
 
 * To uninstall it, simply remove the ``wordseg`` directory in your
-  conda installation folder (once activated it is $CONDA_PREFIX).
+  conda installation folder (once activated it is ``$CONDA_PREFIX``).
 
 .. note::
 

@@ -1,4 +1,4 @@
-"""Test of the wordseg_tp module"""
+"""Test of the wordseg.algos.tp module"""
 
 import pytest
 from wordseg.separator import Separator
