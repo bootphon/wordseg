@@ -108,12 +108,6 @@ supported by conda (but you can virtualenv_ as well).
      source activate wordseg
 
 
-Compilation options
--------------------
-
-
-
-
 Running the tests
 -----------------
 
@@ -134,12 +128,15 @@ Build the documentation
 -----------------------
 
 To build the html documentation (the one you are currently reading),
-have a::
+first install some dependancies::
 
-  pip install sphinx sphinx_rtd_theme
-  make doc
+  pip install sphinx sphinx_rtd_theme numpydoc
 
-The main page is then ``build/html/index.html``.
+Then just have a::
+
+  make html
+
+The main page is built as ``build/html/index.html``.
 
 
 .. _boost: http://www.boost.org/
