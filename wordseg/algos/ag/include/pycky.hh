@@ -15,7 +15,7 @@
 #include <sstream>
 #include <utility>
 #include <vector>
-//#include <tr1/unordered_map>
+#include <unordered_map>
 
 #include "quadmath.hh"
 #include "earley.hh"
@@ -107,7 +107,7 @@ public:
 
     typedef std::vector<S_F> S_Fs;
     // typedef ext::hash_map<Stit,F> Stit_F;
-    typedef tr1::unordered_map<Stit,F> Stit_F;
+    typedef std::unordered_map<Stit,F> Stit_F;
     typedef std::vector<Stit_F> Stit_Fs;
 
     typedef pycfg_type::sT sT;

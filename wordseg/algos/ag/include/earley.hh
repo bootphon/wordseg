@@ -9,8 +9,8 @@
 
 #include <cassert>
 #include <vector>
-#include <tr1/unordered_map>
-#include <tr1/unordered_set>
+#include <unordered_map>
+#include <unordered_set>
 
 #include "symbol.hh"
 #include "utility.hh"
@@ -32,9 +32,9 @@ struct earley {
   typedef std::pair<S,Ss> R;
   typedef const R* Rp;
   typedef std::vector<Rp> Rps;
-  typedef tr1::unordered_map<S,Rps> S_Rps;
+  typedef std::unordered_map<S,Rps> S_Rps;
   typedef std::set<S> sS;
-  typedef tr1::unordered_map<S,sS> S_sS;
+  typedef std::unordered_map<S,sS> S_sS;
   typedef const sS* sSp;
   typedef std::vector<sSp> sSps;
   typedef std::vector<sS> U_sS;
@@ -76,7 +76,7 @@ struct earley {
 
   typedef std::set<A> sA;
   typedef std::pair<sA,sU> sAsU;
-  typedef tr1::unordered_map<S,sAsU> S_sAsU;
+  typedef std::unordered_map<S,sAsU> S_sAsU;
   typedef std::vector<S_sAsU> U_S_sAsU;
 
   const grammar& g;         //!< grammar

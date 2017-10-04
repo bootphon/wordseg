@@ -76,7 +76,7 @@ public:
     template<class value_type>
     using symbol_map = std::map<symbol, value_type>;
 
-    typedef tr1::unordered_map<symbol, S_F> S_S_F;
+    typedef std::unordered_map<symbol, S_F> S_S_F;
     typedef trie<symbol, symbol_map<F> > St_S_F;
     typedef St_S_F::const_iterator Stit;
     typedef catcount_tree tree;
@@ -435,8 +435,8 @@ std::ostream& operator<< (std::ostream& os, const pycfg_type& g);
 
 namespace std
 {
-    namespace tr1
-    {
+    // namespace tr1
+    // {
         template <> struct hash<pycfg_type::Stit>
             : public std::unary_function<pycfg_type::Stit, std::size_t>
         {
@@ -446,7 +446,7 @@ namespace std
                 }
         };
     }
-}
+// }
 
 
 #endif  // _PYCFG_TYPE_HH

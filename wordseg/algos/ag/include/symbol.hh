@@ -73,55 +73,55 @@
 #include <iostream>
 #include <string>
 #include <utility>
-#include <tr1/unordered_set>
+#include <unordered_set>
 
-namespace tr1 = std::tr1;
+// namespace tr1 = std::tr1;
 
-class symbol {
+class symbol
+{
+    typedef std::string* stringptr;
+    const std::string* sp;
+    symbol(const std::string* sp_) : sp(sp_) { }
 
-  typedef std::string* stringptr;
-  const std::string* sp;
-  symbol(const std::string* sp_) : sp(sp_) { }
-
-  typedef tr1::unordered_set<std::string> Table;
-  static Table& table();
+    typedef std::unordered_set<std::string> Table;
+    static Table& table();
 
 public:
 
-  symbol() : sp(NULL) { }       // constructs an undefined symbol
-  symbol(const std::string& s);
-  symbol(const char* cp);
+    symbol() : sp(NULL) { }       // constructs an undefined symbol
+    symbol(const std::string& s);
+    symbol(const char* cp);
 
-  bool is_defined() const { return sp != NULL; }
-  bool is_undefined() const { return sp == NULL; }
+    bool is_defined() const { return sp != NULL; }
+    bool is_undefined() const { return sp == NULL; }
 
-  operator std::string() const { assert(is_defined()); return *sp; }
-  const std::string& string_reference() const { assert(is_defined()); return *sp; }
-  const std::string* string_pointer() const { return sp; }
-  const char* c_str() const { assert(is_defined()); return sp->c_str(); }
+    operator std::string() const { assert(is_defined()); return *sp; }
+    const std::string& string_reference() const { assert(is_defined()); return *sp; }
+    const std::string* string_pointer() const { return sp; }
+    const char* c_str() const { assert(is_defined()); return sp->c_str(); }
 
-  static symbol undefined() { return symbol(stringptr(NULL)); }
-  static size_t size() { return table().size(); }
+    static symbol undefined() { return symbol(stringptr(NULL)); }
+    static size_t size() { return table().size(); }
 
-  bool operator== (const symbol s) const { return sp == s.sp; }
-  bool operator!= (const symbol s) const { return sp != s.sp; }
-  bool operator< (const symbol s) const { return sp < s.sp; }
-  bool operator<= (const symbol s) const { return sp <= s.sp; }
-  bool operator> (const symbol s) const { return sp > s.sp; }
-  bool operator>= (const symbol s) const { return sp >= s.sp; }
+    bool operator== (const symbol s) const { return sp == s.sp; }
+    bool operator!= (const symbol s) const { return sp != s.sp; }
+    bool operator< (const symbol s) const { return sp < s.sp; }
+    bool operator<= (const symbol s) const { return sp <= s.sp; }
+    bool operator> (const symbol s) const { return sp > s.sp; }
+    bool operator>= (const symbol s) const { return sp >= s.sp; }
 };
 
 std::istream& operator>> (std::istream& is, symbol& s);
 std::ostream& operator<< (std::ostream& os, symbol s);
 
-namespace std { namespace tr1 {
+namespace std {
     template <> struct hash<symbol>
-      : public std::unary_function<symbol, std::size_t>  {
-      size_t operator()(symbol s) const
-      {
-	return size_t(s.string_pointer());
-      }
+        : public std::unary_function<symbol, std::size_t>  {
+        size_t operator()(symbol s) const
+            {
+                return size_t(s.string_pointer());
+            }
     };
-  } }
+}
 
 #endif  // sym.h

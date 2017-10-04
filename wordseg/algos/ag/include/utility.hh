@@ -58,14 +58,14 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <time.h>
-#include <tr1/unordered_map>        // The new hash functions
-#include <tr1/unordered_set>
+#include <unordered_map>        // The new hash functions
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
 #include "logging.hh"
 
-namespace tr1 = std::tr1;
+// namespace tr1 = std::tr1;
 
 // define some useful macros
 
@@ -435,7 +435,7 @@ struct second_greaterthan {
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
 
-namespace std { namespace tr1 {
+namespace std { // namespace tr1 {
     /*
     // hash function for bool
     //
@@ -535,7 +535,7 @@ namespace std { namespace tr1 {
       }
     };
 
-  } } // namespace std::tr1
+  } // namespace std
 
 
 
@@ -742,10 +742,10 @@ std::istream& operator>> (std::istream& is, std::set<T>& s)
 // Hash_sets
 //
 template <class T>
-std::ostream& operator<< (std::ostream& os, const tr1::unordered_set<T>& s)
+std::ostream& operator<< (std::ostream& os, const std::unordered_set<T>& s)
 {
   os << '(';
-  for (typename tr1::unordered_set<T>::const_iterator i = s.begin(); i != s.end(); ++i) {
+  for (typename std::unordered_set<T>::const_iterator i = s.begin(); i != s.end(); ++i) {
     if (i != s.begin())
       os << ' ';
     os << *i;
@@ -754,7 +754,7 @@ std::ostream& operator<< (std::ostream& os, const tr1::unordered_set<T>& s)
 }
 
 template <class T>
-std::istream& operator>> (std::istream& is, tr1::unordered_set<T>& s)
+std::istream& operator>> (std::istream& is, std::unordered_set<T>& s)
 {
   char c;
   if (is >> c) {
@@ -818,9 +818,9 @@ std::istream& operator>> (std::istream& is, std::map<Key,Value>& m)
 // Hash_maps
 //
 template <class Key, class Value>
-std::ostream& operator<< (std::ostream& os, const tr1::unordered_map<Key,Value>& m)
+std::ostream& operator<< (std::ostream& os, const std::unordered_map<Key,Value>& m)
 {
-  typedef tr1::unordered_map<Key,Value> M;
+  typedef std::unordered_map<Key,Value> M;
   os << '(';
   for (typename M::const_iterator it = m.begin(); it != m.end(); ++it) {
     if (it != m.begin())
@@ -831,7 +831,7 @@ std::ostream& operator<< (std::ostream& os, const tr1::unordered_map<Key,Value>&
 }
 
 template <class Key, class Value>
-std::istream& operator>> (std::istream& is, tr1::unordered_map<Key,Value>& m)
+std::istream& operator>> (std::istream& is, std::unordered_map<Key,Value>& m)
 {
   char c;
   if (is >> c) {
@@ -911,14 +911,14 @@ namespace std {
   };
 }  // namespace std
 
-namespace std { namespace tr1 {
+namespace std { //namespace tr1 {
     template <typename T> struct hash<boost::shared_ptr<T> >
       : public std::unary_function<boost::shared_ptr<T>, std::size_t> {
       size_t operator() (const boost::shared_ptr<T>& a) const {
 	return hash<T*>()(a.get());
       }
     };
-  } } // namespace std::tr1
+} // namespace std::tr1
 
 template <typename T>
 inline std::ostream& operator<< (std::ostream& os, const boost::shared_ptr<T>& sp)
