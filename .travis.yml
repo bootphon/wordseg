@@ -16,7 +16,7 @@ matrix:
 addons:
   apt:
     packages:
-      - cmake libboost-program-options-dev libboost-dev
+      - cmake libboost-program-options-dev libboost-log-dev
 
 # install python3 on osx
 before_install:
