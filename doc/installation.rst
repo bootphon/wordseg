@@ -130,6 +130,7 @@ Build the documentation
 To build the html documentation (the one you are currently reading),
 first install some dependancies::
 
+  sudo apt-get install texlive textlive-latex-extra dvipng
   pip install sphinx sphinx_rtd_theme numpydoc
 
 Then just have a::

@@ -52,13 +52,13 @@ def check_utterance(utterance, separator=Separator()):
     ------
     ValueError
         If one of the following errors is detected:
-        * `utt` is empty or is not a string
-        * `utt` contains any punctuation character (once the
-          separators are removed)
-        * `utt` begins with a separator
-        * `utt` does not end with a word separator
-        * `utt` contains syllable tokens but a word does not end with
-          a syllable separator
+        * `utterance` is empty or is not a string
+        * `utterance` contains any punctuation character (once the
+           separators are removed)
+        * `utterance` begins with a separator
+        * `utterance` does not end with a word separator
+        * `utterance` contains syllable tokens but a word does not end
+           with a syllable separator
 
     """
     # utterance is empty or not a string (or unicode for python2)

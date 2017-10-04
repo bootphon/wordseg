@@ -476,7 +476,7 @@ def prepare_main(name=None,
     separator : wordseg.separator.Separator
         The default token separation as displayed in the command help
         message at phone, syllable and word levels. Set any level to None to
-      disable this token for the command.
+        disable this token for the command.
     add_arguments : function
         function of prototype (argparse.ArgumentParser: None) adding
         optional arguments to the parser.
