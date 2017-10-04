@@ -55,6 +55,7 @@ import collections
 import joblib
 import logging
 import os
+import pkg_resources
 import shlex
 import subprocess
 import sys
@@ -103,7 +104,7 @@ def get_grammar_files():
 
 def _ag(text, grammar, args, log=utils.null_logger()):
     # generate the command to run as a subprocess
-    command = '{binary} {grammar} {args}'.format(
+    command = '{binary} --grammar {grammar} {args}'.format(
         binary=utils.get_binary('ag'), grammar=grammar, args=args)
 
     log.debug('running "%s"', command)

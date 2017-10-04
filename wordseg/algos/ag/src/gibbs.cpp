@@ -1,5 +1,4 @@
 #include "gibbs.hh"
-
 #include "quadmath.hh"
 #include "logging.hh"
 
