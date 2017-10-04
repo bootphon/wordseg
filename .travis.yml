@@ -10,6 +10,7 @@ matrix:
       python: "3.5"
     - os: osx
       osx_image: xcode8.3
+      compiler: gcc
       language: generic
 
 # install boost on linux only (already here on osx)
