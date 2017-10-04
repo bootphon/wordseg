@@ -198,26 +198,32 @@ def get_binary(binary):
         or if it's not an executable file.
 
     """
-    binary_path = ''
     pkg = pkg_resources.Requirement.parse('wordseg')
 
-    # case of 'python setup.py install'
+    binary_path = ''
     try:
+        # case of 'python setup.py install'
         binary_path = pkg_resources.resource_filename(
             pkg, 'bin/{}'.format(binary))
     except KeyError:
         pass
 
-    # case of 'python setup.py develop' or 'make'
-    if not os.path.isfile(binary_path):
-        binary_path = pkg_resources.resource_filename(
-            pkg, 'build/wordseg/algos/{binary}/{binary}'.format(binary=binary))
+    try:
+        # case of 'python setup.py develop' or 'make'
+        if not os.path.isfile(binary_path):
+            binary_path = pkg_resources.resource_filename(
+                pkg, 'build/wordseg/algos/{binary}/{binary}'
+                .format(binary=binary))
+    except KeyError:
+        pass
 
     if not os.path.isfile(binary_path):
-        raise RuntimeError('binary "{}" not found: {}'.format(binary, binary_path))
+        raise RuntimeError(
+            'binary "{}" not found: {}'.format(binary, binary_path))
 
     if not os.access(binary_path, os.X_OK):
-        raise RuntimeError('binary "{}" not executable: {}'.format(binary_path))
+        raise RuntimeError(
+            'binary "{}" not executable: {}'.format(binary_path))
 
     return binary_path
 
@@ -248,13 +254,21 @@ def get_config_files(algorithm, extension=None):
     """
     pkg = pkg_resources.Requirement.parse('wordseg')
 
-    # case of 'python setup.py install'
-    config_dir = pkg_resources.resource_filename(pkg, 'config/{}'.format(algorithm))
+    config_dir = ''
+    try:
+        # case of 'python setup.py install'
+        config_dir = pkg_resources.resource_filename(
+            pkg, 'config/{}'.format(algorithm))
+    except KeyError:
+        pass
 
-    # case of 'python setup.py develop' or local install
-    if not os.path.isdir(config_dir):
-        config_dir = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), '..', 'config', algorithm))
+    try:
+        # case of 'python setup.py develop' or local install
+        if not os.path.isdir(config_dir):
+            config_dir = os.path.abspath(os.path.join(
+                os.path.dirname(__file__), '..', 'config', algorithm))
+    except KeyError:
+        pass
 
     if not os.path.isdir(config_dir):
         raise RuntimeError('directory not found: {}'.format(config_dir))
