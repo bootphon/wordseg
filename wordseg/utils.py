@@ -198,6 +198,7 @@ def get_binary(binary):
         or if it's not an executable file.
 
     """
+    binary_path = ''
     pkg = pkg_resources.Requirement.parse('wordseg')
 
     # case of 'python setup.py install'
