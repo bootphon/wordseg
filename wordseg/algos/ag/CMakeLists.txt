@@ -10,7 +10,7 @@ find_package(Boost
   COMPONENTS program_options date_time filesystem system log thread)
 
 # compiling a C++11 program
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -fext-numeric-literals")
+set(CMAKE_CXX_FLAGS "-std=c++11 -Wall")
 
 
 option(AG_QUADRUPLE "compile ag with quadruple precision floating point numbers" OFF)

@@ -29,7 +29,8 @@ def bin_targets():
     if on_readthedocs():
         return []
     else:
-        return [os.path.join('${CMAKE_CURRENT_BINARY_DIR}', 'wordseg', algo)
+        return [os.path.join(
+            '${CMAKE_CURRENT_BINARY_DIR}', 'wordseg', 'algos', algo, algo)
                 for algo in ('ag', 'dpseg')]
 
 

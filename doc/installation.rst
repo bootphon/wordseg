@@ -34,11 +34,14 @@ Dependencies
 
   - on **Ubuntu/Debian**::
 
-      sudo apt-get install python3 python3-pip libboost-dev cmake
+      sudo apt-get install python3 python3-pip cmake \
+          libboost-log-dev libboost-program-options-dev
 
   - on **Mac OSX**::
 
       brew install python3 boost cmake
+
+  - optionally you can install ``cmake-gui``
 
 
 System-wide installation
