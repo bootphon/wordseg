@@ -127,6 +127,8 @@ class CountingIterator(object):
         self.count += 1
         return nxt
 
+    next = __next__
+
 
 class CatchExceptions(object):
     """Decorator wrapping a function in a try/except block
@@ -199,8 +201,11 @@ def get_binary(binary):
     pkg = pkg_resources.Requirement.parse('wordseg')
 
     # case of 'python setup.py install'
-    binary_path = pkg_resources.resource_filename(
-        pkg, 'bin/{}'.format(binary))
+    try:
+        binary_path = pkg_resources.resource_filename(
+            pkg, 'bin/{}'.format(binary))
+    except KeyError:
+        pass
 
     # case of 'python setup.py develop' or 'make'
     if not os.path.isfile(binary_path):

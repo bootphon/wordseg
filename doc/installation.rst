@@ -69,6 +69,9 @@ virtual environment.
       make
       sudo make install
 
+* If you planned to modify the wordseg's code, use ``make develop``
+  instead of ``make install``
+
 
 Installation in a virtual environment
 -------------------------------------
@@ -92,8 +95,8 @@ supported by conda (but you can virtualenv_ as well).
 
     source activate wordseg
 
-* Install the wordseg package by following
-
+* Install the wordseg package by following the previous section
+  *System-wide installation*.
 
 * To uninstall it, simply remove the ``wordseg`` directory in your
   conda installation folder (once activated it is ``$CONDA_PREFIX``).

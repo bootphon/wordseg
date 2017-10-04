@@ -18,4 +18,4 @@ def test_tutorial(tags, tmpdir, ext):
 
     p = tmpdir.join('input.txt')
     p.write('\n'.join(tags) + '\n')
-    subprocess.run([script, str(p)], check=True)
+    subprocess.check_call([script, str(p)])

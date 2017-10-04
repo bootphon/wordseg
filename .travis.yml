@@ -35,7 +35,7 @@ install:
   - cd ..
 
 script:
-  - pytest ./test
+  - pytest ./test -v
 
 cache:
   - pip
