@@ -162,7 +162,7 @@ int main(int argc, char** argv)
         ("test1-file,u", po::value<std::string>(&test1_filename),
          "test strings to be parsed (but not trained on) every eval-every iterations")
 
-        ("test1-eval,unsigned", po::value<std::vector<std::string> >(&test1cmdstrs),
+        ("test1-eval,U", po::value<std::vector<std::string> >(&test1cmdstrs),
          "parses of test1-file are piped into this command")
 
         ("test2-file,v", po::value<std::string>(&test2_filename),
@@ -361,7 +361,7 @@ int main(int argc, char** argv)
     gibbs_estimate(g, trains, train_frac, train_frac_randomise, evalcmds, eval_every,
                    niterations, anneal_start, anneal_stop, anneal_its, z_temp, z_its,
                    hastings_correction, random_order, delayed_initialization,
-                   resample_pycache_nits, nparses_iterations,
+                   static_cast<unsigned int>(resample_pycache_nits), nparses_iterations,
                    finalparses_stream_ptr, grammar_stream_ptr,
                    test1s, test1cmds, test2s, test2cmds, grammarcmds);
 

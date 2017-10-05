@@ -35,8 +35,8 @@ F gibbs_estimate(pycfg_type& g, const std::vector<std::vector<symbol> >& trains,
 		 std::ostream* grammar_stream_ptr,
 		 const std::vector<std::vector<symbol> >& test1s, Postreamps& test1cmds,
 		 const std::vector<std::vector<symbol> >& test2s, Postreamps& test2cmds,
-		 Postreamps& grammarcmds) {
-
+		 Postreamps& grammarcmds)
+{
     typedef pycky::tree tree;
     typedef std::vector<tree*> tps_type;
     typedef std::vector<bool> Bs;
@@ -55,12 +55,18 @@ F gibbs_estimate(pycfg_type& g, const std::vector<std::vector<symbol> >& trains,
     // decide which training sentences to use
     Bs train_flag(n, false);   // if true, train on this sentence
     if (train_frac == 1)
+    {
         for (unsigned i = 0; i < n; ++i)
             train_flag[i] = true;
-    else {
+    }
+    else
+    {
         for (unsigned i = 0; i < nn; ++i)
+        {
             train_flag[i] = true;
-        if (train_frac_randomise) {
+        }
+        if (train_frac_randomise)
+        {
             RandomNumberGenerator rng;
             std::random_shuffle(train_flag.begin(), train_flag.end(), rng);
         }
@@ -70,8 +76,8 @@ F gibbs_estimate(pycfg_type& g, const std::vector<std::vector<symbol> >& trains,
         Us try_later; // indices of sentences that are so long that the parser underflows
 
         // initialize tps with (random) trees
-
-        for (unsigned i = 0; i < n; ++i) {
+        for (unsigned i = 0; i < n; ++i)
+        {
             if (!train_flag[i])
                 continue;
 
@@ -85,7 +91,8 @@ F gibbs_estimate(pycfg_type& g, const std::vector<std::vector<symbol> >& trains,
             if (debug >= 1000)
                 std::cerr << ", tprob = " << tprob;
 
-            if (tprob <= 0) {
+            if (tprob <= 0)
+            {
                 if (debug >= 1000)
                     std::cerr << ", parse failed, will retry later " << std::endl;
                 try_later.push_back(i);  // underflowed now; we'll try this later
@@ -101,32 +108,40 @@ F gibbs_estimate(pycfg_type& g, const std::vector<std::vector<symbol> >& trains,
                 g.incrtree(tps[i]);        // incremental initialisation
         }
 
-        if (delayed_initialization)    // collect statistics from the random trees
+        // collect statistics from the random trees
+        if (delayed_initialization)
+        {
             for (unsigned i = 0; i < n; ++i)
+            {
                 if (tps[i] != NULL)
+                {
                     g.incrtree(tps[i]);
+                }
+            }
+        }
 
-        cforeach (Us, it, try_later) {
-
+        for(const auto& sentence: try_later)
+        {
             if (debug >= 1000)
-                std::cerr << "# reparsing trains[" << *it << "] = " << trains[*it];
+                std::cerr << "# reparsing trains[" << sentence << "] = " << trains[sentence];
 
-            F tprob = p.inside(trains[*it]);
+            F tprob = p.inside(trains[sentence]);
 
             if (debug >= 1000)
                 std::cerr << ", tprob = " << tprob;
 
             if (tprob <= 0)
                 std::cerr << "\n## " << HERE << " Error in py-cfg::gibbs_estimate(), tprob = " << tprob
-                          << ", trains[" << *it << "] = " << trains[*it] << " failed to parse." << std::endl
+                          << ", trains[" << sentence << "] = "
+                          << trains[sentence] << " failed to parse." << std::endl
                           << exit_failure;
 
-            tps[*it] = p.random_tree();
+            tps[sentence] = p.random_tree();
 
             if (debug >= 1000)
-                std::cerr << ", tps[" << *it << "] = " << tps[*it] << std::endl;
+                std::cerr << ", tps[" << sentence << "] = " << tps[sentence] << std::endl;
 
-            g.incrtree(tps[*it]);
+            g.incrtree(tps[sentence]);
         }
     }
 
@@ -134,19 +149,24 @@ F gibbs_estimate(pycfg_type& g, const std::vector<std::vector<symbol> >& trains,
     LOG(trace) << "It\tTemp\tTime\t-logP\t-logPcorpus\t-logPrior\ttables\tsame\t"
         "changed\treject\tdefault_pya\t(parent pym pyn pya pyb)*";
 
-    Us index(n);  // order in which parses should be resampled
+    // order in which parses should be resampled
+    Us index(n);
     for (unsigned i = 0; i < n; ++i)
+    {
         index[i] = i;
+    }
 
     unsigned unchanged = 0, rejected = 0;
 
-    for (unsigned iteration = 0; iteration < niterations; ++iteration) {
-
+    for (unsigned iteration = 0; iteration < niterations; ++iteration)
+    {
         if (random_order)
+        {
             std::random_shuffle(index.begin(), index.end());
+        }
 
         if (iteration + z_its > niterations)
-            p.anneal = 1.0/z_temp;
+            p.anneal = 1.0 / z_temp;
         else if (iteration == 0 && anneal_its > 0)
             p.anneal = anneal_start;
         else if (iteration < anneal_its)

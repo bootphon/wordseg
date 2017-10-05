@@ -228,8 +228,8 @@ def main():
     def add_arguments(parser):
         parser.add_argument(
             '-u', '--unit', type=str,
-            choices=['phoneme', 'syllable'], default='phoneme', help='''
-            output level representation, must be "phoneme" or "syllable"''')
+            choices=['phone', 'syllable'], default='phone', help='''
+            output level representation, must be "phone" or "syllable"''')
 
         parser.add_argument(
             '-t', '--tolerant', action='store_true',
