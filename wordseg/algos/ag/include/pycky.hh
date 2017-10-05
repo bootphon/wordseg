@@ -1,7 +1,3 @@
-// py-cky.h
-//
-// (c) Mark Johnson, 27th January 2006, last modified 7th Jan 2014
-
 #ifndef _PYCKY_HH
 #define _PYCKY_HH
 
@@ -34,34 +30,39 @@ extern int debug;
 
 typedef symbol S;
 
-// readline_symbols() reads all of the symbols on the current
-// line into syms
+// readline_symbols() reads all of the symbols on the current line
+// into syms
 std::istream& readline_symbols(std::istream& is, Ss& syms);
 
 
-// A default_value_type{} object is used to read an object from a stream,
-// assigning a default value if the read fails.  Users should not need to
-// construct such objects, but should use the default_value() function instead.
+// A default_value_type{} object is used to read an object from a
+// stream, assigning a default value if the read fails.  Users should
+// not need to construct such objects, but should use the
+// default_value() function instead.
 template <typename object_type, typename default_type>
 struct default_value_type
 {
     object_type& object;
-    const default_type defaultvalue;
-    default_value_type(object_type& object, const default_type defaultvalue)
-        : object(object), defaultvalue(defaultvalue) {}
+    const default_type default_value;
+
+    default_value_type(object_type& object, const default_type default_value)
+        : object(object),
+          default_value(default_value)
+        {}
 };
 
-// default_value() is used to read an object from a stream, assigning a
-// default value if the read fails.  It returns a default_value_type{}
-// object, which does the actual reading.
+// Reads an object from a stream, assigning a default value if the
+// read fails. It returns a default_value_type{} object, which does
+// the actual reading.
 template <typename object_type, typename default_type>
 default_value_type<object_type,default_type>
-default_value(object_type& object, const default_type defaultvalue=default_type())
+default_value(object_type& object, const default_type default_value=default_type())
 {
-    return default_value_type<object_type,default_type>(object, defaultvalue);
+    return default_value_type<object_type,default_type>(
+        object, default_value);
 }
 
-// This operator>>() reads default_value_type{} from an input stream.
+// Reads default_value_type{} from an input stream.
 template <typename object_type, typename default_type>
 std::istream& operator>> (
     std::istream& is, default_value_type<object_type, default_type> dv)
@@ -73,7 +74,7 @@ std::istream& operator>> (
         else
         {
             is.clear(is.rdstate() & ~std::ios::failbit);  // clear failbit
-            dv.object = dv.defaultvalue;
+            dv.object = dv.default_value;
         }
     }
 

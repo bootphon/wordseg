@@ -355,7 +355,7 @@ int main(int argc, char** argv)
     if (!grammar_filename.empty())
         grammar_stream_ptr = new std::ofstream(grammar_filename.c_str());
 
-    LOG(debug) << "initial grammar = " << g;
+    // LOG(debug) << "initial grammar = " << g;
     pycky parser(g);
     LOG(info) << "initial grammar parsed";
     gibbs_estimate(g, trains, train_frac, train_frac_randomise, evalcmds, eval_every,
