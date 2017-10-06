@@ -225,7 +225,7 @@ public:
                                         && !predictedparents->count(parent))
                                         continue;
                                     parentinactives[parent] += leftrightprob
-                                        * power(itparent->second/afind(g.parent_weight, parent), anneal);
+                                        * std::pow(itparent->second/afind(g.parent_weight, parent), anneal);
                                 }
                                 if (!parentactive->key_trie.empty())
                                     parentactives[parentactive] += leftrightprob;
@@ -241,7 +241,7 @@ public:
                     F pyb = g.get_pyb(it->first);
                     U pym = dfind(g.parent_pym, it->first);
                     U pyn = dfind(g.parent_pyn, it->first);
-                    it->second *= power( (pym*pya + pyb)/(pyn + pyb), anneal);
+                    it->second *= std::pow( (pym*pya + pyb)/(pyn + pyb), anneal);
                 }
                 if (pytit != g.terms_pytrees.end())
                     add_pycache(pytit->data, parentinactives);
@@ -276,7 +276,7 @@ public:
                 continue;
             F pyb = g.get_pyb(cat);
             U pyn = dfind(g.parent_pyn, cat);
-            inactives[cat] += power( ((*it)->count() - pya)/(pyn + pyb), anneal);
+            inactives[cat] += std::pow( ((*it)->count() - pya)/(pyn + pyb), anneal);
         }
     }  // pycky::add_cache()
 
@@ -302,13 +302,13 @@ public:
                         F prob = it0->second;
                         F pya = g.get_pya(parent);
                         if (pya == 1)
-                            prob *= power(it1->second/afind(g.parent_weight, parent),
+                            prob *= std::pow(it1->second/afind(g.parent_weight, parent),
                                           anneal);
                         else {
                             F pyb = g.get_pyb(parent);
                             U pym = dfind(g.parent_pym, parent);
                             U pyn = dfind(g.parent_pyn, parent);
-                            prob *= power(it1->second/afind(g.parent_weight, parent)
+                            prob *= std::pow(it1->second/afind(g.parent_weight, parent)
                                           * (pym*pya + pyb)/(pyn + pyb),
                                           anneal);
                         }
@@ -359,7 +359,7 @@ public:
                 cforeach (sT, it, pytit->data) {
                     if ((*it)->label() != parent)
                         continue;
-                    probsofar += power( ((*it)->count() - pya)/(pyn + pyb), anneal);
+                    probsofar += std::pow( ((*it)->count() - pya)/(pyn + pyb), anneal);
                     if (probsofar >= probthreshold)
                         return *it;
                 }
@@ -382,7 +382,7 @@ public:
             if (it1 != g.unarychild_parent_weight.end()) {
                 const S_F& parent1_weight = it1->second;
                 probsofar += childprob
-                    * power(dfind(parent1_weight, parent)*rulefactor, anneal);
+                    * std::pow(dfind(parent1_weight, parent)*rulefactor, anneal);
                 if (probsofar >= probthreshold) {
                     tp->add_child(random_inactive(child, childprob, left, right));
                     return tp;
@@ -405,7 +405,7 @@ public:
                         S_F::const_iterator it = parentactive->data.find(parent);
                         if (it != parentactive->data.end()) {
                             probsofar += leftprob * rightprob
-                                * power(it->second*rulefactor, anneal);
+                                * std::pow(it->second*rulefactor, anneal);
                             if (probsofar >= probthreshold) {
                                 random_active(leftactive, leftprob, left, mid, tp->children());
                                 tp->add_child(random_inactive(rightinactive, rightprob, mid, right));
@@ -517,7 +517,7 @@ struct resample_pycache_helper {
                 F pi1 = g.incrtree(tp1);
                 F pi1r0 = pi1 * r0;
                 F pi0r1 = pi0 * r1;
-                F accept = (pi0r1 > 0) ? power(pi1r0/pi0r1, p.anneal) : 2.0; // accept if there has been an underflow
+                F accept = (pi0r1 > 0) ? std::pow(pi1r0/pi0r1, p.anneal) : 2.0; // accept if there has been an underflow
                 if (random1() <= accept) {
                     tp0->generalize().swap(tp1->generalize());  // don't swap top counts
                     tp1->selective_delete();

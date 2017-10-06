@@ -55,9 +55,6 @@
 //!
 //! where G is the Gamma function.
 
-inline float power(float x, float y) { return y == 1 ? x : powf(x, y); }
-inline double power(double x, double y) { return y == 1 ? x : pow(x, y); }
-
 
 //typedef symbol S;
 typedef std::vector<symbol> Ss;

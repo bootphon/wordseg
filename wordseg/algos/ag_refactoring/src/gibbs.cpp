@@ -2,9 +2,14 @@
 #include "quadmath.hh"
 #include "logging.hh"
 
-struct S_F_incrementer {
+#include <cmath>
+#include <sstream>
+
+struct S_F_incrementer
+{
     const F increment;
-    S_F_incrementer(F increment) : increment(increment) { }
+    S_F_incrementer(F increment)
+        : increment(increment) {}
 
     template <typename arg_type>
     void operator() (const arg_type& arg, S_F& parent_weights) const
@@ -15,10 +20,12 @@ struct S_F_incrementer {
 };
 
 
-struct RandomNumberGenerator : public std::unary_function<unsigned,unsigned> {
-    unsigned operator() (unsigned nmax) {
-        return mt_genrand_int32() % nmax;
-    }
+struct RandomNumberGenerator : public std::unary_function<unsigned, unsigned>
+{
+    unsigned operator() (unsigned nmax)
+        {
+            return mt_genrand_int32() % nmax;
+        }
 };
 
 F gibbs_estimate(pycfg_type& g, const std::vector<std::vector<symbol> >& trains,
@@ -145,6 +152,8 @@ F gibbs_estimate(pycfg_type& g, const std::vector<std::vector<symbol> >& trains,
         }
     }
 
+    std::cerr << nwords << " tokens in " << nn << " sentences" << std::endl;
+
     LOG(trace) << nwords << " tokens in " << nn << " sentences";
     LOG(trace) << "It\tTemp\tTime\t-logP\t-logPcorpus\t-logPrior\ttables\tsame\t"
         "changed\treject\tdefault_pya\t(parent pym pyn pya pyb)*";
@@ -166,27 +175,44 @@ F gibbs_estimate(pycfg_type& g, const std::vector<std::vector<symbol> >& trains,
         }
 
         if (iteration + z_its > niterations)
+        {
             p.anneal = 1.0 / z_temp;
+        }
         else if (iteration == 0 && anneal_its > 0)
+        {
             p.anneal = anneal_start;
+        }
         else if (iteration < anneal_its)
-            p.anneal = anneal_start*power(anneal_stop/anneal_start,F(iteration)/F(anneal_its-1));
+        {
+            p.anneal = anneal_start * std::pow(
+                anneal_stop / anneal_start,
+                static_cast<F>(iteration) / static_cast<F>(anneal_its-1));
+        }
         else
+        {
             p.anneal = anneal_stop;
+        }
 
         assert(std::isfinite(p.anneal));
 
-        if (debug >= 100) {
+        if (debug >= 100)
+        {
             std::cerr << "# Iteration " << iteration << ", "
                       << g.sum_pym() << " tables, "
                       << "-logPcorpus = " << -g.logPcorpus() << ", "
                       << "-logPrior = " << -g.logPrior() << ", "
-                      << unchanged << '/' << n << " analyses unchanged";
+                      << unchanged << '/' << n << " analyses unchanged" << std::endl;
+
             if (hastings_correction)
+            {
                 std::cerr << ", " << rejected << '/' << n-unchanged
                           << " rejected";
+            }
             if (p.anneal != 1)
+            {
                 std::cerr << ", temp = " << 1.0/p.anneal;
+            }
+
             std::cerr << '.' << std::endl;
         }
 
@@ -213,7 +239,8 @@ F gibbs_estimate(pycfg_type& g, const std::vector<std::vector<symbol> >& trains,
             }
         }
 
-        if (iteration % eval_every == 0) {  // do we print a trace at this iteration?
+        if (iteration % eval_every == 0)
+        {  // do we print a trace at this iteration?
             for (unsigned i = 0; i < n; ++i) {
                 if (train_flag[i])
                     foreach (Postreamps, ecit, evalcmds) { // print this parse
@@ -286,8 +313,8 @@ F gibbs_estimate(pycfg_type& g, const std::vector<std::vector<symbol> >& trains,
         unchanged = 0;
         rejected = 0;
 
-        for (unsigned i0 = 0; i0 < n; ++i0) {
-
+        for (unsigned i0 = 0; i0 < n; ++i0)
+        {
             unsigned i = index[i0];
 
             if (!train_flag[i])  // skip this sentence if we don't train on it
@@ -357,7 +384,7 @@ F gibbs_estimate(pycfg_type& g, const std::vector<std::vector<symbol> >& trains,
                 if (hastings_correction) {         // perform accept-reject step
                     F accept = (pi1 * r0) / (pi0 * r1); // acceptance probability
                     if (p.anneal != 1)
-                        accept = power(accept, p.anneal);
+                        accept = std::pow(accept, p.anneal);
                     if (!finite(accept))  // accept if there has been an underflow
                         accept = 2.0;
                     if (debug >= 1000)
@@ -414,8 +441,9 @@ F gibbs_estimate(pycfg_type& g, const std::vector<std::vector<symbol> >& trains,
                 }
             (*finalparses_stream_ptr) << std::endl;
         }
-
     }
+
+    std::cerr << "HERE!!! " << g.logPrior() << std::endl;
 
     if (logging::get_level() <= logging::severity::trace)
     {

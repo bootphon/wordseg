@@ -4,6 +4,11 @@
 # looking for -pthread
 find_package(Threads)
 
+# looking for boost libraries
+find_package(Boost
+  REQUIRED
+  COMPONENTS program_options date_time filesystem system log thread)
+
 # compiling a C++11 program
 set(CMAKE_CXX_FLAGS "-std=c++11 -Wall")
 
@@ -11,9 +16,11 @@ set(CMAKE_CXX_FLAGS "-std=c++11 -Wall")
 option(AG_QUADRUPLE "compile ag with quadruple precision floating point numbers" OFF)
 option(AG_PARALLEL "compile ag with multithreads" OFF)
 
+
 if(AG_QUADRUPLE)
   add_compile_options("-DQUADPREC")
 endif()
+
 message(STATUS "Option AG_QUADRUPLE is ${AG_QUADRUPLE}")
 
 
@@ -21,14 +28,15 @@ if(AG_PARALLEL)
   find_package(OpenMP REQUIRED)
   add_compile_options(${OpenMP_CXX_FLAGS})
 endif()
+
 message(STATUS "Option AG_PARALLEL is ${AG_PARALLEL}")
 
 
 # the source files to compile
-file(GLOB SOURCES src/*.cc include/*)
+file(GLOB SOURCES src/*.cpp include/*)
 
 # ag binary linked on dependencies
-include_directories(include)
+include_directories(${Boost_INCLUDE_DIRS} include)
 add_executable(ag ${SOURCES})
 target_link_libraries(ag ${CMAKE_THREAD_LIBS_INIT} ${Boost_LIBRARIES})
 if(AG_PARALLEL)

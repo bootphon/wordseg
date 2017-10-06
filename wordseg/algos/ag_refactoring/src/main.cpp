@@ -4,6 +4,7 @@
 // Adaptor Grammar
 
 #include <cmath>
+#include <sstream>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -22,7 +23,7 @@
 typedef pstream::ostream* Postreamp;
 typedef std::vector<Postreamp> Postreamps;
 
-int debug = 0;
+int debug = 101;
 
 
 int main(int argc, char** argv)
@@ -41,7 +42,7 @@ int main(int argc, char** argv)
     F anneal_start = 1;
     F anneal_stop = 1;
     unsigned anneal_its = 100;
-    unsigned resample_pycache_nits = 0;
+    int resample_pycache_nits = 0;
     F z_temp = 1;
     unsigned z_its = 0;
     unsigned long rand_init = 0;
@@ -99,7 +100,7 @@ int main(int argc, char** argv)
         ("predictive-parse-filter,P", po::value<bool>(&predictive_parse_filter)->implicit_value(true),
          "use a predictive Earley parse to filter useless categories")
 
-        ("resample-pycache-niter,R", po::value<unsigned>(&resample_pycache_nits),
+        ("resample-pycache-niter,R", po::value<int>(&resample_pycache_nits),
          "resample PY cache strings during first n iterations (-1 = forever)")
 
         ("niterations,n", po::value<unsigned>(&niterations),
@@ -314,32 +315,37 @@ int main(int argc, char** argv)
 
     if (rand_init == 0)
         rand_init = time(NULL);
-
     mt_init_genrand(rand_init);
-    LOG(trace) << "D = " << delayed_initialization
-               << ", E = " << g.estimate_theta_flag
-               << ", I = " << random_order
-               << ", P = " << predictive_parse_filter
-               << ", R = " << resample_pycache_nits
-               << ", n = " << niterations
-               << ", N = " << nparses_iterations
-               << ", P = " << predictive_parse_filter
-               << ", w = " << g.default_weight
-               << ", a = " << g.default_pya
-               << ", b = " << g.default_pyb
-               << ", e = " << g.pya_beta_a
-               << ", f = " << g.pya_beta_b
-               << ", g = " << g.pyb_gamma_s
-               << ", h = " << g.pyb_gamma_c
-               << ", r = " << rand_init
-               << ", s = " << train_frac
-               << ", S = " << train_frac_randomise
-               << ", x = " << eval_every
-               << ", m = " << anneal_its
-               << ", Z = " << z_temp
-               << ", z = " << z_its
-               << ", T = " << 1.0/anneal_start
-               << ", t = " << anneal_stop;
+
+  std::stringstream parameters;
+  parameters << "# D = " << delayed_initialization
+             << ", E = " << g.estimate_theta_flag
+             << ", I = " << random_order
+             << ", P = " << predictive_parse_filter
+             << ", R = " << resample_pycache_nits
+             << ", n = " << niterations
+             << ", N = " << nparses_iterations
+             << ", P = " << predictive_parse_filter
+             << ", w = " << g.default_weight
+             << ", a = " << g.default_pya
+             << ", b = " << g.default_pyb
+             << ", e = " << g.pya_beta_a
+             << ", f = " << g.pya_beta_b
+             << ", g = " << g.pyb_gamma_s
+             << ", h = " << g.pyb_gamma_c
+             << ", r = " << rand_init
+             << ", s = " << train_frac
+             << ", S = " << train_frac_randomise
+             << ", x = " << eval_every
+             << ", m = " << anneal_its
+             << ", Z = " << z_temp
+             << ", z = " << z_its
+             << ", T = " << 1.0/anneal_start
+             << ", t = " << anneal_stop;
+
+  std::cerr << parameters.str() << std::endl;
+  // exit(0);
+  LOG(trace) << parameters.str();
 
     if (train_frac < 0 || train_frac > 1)
     {
