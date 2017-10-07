@@ -6,10 +6,33 @@ import logging
 import os
 import pkg_resources
 import re
-import subprocess
 import sys
 
 from wordseg.separator import Separator
+
+
+def str2type(t):
+    if not isinstance(t, str):
+        return t
+
+    # raise on unknown type
+    return {'bool': bool,
+            'int': int,
+            'float': float,
+            'string': str,
+            'list': list}[t]
+
+
+def type2str(t):
+    if isinstance(t, str):
+        return t
+
+    # raise on unknown type
+    return {bool: 'bool',
+            int: 'int',
+            float: 'float',
+            str: 'string',
+            list: 'list'}[t]
 
 
 def strip(string):
@@ -202,28 +225,27 @@ def get_binary(binary):
 
     binary_path = ''
     try:
-        # case of 'python setup.py install'
+        # case of 'make install'
         binary_path = pkg_resources.resource_filename(
             pkg, 'bin/{}'.format(binary))
     except KeyError:
         pass
 
     try:
-        # case of 'python setup.py develop' or 'make'
+        # case of 'make develop'
         if not os.path.isfile(binary_path):
             binary_path = pkg_resources.resource_filename(
-                pkg, 'build/wordseg/algos/{binary}/{binary}'
-                .format(binary=binary))
+                pkg, 'build/wordseg/algos/{}/{}'.format(binary, binary))
     except KeyError:
         pass
 
     if not os.path.isfile(binary_path):
         raise RuntimeError(
-            'binary "{}" not found: {}'.format(binary, binary_path))
+            'binary file "{}" not found: {}'.format(binary, binary_path))
 
     if not os.access(binary_path, os.X_OK):
         raise RuntimeError(
-            'binary "{}" not executable: {}'.format(binary_path))
+            'binary file "{}" not executable: {}'.format(binary_path))
 
     return binary_path
 
@@ -279,110 +301,55 @@ def get_config_files(algorithm, extension=None):
 
     if len(config_files) == 0:
         raise RuntimeError('no {}files found in {}'.format(
-        '*{} '.format(extension) if extension else '', config_dir))
+            '*{} '.format(extension) if extension else '', config_dir))
 
     return [os.path.join(config_dir, f) for f in config_files]
 
 
 class Argument(object):
-    """Command line argument adapter class
-
-    Read a command line argument from a C++ binary (argument parsing
-    must be handled by boost::program_options) and convert it to a
-    python argparse argument.
-
-    """
-    def __init__(self, name=None, default=None,  help='', excluded=[]):
+    """Command line argument adapter class"""
+    def __init__(self, short_name=None, name=None, type=None, default=None, help=''):
+        self.short_name = short_name
         self.name = name
         self.default = default
+        self.type = type
         self.help = help
-        self.excluded = excluded
 
-    def is_valid(self):
-        if not self.name:
-            return False
-        if self.name in self.excluded:
-            return False
-        return True
+    def add_to_parser(self, parser):
+        """Adds the argument to a `parser`
 
-    def send(self):
-        # adapting help message for some options
-        if self.name == '--debug-level':
-            self.help = (
-                'increase the amount of debug messages, use together with -vv '
-                '(a reasonable value is 1000)')
+        Builds the argument declaration and call the
+        parser.add_argument() method.
 
-        if self.name == '--config-file':
-            self.help += ' (in case of duplicates, precedence goes to the command line option)'
+        """
+        params = {}
 
-        # adding the default argument value in help
-        if self.default:
-            self.help += ', default is "%(default)s"'
-        return self
+        if isinstance(self.type, list):
+            params['choices'] = self.type
+            params['default'] = self.default
 
-    def add(self, parser):
-        parser.add_argument(
-            self.name, default=self.default, help=self.help, metavar='<arg>')
+        elif isinstance(self.type, str):
+            params['metavar'] = '<{}>'.format(self.type)
+            params['default'] = self.default
 
+        elif self.type is bool:
+            params['action'] = 'store_true'
 
-def yield_binary_arguments(binary, excluded=[]):
-    """Yields arguments as parsed from the "`binary` --help" message
+        else:
+            params['type'] = self.type
+            params['metavar'] = '<{}>'.format(type2str(self.type))
+            params['default'] = self.type(self.default)
 
-    The `binary` file must be a C++ program with command line options
-    implemented with the boost::program_options library.
+        params['help'] = self.help
+        if self.default is not None and 'default' not in self.help:
+            params['help'] += ', default is "%(default)s"'
+            # case of empty help, remove leading quote
+            params['help'] = re.sub('^, ', '', params['help'])
 
-    This function is used in the *ag* and *dpseg* wrappers.
-
-    Parameters
-    ----------
-    binary : str
-        Executable to execute with the option "--help".
-    excluded : list
-        List of excluded options from the ones parsed from `binary`.
-
-    Yields
-    ------
-
-
-    Raises
-    ------
-    subprocess.SubprocessError
-        When exectution of the command "`binary` --help" fails.
-
-    """
-    # get the help message of the binary (raise a SubprocessError on
-    # failure)
-    help_msg= subprocess.Popen(
-        [binary, '--help'], stderr=subprocess.PIPE).communicate()[1].decode()
-
-    # parse the message line by line to build arguments for argparse
-    short_opts = '\s+-\w \[ (--[\w_\-]+) \]'
-    long_opts = '\s+(--[\w_\-]+)'
-    argument_re = ('({}|{})\s*'
-                   '(arg)?\s*(\(\=([a-zA-Z0-9\._\-\s]+)\))?(.*)'
-                   .format(short_opts, long_opts))
-
-    argument = Argument(excluded=excluded)
-    for line in help_msg.split('\n'):
-        m = re.match(argument_re, line)
-        if m:  # continuation of the previous help message
-            # yield the previous argument
-            if argument.is_valid():
-                yield argument.send()
-            argument = Argument(excluded=excluded)
-
-            argument.name = m.group(2) if m.group(2) else m.group(3)
-            argument.default = (m.group(6).replace('(=', '').replace(')', '')
-                                if m.group(6) else None)
-            argument.help = m.group(7).strip()
-        else:  # the regext is not matched: this is the continuation
-               # of a help message
-            assert '--' not in line
-            argument.help += ' ' + line.strip()
-
-    if argument.is_valid():
-        argument.help += ', default is %(default)s'
-        yield argument.send()
+        if self.short_name:
+            parser.add_argument(self.short_name, self.name, **params)
+        else:
+            parser.add_argument(self.name, **params)
 
 
 def get_parser(description=None, separator=Separator()):
