@@ -34,8 +34,7 @@ Dependencies
 
   - on **Ubuntu/Debian**::
 
-      sudo apt-get install python3 python3-pip cmake \
-          libboost-log-dev libboost-program-options-dev
+      sudo apt-get install python3 python3-pip cmake libboost-program-options-dev
 
   - on **Mac OSX**::
 

@@ -330,7 +330,8 @@ class Argument(object):
 
         elif isinstance(self.type, str):
             params['metavar'] = '<{}>'.format(self.type)
-            params['default'] = self.default
+            if self.default:
+                params['default'] = self.default
 
         elif self.type is bool:
             params['action'] = 'store_true'
@@ -338,7 +339,8 @@ class Argument(object):
         else:
             params['type'] = self.type
             params['metavar'] = '<{}>'.format(type2str(self.type))
-            params['default'] = self.type(self.default)
+            if self.default:
+                params['default'] = self.type(self.default)
 
         params['help'] = self.help
         if self.default is not None and 'default' not in self.help:
@@ -350,6 +352,15 @@ class Argument(object):
             parser.add_argument(self.short_name, self.name, **params)
         else:
             parser.add_argument(self.name, **params)
+
+    def parsed_name(self):
+        """Returns the option name once parsed by argparse
+
+        Removes the leading '--' and replace '-' by '_' from the
+        option name.
+
+        """
+        return re.sub('^--', '', self.name).replace('-', '_')
 
 
 def get_parser(description=None, separator=Separator()):
