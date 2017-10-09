@@ -13,7 +13,7 @@ instructions below.
    Before going further, please clone the repository from
    github and go in it's root directory::
 
-     git clone https://github.com/mmmaat/wordseg.git ./wordseg
+     git clone https://github.com/bootphon/wordseg.git ./wordseg
      cd ./wordseg
 
 

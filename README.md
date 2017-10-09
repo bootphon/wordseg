@@ -1,7 +1,7 @@
 # wordseg: text based word segmentation #
 
 [![Documentation Status](https://readthedocs.org/projects/wordseg/badge/?version=latest)](http://wordseg.readthedocs.io/en/latest/?badge=latest)
-[![Build Status](https://travis-ci.org/mmmaat/wordseg.svg?branch=master)](https://travis-ci.org/bootphon/wordseg)
+[![Build Status](https://travis-ci.org/bootphon/wordseg.svg?branch=master)](https://travis-ci.org/bootphon/wordseg)
 
 
 ### Please see the online documentation at https://wordseg.readthedocs.io ###
