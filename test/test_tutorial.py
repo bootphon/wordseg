@@ -10,7 +10,8 @@ from . import tags
 
 @pytest.mark.parametrize('ext', ['py', 'sh'])
 def test_tutorial(tags, tmpdir, ext):
-    tutorial_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'doc'))
+    tutorial_dir = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), '..', 'doc'))
     assert os.path.isdir(tutorial_dir)
 
     script = os.path.join(tutorial_dir, 'tutorial.' + ext)
@@ -18,4 +19,4 @@ def test_tutorial(tags, tmpdir, ext):
 
     p = tmpdir.join('input.txt')
     p.write('\n'.join(tags) + '\n')
-    subprocess.check_call([script, str(p)])
+    subprocess.check_call([script, str(p)], cwd=tmpdir)
