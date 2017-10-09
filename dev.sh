@@ -28,9 +28,9 @@ seed=$RANDOM
 resfolder=./test_ag/ws
 mkdir -p $resfolder
 rm -f $resfolder/*
-#cat $input | \
-wordseg-ag -vv -d 101 -n 10 -E -r $seed -a 0.0001 -b 10000 \
-           -e 1 -f 1 -g 100 -i 0.01 -R -1 -P $grammar < $input || exit 1
+wordseg-ag --njobs 4 -vv \
+           -d 101 -n 50 -E -r $seed -a 0.0001 -b 10000 \
+           -e 1 -f 1 -g 100 -i 0.01 -R -1 -P -x 10 $grammar < $input || exit 1
 
 
 exit 0

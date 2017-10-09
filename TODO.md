@@ -1,8 +1,10 @@
-* roadmap for wordseg-0.5 [0/4]
+* roadmap for wordseg-0.5 [0/8]
 - [ ] ag output: make it works
-- [ ] implement --ag-median option
-- [ ] add test/test_ag.py
-- [ ] test dpseg ag works from config file
+- [ ] implement --ag-median option and run 8 times in the inner loop
+- [ ] populate test/test_ag.py
+- [ ] test AG_PARALLEL and AG_QUADRUPLE
+- [ ] forward dpseg/ag stderr to Python log
+- [ ] test ag works from config file
 - [ ] add a ChangeLog.md
 - [ ] reorganize documentation (less pages for general, more for API)
 

@@ -56,16 +56,17 @@ nonterminal is not adapted.
 
 import collections
 import joblib
-import logging
+import multiprocessing
 import os
 import pkg_resources
+import re
 import shlex
 import subprocess
 import sys
 import tempfile
 
 from wordseg import utils
-
+from wordseg.algos import treebank
 
 
 AG_ARGUMENTS = [
@@ -111,7 +112,8 @@ AG_ARGUMENTS = [
 
     utils.Argument(
         short_name='-R', name='--resample-pycache-niter', type=int,
-        help='resample PY cache strings during first n iterations (-1 = forever)'),
+        help=('resample PY cache strings during first n iterations '
+              '(-1 = forever)')),
 
     utils.Argument(
         short_name='-n', name='--niterations', type=int,
@@ -193,7 +195,7 @@ AG_ARGUMENTS = [
 
     utils.Argument(
         short_name='-x', name='--eval-every', type=int,
-        help='pipe trees into the eval-parses-cmd every eval-every iterations'),
+        help='pipe trees into the eval-parses-cmd every <int> iterations'),
 
     # We ignore the following options because they conflict with the
     # wordseg workflow (stdin > wordseg-cmd > stdout). In this AG
@@ -254,46 +256,76 @@ def get_grammar_files():
     return [os.path.join(grammar_dir, f) for f in grammar_files]
 
 
-def _ag(text, grammar, args, log=utils.null_logger()):
+def _run_ag_single(text, grammar_file, args, log=utils.null_logger()):
+    """Runs the AG program a single time and returns the computed parse trees
+
+    Parameters
+    ----------
+    text : sequence
+        The list of utterances to be segmented
+    grammar_file : str
+        The path to the grammar file to use for segmentation
+    args : str
+        Command line options to run the AG program with, use
+        'wordseg-ag --help' to have a complete list of available
+        options
+    log : logging.Logger, optional
+        A logger where to send log messages
+
+    Returns
+    -------
+    A list of parse trees, one tree per input utterance in `text`
+
+    Raises
+    ------
+    RuntimeError
+        If the AG program fails and returns an error code
+
+    """
+    # convert the text list into a multiline string
+    text = '\n'.join(utt.strip() for utt in text)
+
+    # we need to write the text as a tempfile, so we create a
+    # tempdir. The directory and its content is automatically erased
+    # when done.
     with tempfile.TemporaryDirectory() as temp_dir:
         # write the text as a temporary file. ylt extension is the one
         # used in the original implementation
         input_tmpfile = os.path.join(temp_dir, 'input.ylt')
-        open(input_tmpfile, 'w', encoding='utf8').write(
-            '\n'.join(utt.strip() for utt in text))
+        open(input_tmpfile, 'w', encoding='utf8').write(text)
 
         # generate the command to run as a subprocess
-        command = (
-            '{binary} {grammar} {args} -u {input} -U cat'
-            .format(binary=utils.get_binary('ag'),
-                    grammar=grammar,
-                    args=args,
-                    input=input_tmpfile,
-                    output=os.path.join(temp_dir, 'output.prs')))
+        command = ('{binary} {grammar} {args} -u {input} -U cat'.format(
+            binary=utils.get_binary('ag'),
+            grammar=grammar_file,
+            args=args,
+            input=input_tmpfile))
 
-        # run the command, write output_tmpfile
+        # run the command as a subprocess
         log.debug('running "%s"', command)
-
         process = subprocess.Popen(
             shlex.split(command),
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=None)
 
-        parses, _ = process.communicate(
-            '\n'.join(utt.strip() for utt in text).encode('utf8'))
+        # send the text from stdin and get back the raw parses from
+        # stdout (ignoring the stderr output)
+        parses, _ = process.communicate(text.encode('utf8'))
+
+        # fail if AG returns an error code
         if process.returncode:
             raise RuntimeError(
                 'fails with error code {}'.format(process.returncode))
 
-        return parses.decode('utf8').split('\n')
+    return parses.decode('utf8').split('\n')
 
 
-def _yield_parses(raw_parses, ignore_firsts=0):
-    """Yield parses as outputed by the ag binary, ignoring the first ones"""
+def _yield_trees(parses, ignore_firsts=0):
+    """Yield parse trees, ignoring the first ones"""
     nparses = 0
     parse = []
 
     # read input line per line, yield at each empty line
-    for line in raw_parses:
+    for line in parses:
         line = line.strip()
         if len(line) == 0 and len(parse) > 0:
             nparses += 1
@@ -309,35 +341,129 @@ def _yield_parses(raw_parses, ignore_firsts=0):
             yield parse
 
 
-def most_frequent_parse(data):
-    """Counts the number of times each parse appears, and returns the
-    one that appears most frequently"""
-    counter = collections.Counter(("\n".join(d) for d in data))
-    return counter.most_common(1)[0][0]
+def _tree_string(tree, ignore_terminal_re, word_re):
+    def simplify_terminal(t):
+        return t[1:] if len(t) > 0 and t[0] == '\\' else t
+
+    def visit(node, words_sofar, segs_sofar):
+        """Does a preorder visit of the nodes in the tree"""
+        if treebank.is_terminal(node):
+            if not ignore_terminal_re.match(node):
+                segs_sofar.append(simplify_terminal(node))
+            return words_sofar, segs_sofar
+
+        for child in treebank.tree_children(node):
+            wordssofar, segssofar = visit(
+                child, words_sofar, segs_sofar)
+
+        if word_re.match(treebank.tree_label(node)):
+            if segssofar != []:
+                wordssofar.append(''.join(segssofar))
+                segssofar = []
+
+        return wordssofar, segssofar
+
+    words_sofar, segs_sofar = visit(tree, [], [])
+    if segs_sofar:  # append any unattached segments as a word
+        words_sofar.append(''.join(segs_sofar))
+
+    return ' '.join(words_sofar)
 
 
-def segment(text, grammar_file, njobs=1, ignore_first_parses=0, args='',
-            log=utils.null_logger()):
-    """Run the ag binary"""
+def _tree2words(tree, nepochs=0, skip=0, rate=1,
+                ignore_terminals_re=r'^[$]{3}$'):
+    """Extracts segmenteed words from raw parse trees
+
+    Parameters
+    ----------
+    tree : sequence
+        The parse tree on which to extract the words
+    nepochs : int, optional
+        Total number of epochs
+    skip : int, optional
+        Initial fraction of epochs to skip
+    rate : int, optional
+        Input provides samples every rate epochs
+    ignore_terminals_re : str
+        Ignore terminals that match this regular expression
+
+    Returns
+    -------
+
+    """
+    word_re = re.compile(r'Word\b')
+    ignore_terminals_re = re.compile(ignore_terminals_re)
+
+    nskip = int(skip * nepochs / rate)
+
+    words = []
+    for line in tree:
+        line = line.strip()
+        if len(line) > 0:
+            if nskip <= 0:
+                trees = treebank.string_trees(line)
+                trees.insert(0, 'ROOT')
+                words.append(
+                    _tree_string(trees, ignore_terminals_re, word_re).strip())
+        elif nskip <= 0:
+            words.append('')
+            nskip -= 1
+        trees = treebank.string_trees(line)
+        trees.insert(0, 'ROOT')
+
+    return words
+
+
+def segment(text, grammar_file, args='', ignore_first_parses=0,
+            njobs=multiprocessing.cpu_count(), log=utils.null_logger()):
+    """Segment a `text` using the Adaptor Grammar algorithm
+
+    The algorithm is ran 8 times in parallel and the results are collapsed
+
+    Parameters
+    ----------
+    text : sequence
+        The list of utterances to be segmented
+    grammar_file : str
+        The path to the grammar file to use for segmentation
+    args : str
+        Command line options to run the AG program with, use
+        'wordseg-ag --help' to have a complete list of available
+        options
+    ignore_first_parses : int, optional
+        Ignore the first parses from the algorithm output
+    njobs : int, optional
+        The number of parallel subprocesses to run, default is to take
+        the number of CPU cores available
+    log : logging.Logger, optional
+        A logger where to send log messages
+
+    """
     text = list(text)
     log.info('%s utterances loaded for segmentation', len(text))
 
     try:
-        segmented_texts = joblib.Parallel(n_jobs=njobs, verbose=100)(
-            joblib.delayed(_ag)(text, grammar_file, args, log=log)
-            for _ in range(njobs))
+        segmented_texts = joblib.Parallel(
+            n_jobs=njobs, backend="threading", verbose=0)(
+            joblib.delayed(_run_ag_single)(text, grammar_file, args, log=log)
+            for _ in range(2))
     except RuntimeError as err:
         log.fatal('%s, exiting', err)
         sys.exit(1)
 
-    log.warning(type(segmented_texts))
-    log.warning(len(segmented_texts))
-    # log.warning(segmented_texts[0])
-    return
+    # TODO debugging!!!!
+    for n, text in enumerate(segmented_texts):
+        open('./output_{}.prs'.format(n), 'w').write(
+            '\n'.join(text) + '\n')
 
-    return most_frequent_parse(
-        (parses for text in segmented_texts
-         for parses in _yield_parses(text, ignore_firsts=ignore_first_parses)))
+    # # extract individual parses from the raw results
+    # parses = (parse for text in segmented_texts for parse
+    #           in _yield_trees(text, ignore_firsts=ignore_first_parses))
+
+    # log.warning(list(parses))
+    # return
+    # # return the most frequent parse found in the sequence of parses
+    # return collections.Counter(parses).most_common(1)[0][0]
 
 
 def add_arguments(parser):
@@ -349,7 +475,7 @@ def add_arguments(parser):
     parser.add_argument(
         'grammar', metavar='<grammar-file>',
         help=('read the grammar from this file, for exemple of grammars see {}'
-              .format(os.path.dirname(get_grammar_files()[0])))),
+              .format(os.path.dirname(get_grammar_files()[0]))))
 
     parser.add_argument(
         '-c', '--config-file', metavar='<file>',
@@ -375,11 +501,12 @@ def main():
         description=__doc__,
         add_arguments=add_arguments)
 
-    # build the ag command arguments
+    # build the ag command arguments, the binary takes only short
+    # option names
     ag_args = {}
     short_names = {arg.parsed_name(): arg.short_name for arg in AG_ARGUMENTS}
-    flags = [short_names[arg.parsed_name()]
-             for arg in AG_ARGUMENTS if arg.type == bool]
+    flag_options = [short_names[arg.parsed_name()]
+                    for arg in AG_ARGUMENTS if arg.type == bool]
     excluded_args = ['verbose', 'quiet', 'input', 'output', 'njobs']
     for k, v in vars(args).items():
         # ignored arguments
@@ -397,15 +524,17 @@ def main():
         except KeyError:
             pass
 
-    ag_args = ' '.join('{} {}'.format(k, v if k not in flags else '')
-                       for k, v in ag_args.items())
+    # create the list of command options
+    ag_args = ' '.join(
+        '{} {}'.format(k, v if k not in flag_options else '')
+        for k, v in ag_args.items())
 
     log.debug('using the grammar file %s', args.grammar)
     segmented = segment(
         streamin, args.grammar, njobs=args.njobs,
         ignore_first_parses=args.ignore_first_parses,
         args=ag_args, log=log)
-    log.debug('segment done')
+    log.debug('segmentation done')
 
     if segmented:
         streamout.write('\n'.join(segmented) + '\n')
