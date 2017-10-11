@@ -61,11 +61,10 @@ import pkg_resources
 import re
 import shlex
 import subprocess
-import sys
 import tempfile
 
 from wordseg import utils
-from wordseg.algos import treebank
+from wordseg.algos import tb
 
 
 AG_ARGUMENTS = [
@@ -308,7 +307,6 @@ def _run_ag_single(text, grammar_file, args, test_text=None,
             test=test_tmpfile))
 
         # run the command as a subprocess
-        log.debug('running "%s"', command)
         process = subprocess.Popen(
             shlex.split(command),
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=None)
@@ -322,7 +320,7 @@ def _run_ag_single(text, grammar_file, args, test_text=None,
             raise RuntimeError(
                 'fails with error code {}'.format(process.returncode))
 
-    return parses.decode('utf8').split('\n')
+    return parses.decode('utf8').strip().split('\n')
 
 
 def _yield_trees(trees, ignore_firsts=0):
@@ -348,20 +346,22 @@ def _yield_trees(trees, ignore_firsts=0):
 
 def _tree_string(tree, ignore_terminal_re, word_re):
     def simplify_terminal(t):
-        return t[1:] if len(t) > 0 and t[0] == '\\' else t
+        if len(t) > 0 and t[0] == '\\':
+            return t[1:]
+        else:
+            return t
 
     def visit(node, words_sofar, segs_sofar):
         """Does a preorder visit of the nodes in the tree"""
-        if treebank.is_terminal(node):
+        if tb.is_terminal(node):
             if not ignore_terminal_re.match(node):
                 segs_sofar.append(simplify_terminal(node))
             return words_sofar, segs_sofar
 
-        for child in treebank.tree_children(node):
-            words_sofar, segs_sofar = visit(
-                child, words_sofar, segs_sofar)
+        for child in tb.tree_children(node):
+            words_sofar, segs_sofar = visit(child, words_sofar, segs_sofar)
 
-        if word_re.match(treebank.tree_label(node)) and segs_sofar != []:
+        if word_re.match(tb.tree_label(node)) and segs_sofar != []:
             words_sofar.append(''.join(segs_sofar))
             segs_sofar = []
 
@@ -375,6 +375,7 @@ def _tree_string(tree, ignore_terminal_re, word_re):
 
 
 def _tree2words(tree, nepochs=0, skip=0, rate=1,
+                score_category_re=r'Word\b',
                 ignore_terminals_re=r'^[$]{3}$'):
     """Extracts segmented words from raw parse trees
 
@@ -388,6 +389,8 @@ def _tree2words(tree, nepochs=0, skip=0, rate=1,
         Initial fraction of epochs to skip
     rate : int, optional
         Input provides samples every rate epochs
+    score_category_re : str, optional
+        Score categories in tree input that match this regex
     ignore_terminals_re : str, optional
         Ignore terminals that match this regular expression
 
@@ -397,7 +400,7 @@ def _tree2words(tree, nepochs=0, skip=0, rate=1,
         The words extracted from the parse tree
 
     """
-    word_re = re.compile(r'Word\b')
+    word_re = re.compile(score_category_re)
     ignore_terminals_re = re.compile(ignore_terminals_re)
 
     nskip = int(skip * nepochs / rate)
@@ -405,19 +408,19 @@ def _tree2words(tree, nepochs=0, skip=0, rate=1,
     words = []
     for line in tree:
         line = line.strip()
-        if len(line) > 0:
+        if len(line) > 0 and nskip <= 0:
+            trees = tb.string_trees(line)
+            trees.insert(0, 'ROOT')
+            words.append(
+                _tree_string(trees, ignore_terminals_re, word_re).strip())
+        else:
             if nskip <= 0:
-                trees = treebank.string_trees(line)
-                trees.insert(0, 'ROOT')
-                words.append(
-                    _tree_string(trees, ignore_terminals_re, word_re).strip())
-        elif nskip <= 0:
-            words.append('')
+                words.append('\n')
             nskip -= 1
-        trees = treebank.string_trees(line)
+        trees = tb.string_trees(line)
         trees.insert(0, 'ROOT')
 
-    return words
+    return words  # ''.join(words)
 
 
 def segment(text, grammar_file, args='', test_text=None,
@@ -449,7 +452,7 @@ def segment(text, grammar_file, args='', test_text=None,
 
     Returns
     -------
-    segmented : sequence
+    segmented : list
         The test utterances with estimated word boundaries
 
     Raises
@@ -469,29 +472,38 @@ def segment(text, grammar_file, args='', test_text=None,
     else:
         log.info('no test text provided, segmentation on train data')
 
+    log.info('parameters are: "%s"', args)
+
     # number of runs to execute and output parses to collapse. This
-    # number comes from the original recipe provided by Mark Jonhson
-    nruns_inner = 8
+    # number 8 comes from the original recipe provided by M Jonhson.
+    nruns_inner = 1
 
     # parallel runs of the AG algorithm, raw_parses is a list of
     # `nruns_inner` raw parse trees we need to postprocess to obtain
     # words.
+    log.info('running (%d times)...', nruns_inner * nruns)
     raw_trees = joblib.Parallel(
         n_jobs=njobs, backend="threading", verbose=0)(
             joblib.delayed(_run_ag_single)(
                 text, grammar_file, args, test_text=test_text, log=log)
-            for _ in range(nruns_inner))
+            for _ in range(nruns_inner * nruns))
 
-    # collaspe the parses all together
-    trees = (tree for trees in raw_trees for tree
-             in _yield_trees(trees, ignore_firsts=ignore_first_parses))
+    log.info('collapsing the results%s', '' if ignore_first_parses == 0 else
+             ', ignore the {} first parses of each run'.format(
+                 ignore_first_parses))
+    trees = [tree for trees in raw_trees for tree
+             in _yield_trees(trees, ignore_firsts=ignore_first_parses)]
+    log.debug('loaded %d parse trees', len(trees))
+    log.debug('%s %s %s', type(trees[0]), len(trees), len(trees[-1]))
 
-    # extract words from the trees
-    words = ()
+    log.info('extracting words from raw parses')
+    score_category_re = 'Colloc0'
+    segmented = ['\n'.join(
+        _tree2words(tree, score_category_re=score_category_re))
+                 for tree in trees]
 
     # return the most frequent parse found in the sequence of parses
-    return collections.Counter(
-        '\n'.join(utt) for utt in words).most_common(1)[0][0]
+    return collections.Counter(segmented).most_common(1)[0][0].split('\n')
 
 
 def _add_arguments(parser):
@@ -602,7 +614,6 @@ def main():
 
     # build the AG command line from the parsed arguments
     cmd_args = _command_line_arguments(args)
-    log.info('parsed options are: "%s"', cmd_args)
 
     # load the test text if any
     test_text = _init_test_text(args.test_file)
@@ -617,7 +628,6 @@ def main():
         nruns=args.nruns, njobs=args.njobs, log=log)
 
     # output the results
-    log.debug('segmentation done')
     streamout.write('\n'.join(segmented) + '\n')
 
 

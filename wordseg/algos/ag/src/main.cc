@@ -887,7 +887,7 @@ int main(int argc, char** argv) {
              << ", z = " << z_its
              << ", T = " << 1.0/anneal_start
              << ", t = " << anneal_stop;
-  std::cerr << parameters.str() << std::endl;
+  // std::cerr << parameters.str() << std::endl;
 
   if (trace_stream_ptr)
       *trace_stream_ptr << parameters.str() << std::endl;

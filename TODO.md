@@ -1,5 +1,5 @@
-* roadmap for wordseg-0.5 [0/8]
-- [ ] ag output: make it works
+* roadmap for wordseg-0.5 [1/8]
+- [X] ag output: make it works
 - [ ] implement --ag-median option and run 8 times in the inner loop
 - [ ] populate test/test_ag.py
 - [ ] test AG_PARALLEL and AG_QUADRUPLE
