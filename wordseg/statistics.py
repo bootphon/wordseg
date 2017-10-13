@@ -62,7 +62,7 @@ def stat_corpus(text, separator=default_separator):
 
     df.number_tokens = len(list_of_words)
     df.number_types = len(dict_of_types)
-    df.number_utterance = len(text)
+    df.number_utterances = len(text)
 
     return df
 
@@ -96,14 +96,17 @@ def main():
         description=__doc__,
         separator=default_separator)
 
+    # force the input to be a list (can be a sequence or a file buffer)
+    streamin = list(streamin)
+    
     top = top_frequency_tokens(streamin, separator=separator)
     streamout.write(
         '{} top frequency tokens:\n'.format(len(top))
         + '\n'.join('{} {}'.format(t[0], t[1]) for t in top)
-        + '\n')
+        + '\n' * 2)
 
     stat = stat_corpus(streamin, separator=separator)
-    streamout.write(stat)
+    streamout.write(stat.to_string() + '\n')
 
 
 if __name__ == '__main__':
