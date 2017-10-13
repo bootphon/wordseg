@@ -46,12 +46,13 @@ def stat_corpus(text, separator=default_separator):
 
     df.number_tokens = len(list_of_words)
     df.number_types = len(dict_of_types)
-    df.number_utterance = len(text)
+    df.number_utterances = len(text)
 
     return df
 
 
-def top_frequency_tokens(text, n=1000, separator=default_separator, level='word'):
+def top_frequency_tokens(text, n=1000, separator=default_separator,
+                         level='word'):
     """Return the `n` most common tokens in `text`
 
     :param list(str) text: the nput text split in utterances
@@ -80,14 +81,16 @@ def main():
         description=__doc__,
         separator=default_separator)
 
+    streamin = list(streamin)
+
     top = top_frequency_tokens(streamin, separator=separator)
     streamout.write(
         '{} top frequency tokens:\n'.format(len(top))
         + '\n'.join('{} {}'.format(t[0], t[1]) for t in top)
-        + '\n')
+        + '\n' * 2)
 
     stat = stat_corpus(streamin, separator=separator)
-    streamout.write(stat)
+    streamout.write(stat.to_string() + '\n')
 
 
 if __name__ == '__main__':

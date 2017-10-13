@@ -3,7 +3,6 @@
 import os
 import pytest
 import subprocess
-import tempfile
 
 from . import tags
 
