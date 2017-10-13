@@ -87,7 +87,7 @@ setup(
     entry_points={'console_scripts': [
         'wordseg-prep = wordseg.prepare:main',
         'wordseg-eval = wordseg.evaluate:main',
-        'wordseg-stats = wordseg.stats:main',
+        'wordseg-stats = wordseg.statistics:main',
         'wordseg-dibs = wordseg.algos.dibs:main',
         'wordseg-dpseg = wordseg.algos.dpseg:main',
         'wordseg-tp = wordseg.algos.tp:main',
