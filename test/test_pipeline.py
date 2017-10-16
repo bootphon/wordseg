@@ -2,6 +2,7 @@
 
 """Test of the segmentation pipeline from raw text to eval"""
 
+import os
 import pytest
 import wordseg.evaluate
 import wordseg.prepare
@@ -16,7 +17,7 @@ from . import tags
 
 
 algos = {
-#    'ag': wordseg.algos.ag,
+    'ag': wordseg.algos.ag,
     'dibs': wordseg.algos.dibs,
     'dpseg': wordseg.algos.dpseg,
     'puddle': wordseg.algos.puddle,
@@ -25,16 +26,20 @@ algos = {
 params = [(a, e) for a in algos.keys() for e in ('ascii', 'unicode')]
 
 
+def add_unicode(lines):
+    return [
+        line.replace('ih', u'ଖ').replace('eh', u'ࠇ').replace('hh', u'ლ')
+        for line in lines]
+
+
 @pytest.mark.parametrize('algo, encoding', params)
-def test_pipeline(algo, encoding, tags):
+def test_pipeline(algo, encoding, tags, tmpdir):
     # the token separator we use in the whole pipeline
     separator = Separator(phone=' ', syllable=';esyll', word=';eword')
 
     # add some unicode chars in the input text
     if encoding == 'unicode':
-        tags = [line.replace('ih', u'ଖ')
-                .replace('eh', u'ࠇ').replace(' m ', u'ლ')
-                for line in tags]
+        tags = add_unicode(tags)
 
     # build the gold version from the tags
     gold = list(wordseg.prepare.gold(tags, separator=separator))
@@ -50,8 +55,20 @@ def test_pipeline(algo, encoding, tags):
 
     # segment it with the given algo (use default options)
     if algo in ('dpseg', 'puddle'):
-        # only 1 fold for iteratove algos: faster
+        # only 1 fold for iterative algos: faster
         segmented = list(algos[algo].segment(prepared_text, nfolds=1))
+    elif algo == 'ag':
+        # add grammar related arguments, if in unicode test adapt the
+        # grammar too
+        grammar_file = os.path.join(
+            os.path.dirname(wordseg.algos.ag.get_grammar_files()[0]),
+            'Colloc0_enFestival.lt')
+        if encoding == 'unicode':
+            grammar_unicode = add_unicode(open(grammar_file, 'r'))
+            grammar_file = tmpdir.join('grammar.lt')
+            grammar_file.write('\n'.join(grammar_unicode))
+        segmented = list(algos[algo].segment(
+            prepared_text, grammar_file, 'Colloc0', nruns=1))
     else:
         segmented = list(algos[algo].segment(prepared_text))
 

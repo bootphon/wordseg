@@ -24,7 +24,6 @@ n ow ;esyll ;eword
 
 @pytest.yield_fixture(scope='session')
 def tags():
-    """Return a list of `nlines` utterances loaded from tags.txt"""
     return _tags.strip().split('\n')
 
 

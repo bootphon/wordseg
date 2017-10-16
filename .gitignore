@@ -8,4 +8,3 @@ wordseg/algos/*/build/*
 *.pyc
 wordseg_tutorial/*
 test/.cache/*
-test/data

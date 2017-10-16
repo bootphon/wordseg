@@ -9,14 +9,20 @@ set(CMAKE_CXX_FLAGS "-std=c++11 -Wall")
 
 
 option(AG_QUADRUPLE "compile ag with quadruple precision floating point numbers" OFF)
-option(AG_PARALLEL "compile ag with multithreads" OFF)
-
 if(AG_QUADRUPLE)
   add_compile_options("-DQUADPREC")
 endif()
 message(STATUS "Option AG_QUADRUPLE is ${AG_QUADRUPLE}")
 
 
+# The AG_PARALLEL options seems to slow down the execution on a
+# machine with less than 8 cores available, because the python wrapper
+# already run 8 parallel subprocesses of the original AG code.  Notes
+# by Mark Johnson executing the original code: On my 8 core desktop
+# machine, the multi-threaded version runs about twice as fast as the
+# single threaded version, albeit using on average about 6 cores
+# (i.e., its parallel efficiency is about 33%).
+option(AG_PARALLEL "compile ag with multithreads support" OFF)
 if(AG_PARALLEL)
   find_package(OpenMP REQUIRED)
   add_compile_options(${OpenMP_CXX_FLAGS})
@@ -34,14 +40,3 @@ target_link_libraries(ag ${CMAKE_THREAD_LIBS_INIT} ${Boost_LIBRARIES})
 if(AG_PARALLEL)
   target_link_libraries(ag ${OpenMP_CXX_FLAGS})
 endif()
-
-
-# TODO little test from MJ
-#
-# run-toy: pycfg  testengger.lt testeng.yld
-# 	$(EXEC) pycfg -r 1234 -P -D -R -1 -d 100 -a 1e-2 -b 1 -e 1 -f 1 \
-# 		-g 1e2 -h 1e-2 -n 10 -C -E -A testeng.prs -N 10 \
-# 		-F testeng.trace -G testeng.wlt testengger.lt \
-# 		-X "cat > testeng.X1.prs" -X "cat > testeng.X2.prs" \
-# 		-u testeng1.yld -U "cat > testeng1.prs" -v testeng2.yld \
-# 		-V "cat > testeng2.prs" < testeng.yld
