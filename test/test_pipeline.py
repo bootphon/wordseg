@@ -65,8 +65,8 @@ def test_pipeline(algo, encoding, tags, tmpdir):
             'Colloc0_enFestival.lt')
         if encoding == 'unicode':
             grammar_unicode = add_unicode(open(grammar_file, 'r'))
-            grammar_file = tmpdir.join('grammar.lt')
-            grammar_file.write('\n'.join(grammar_unicode))
+            grammar_file = os.path.join(str(tmpdir), 'grammar.lt')
+            open(grammar_file, 'w').write('\n'.join(grammar_unicode))
         segmented = list(algos[algo].segment(
             prepared_text, grammar_file, 'Colloc0', nruns=1))
     else:

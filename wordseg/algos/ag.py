@@ -148,6 +148,7 @@ import os
 import pkg_resources
 import re
 import shlex
+import shutil
 import subprocess
 import tempfile
 
@@ -396,7 +397,8 @@ def _run_ag_single(text, grammar_file, args, test_text=None,
     # we need to write the test text as a tempfile, so we create a
     # tempdir. The directory and its content is automatically erased
     # when done
-    with tempfile.TemporaryDirectory() as temp_dir:
+    temp_dir = tempfile.mkdtemp()
+    try:
         # write the test text as a temporary file. ylt extension is
         # the one used in the original AG implementation
         test_tmpfile = os.path.join(temp_dir, 'test.ylt')
@@ -428,7 +430,9 @@ def _run_ag_single(text, grammar_file, args, test_text=None,
             raise RuntimeError(
                 'fails with error code {}'.format(process.returncode))
 
-    return parses.decode('utf8').strip().split('\n')
+        return parses.decode('utf8').strip().split('\n')
+    finally:
+        shutil.rmtree(temp_dir)
 
 
 def _yield_trees(trees, ignore_firsts=0):
