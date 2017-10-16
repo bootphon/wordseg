@@ -51,7 +51,11 @@ def test_config_files_are_here():
         assert 'dpseg' in conf
 
 
-@pytest.mark.parametrize('conf', wordseg.utils.get_config_files('dpseg'))
+# skip the bi_ideal config because it is time consuming
+@pytest.mark.parametrize(
+    'conf', (f for f in wordseg.utils.get_config_files('dpseg')
+             if 'bi_ideal' not in f))
 def test_dpseg_from_config_file(prep, conf):
-    segmented = segment(prep[:5], nfolds=1, args='--config-file {}'.format(conf))
+    segmented = segment(
+        prep[:5], nfolds=1, args='--config-file {}'.format(conf))
     assert len(list(segmented)) == 5

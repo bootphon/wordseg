@@ -9,7 +9,7 @@ from . import prep
 
 @pytest.mark.parametrize(
     'window, nfolds, njobs',
-    [(w, f, j) for w in (1, 2, 10) for f in (1, 5, 8) for j in (1, 3, 10)])
+    [(w, f, j) for w in (1, 5) for f in (1, 5) for j in (3, 10)])
 def test_puddle(prep, window, nfolds, njobs):
     out = list(puddle.segment(prep, window=window, nfolds=nfolds, njobs=njobs))
     s = Separator().remove
