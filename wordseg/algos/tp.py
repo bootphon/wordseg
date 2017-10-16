@@ -1,26 +1,4 @@
-#!/usr/bin/env python
-#
-# Copyright 2015 Amanda Saksida <amanda.saksida@gmail.com>
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-
-"""Transitional Probabilities word segmentation.
-
-The input text must be formatted one utterance a line, with syllable
-(or phoneme) boundaries marked by spaces and no word boundaries.
-
-"""
+"""Transitional Probabilities word segmentation"""
 
 import collections
 import re
@@ -74,18 +52,26 @@ def _absolute_threshold(syls, tps):
 
 
 def segment(text, threshold='relative', log=utils.null_logger()):
-    """Return a word-segmented version of an input `text`
+    """Returns a word segmented version of `text` using the TP algorithm
 
-    :param sequence(str) text: a sequence of lines with syllable (or
-      phoneme) boundaries marked by spaces and no word
-      boundaries. Each string in the sequence corresponds to an
-      utterance in the corpus.
+    Parameters
+    ----------
+    text : sequence
+        A sequence of lines with syllable (or phoneme) boundaries
+        marked by spaces and no word boundaries. Each line in the
+        sequence corresponds to a single and complete utterance.
+    threshold : str
+        Type of threshold to use, must be 'relative' or 'absolute'.
 
-    :param str threshold: type of threshold to use, must be 'relative'
-      or 'absolute', raise ValueError otherwise
+    Returns
+    -------
+    list
+        The utterances from `text` with estimated words boundaries.
 
-    :return: the corpus with estimated words boundaries, as a sequence
-      of strings
+    Raises
+    ------
+    ValueError
+        If `threshold` is not 'relative' or 'absolute'.
 
     """
     # raise on invalid threshold type

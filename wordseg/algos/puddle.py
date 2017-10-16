@@ -1,33 +1,10 @@
-#!/usr/bin/env python
-#
-# Copyright 2017 Elin Larsen, Mathieu Bernard
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-
 """Puddle word segmentation algorithm
 
-'Translation' of the puddle philosophy developped by P. Monaghan in a
-python language Monaghan, P., & Christiansen, M. H. (2010). Words in
+Implementation of the puddle philosophy developped by P. Monaghan.
+
+See "Monaghan, P., & Christiansen, M. H. (2010). Words in
 puddles of sound: modelling psycholinguistic effects in speech
-segmentation. Journal of child language, 37(03), 545-564.
-
-The fonction update_line is a function that takes as input a list of
-phonemes (ie character separated by space) defining all together an
-utterance
-
-Invariant : each time the lexicon is updated, we are segmenting
-(printing on the text file)
+segmentation. Journal of child language, 37(03), 545-564."
 
 """
 
@@ -38,132 +15,174 @@ import logging
 from wordseg import utils, folding
 
 
-lexicon = collections.Counter()
-beginning = collections.Counter()
-ending = collections.Counter()
+class Puddle(object):
+    def __init__(self, window=2, log=utils.null_logger()):
+        self.log = log
+        self.window = window
+        self.lexicon = collections.Counter()
+        self.beginning = collections.Counter()
+        self.ending = collections.Counter()
 
+    # def filter_by_frequency(self, phonemes, i, j):
+    #     all_candidates = []
+    #     for k in range(j, len(phonemes)):
+    #         try:
+    #             all_candidates.append((k, self.lexicon[''.join(phonemes[i:k+1])]))
+    #         except KeyError:
+    #             pass
+    #
+    #     j, _ = sorted(all_candidates, key=lambda x: x[1])[-1]
+    #     return j
 
-def filter_by_frequency(phonemes, i, j):
-    all_candidates = []
-    for k in range(j, len(phonemes)):
-        try:
-            all_candidates.append((k, lexicon[''.join(phonemes[i:k+1])]))
-        except KeyError:
-            pass
+    def filter_by_boundary_condition(self, phonemes, i, j, found):
+        if found:
+            previous_biphone = ''.join(phonemes[i - self.window:i])
+            # previous must be word-end
+            if i != 0 and previous_biphone not in self.ending:
+                return False
 
-    j, _ = sorted(all_candidates, key=lambda x: x[1])[-1]
+            following_biphone = ''.join(phonemes[j + 1:j + 1 + self.window])
+            if len(phonemes) != j - i and following_biphone not in self.beginning:
+                return False
 
-    return j
+            return True
 
+    def update_counters(self, segmented, phonemes, i, j):
+        self.lexicon.update([''.join(phonemes[i:j+1])])
+        segmented.append(''.join(phonemes[i:j+1]))
 
-def filter_by_boundary_condition(phonemes, i, j, found, window):
-    if found:
-        previous_biphone = ''.join(phonemes[i - window:i])
-        # previous must be word-end
-        if i != 0 and previous_biphone not in ending:
-            return False
+        if len(phonemes[i:j+1]) == len(phonemes):
+            self.log.debug('Utterance %s added in lexicon', ''.join(phonemes[i:j+1]))
+        else:
+            self.log.debug('Match %s added in lexicon', ''.join(phonemes[i:j+1]))
 
-        following_biphone = ''.join(phonemes[j + 1:j + 1 + window])
-        if len(phonemes) != j - i and following_biphone not in beginning:
-            return False
+        if len(phonemes[i:j+1]) >= 2:
+            w = self.window
+            self.beginning.update([''.join(phonemes[i:i+w])])
+            self.ending.update([''.join(phonemes[j+1-w:j+1])])
 
-        return True
+            self.log.debug('biphones %s added in beginning', ''.join(phonemes[i:i+w]))
+            self.log.debug('biphones %s added in ending', ''.join(phonemes[j+1-w:j+1]))
 
+        return segmented
 
-def update_counters(segmented, phonemes, i, j, window,
-                    log=utils.null_logger()):
-    lexicon.update([''.join(phonemes[i:j+1])])
-    segmented.append(''.join(phonemes[i:j+1]))
+    def update_utterance(self, utterance, segmented=[]):
+        """Recursive function implementing puddle
 
-    if len(phonemes[i:j+1]) == len(phonemes):
-        log.debug('Utterance %s added in lexicon', ''.join(phonemes[i:j+1]))
-    else:
-        log.debug('Match %s added in lexicon', ''.join(phonemes[i:j+1]))
+        Parameters
+        ----------
+        utterance : list
+            A non-empty list of phonological symbols (phones or syllables)
+            corresponding to an utterance.
+        segmented : list
+            Recursively build lexicon of pseudo words.
 
-    if len(phonemes[i:j+1]) >= 2:
-        beginning.update([''.join(phonemes[i:i+window])])
-        ending.update([''.join(phonemes[j+1-window:j+1])])
-        log.debug(
-            'Bi-phonemes %s added in beginning',
-            ''.join(phonemes[i:i+window]))
-        log.debug(
-            'Bi-phonemes %s added in ending',
-            ''.join(phonemes[j+1-window:j+1]))
+        Raises
+        ------
+        ValueError
+            If `phonemes` is empty.
 
-    return segmented
+        """
+        # check if the utterance is empty
+        if not len(utterance):
+            raise ValueError('The utterance is empty')
 
+        found = False
 
-def update_line(phonemes, window, log=utils.null_logger(), segmented=[]):
-    # check if the list of phonemes is not null
-    if not len(phonemes):
-        raise NotImplementedError
+        # index of start of word candidate
+        i = 0
+        while i < len(utterance):
+            j = i
+            while j < len(utterance):
+                candidate_word = ''.join(utterance[i:j+1])
+                self.log.debug('word candidate: %s', candidate_word)
 
-    found = False
+                if candidate_word in self.lexicon:
+                    found = True
 
-    # index of start of word candidate
-    i = 0
-    while i < len(phonemes):
-        j = i
-        while j < len(phonemes):
-            candidate_word = ''.join(phonemes[i:j+1])
-            log.debug('word candidate: %s', candidate_word)
+                    # choose the best candidate by looking at the
+                    # frequency of different candidates
+                    # j = filter_by_frequency(utterance,i,j)
 
-            if candidate_word in lexicon:
-                found = True
+                    # check if the boundary conditions are respected
+                    found = self.filter_by_boundary_condition(utterance, i, j, found)
 
-                # j=filter_by_frequency(phonemes,i,j) # choose the
-                # best candidate by looking at the frequency of
-                # different candidates
+                    if found:
+                        self.log.info('match found : %s', candidate_word)
+                        if i != 0:
+                            # add the word preceding the word found in
+                            # lexicon; update beginning and ending
+                            # counters and segment
+                            segmented = self.update_counters(
+                                segmented, utterance, 0, i-1)
 
-                # check if the boundary conditions are respected
-                found = filter_by_boundary_condition(
-                    phonemes, i, j, found, window)
+                        # update the lexicon, beginning and ending counters
+                        segmented = self.update_counters(
+                            segmented, utterance, i, j)
 
-                if found:
-                    log.info('match found : %s', candidate_word)
-                    if i != 0:
-                        # add the word preceding the word found in
-                        # lexicon; update beginning and ending
-                        # counters and segment
-                        segmented = update_counters(
-                            segmented, phonemes, 0, i-1, window, log=log)
+                        if j != len(utterance) - 1:
+                            # recursion
+                            return self.update_utterance(
+                                utterance[j+1:], segmented=segmented)
 
-                    # update the lexicon, beginning and ending counters
-                    segmented = update_counters(
-                        segmented, phonemes, i, j, window, log=log)
+                        # go to the next chunk and apply the same condition
+                        self.log.info('go to next chunk : %s ', utterance[j+1:])
+                        break
 
-                    if j != len(phonemes) - 1:
-                        # recursion
-                        return update_line(
-                            phonemes[j+1:], window,
-                            log=log, segmented=segmented)
-
-                    # go to the next chunk and apply the same condition
-                    log.info('go to next chunk : %s ', phonemes[j+1:])
-                    break
-
+                    else:
+                        j += 1
                 else:
                     j += 1
-            else:
-                j += 1
+            i += 1  # or go to the next phoneme
 
-        i += 1  # or go to the next phoneme
+        if not found:
+            self.update_counters(segmented, utterance, 0, len(utterance) - 1)
 
-    if not found:
-        update_counters(segmented, phonemes, 0, len(phonemes) - 1, window)
-
-    return segmented
+        return segmented
 
 
 def _puddle(text, window, log_level=logging.ERROR, log_name='wordseg-puddle'):
-    log = utils.get_logger(name=log_name, level=log_level)
-    return [' '.join(update_line(
-        line.strip().split(), window=window, log=log, segmented=[]))
-            for line in text]
+    """Runs the puddle algorithm on the `text`"""
+    # create a new puddle segmenter (with an empty lexicon)
+    puddle = Puddle(
+        window=window,
+        log=utils.get_logger(name=log_name, level=log_level))
+
+    return [' '.join(puddle.update_utterance(
+        line.strip().split(), segmented=[])) for line in text]
 
 
 def segment(text, window=2, nfolds=5, njobs=1, log=utils.null_logger()):
-    """TODO docstring"""
+    """Returns a word segmented version of `text` using the puddle algorithm
+
+    Parameters
+    ----------
+    text : sequence
+        A sequence of lines with syllable (or phoneme) boundaries
+        marked by spaces and no word boundaries. Each line in the
+        sequence corresponds to a single and comlete utterance.
+    window : int, optional
+        TODO
+    nfolds : int, optional
+        The number of folds to segment the `text` on.
+    njobs : int, optional
+        The number of subprocesses to run in parallel. The folds are
+        independant of each others and can be computed in
+        parallel. Requesting a number of jobs greater then `nfolds`
+        have no effect.
+    log : logging.Logger, optional
+        The logger instance where to send messages.
+
+    Returns
+    -------
+    generator
+        The utterances from `text` with estimated words boundaries.
+
+    See also
+    --------
+    wordseg.folding.fold
+
+    """
     # force the text to be a list of utterances
     text = list(text)
 

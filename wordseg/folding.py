@@ -1,18 +1,3 @@
-# Copyright 2015-2017 Mathieu Bernard
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-
 """Folding and unfolding texts for use in iterative word segmenters
 
 Iterative algorithms pass through the input text only once, the model
@@ -23,11 +8,11 @@ To use the whole input for evaluation, the folding module create
 "folded" versions of a text to be used in iterative text based
 algorithms.
 
-Let "A B C" be a text of three block of lines A, B and C equivalent in
-length. Folding that text in 3 generates a list of 3 versions ["A1 B1
-C1", "C2 A2 B2", and "B3 C3 A3"]. The algorithm is ran over the 3
-versions and their outputs are then unfolded to retrieve the original
-text "A3 B2 C1".
+Let "A B C" be a text made of three blocks A, B and C having roughly
+the same number of lines. Folding that text in 3 generates a list of 3
+versions ["A1 B1 C1", "C2 A2 B2", and "B3 C3 A3"]. The algorithm is
+ran over the 3 versions and their outputs are then unfolded to
+retrieve the original text "A3 B2 C1".
 
 """
 
@@ -36,24 +21,36 @@ import numpy
 
 
 def permute(l):
-    """Pop the last element of a list an push it at beginning"""
+    """Pops the last element of a list an push it at beginning"""
     return [l[-1]] + l[0:-1]
 
 
 def flatten(l):
-    """Flatten a list of lists in a single list"""
+    """Flattens a list of lists in a single list"""
     return list(itertools.chain(*l))
 
 
 def fold_boundaries(text, nfolds):
-    """Return `nfolds` boundaries as a list of line indexes in `text`
+    """Returns `nfolds` boundaries as a list of line indices in `text`
 
-    :param list text: The input text as a list of utterances
+    Parameters
+    ----------
+    text : list
+        The input text as a list of utterances.
+    nfolds : int
+        The number of fold boundaries to compute.
 
-    :param int nfolds: The number of fold boundaries to compute
+    Returns
+    -------
+    list
+        The list of indices in `text` corresponding to the computed
+        fold boundaries.
 
-    :raise ValueError: when the `text` has not enought lines to build
-      the requested `nfolds`, or if `nfolds` is not strictly positive
+    Raises
+    ------
+    ValueError
+        If the `text` has not enought lines to build the requested
+        `nfolds`, or if `nfolds` is not strictly positive.
 
     """
     if nfolds < 1:
@@ -75,6 +72,7 @@ def fold(text, nfolds):
     This function reorders the blocks given from `boundaries`
     folds. In order to serve the unfold operation, this functions also
     build the index of the beginning of the last block in each fold.
+
 
     :param list text: The input text as a list of utterances
 

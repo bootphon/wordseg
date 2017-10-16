@@ -9,9 +9,19 @@ Python API Reference
 
      import wordseg
 
+.. _algorithms:
 
 wordseg\.algos
 --------------
+
+wordseg\.algos\.ag
+~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: wordseg.algos.ag
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 wordseg\.algos\.dibs
 ~~~~~~~~~~~~~~~~~~~~
@@ -53,15 +63,6 @@ wordseg\.prepare
 ----------------
 
 .. automodule:: wordseg.prepare
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-wordseg\.gold
--------------
-
-.. automodule:: wordseg.gold
     :members:
     :undoc-members:
     :show-inheritance:

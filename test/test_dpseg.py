@@ -1,25 +1,11 @@
-# Copyright 2017 Mathieu Bernard, Elin Larsen
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-
 """Test of the 'wordseg-dpseg' command"""
 
 import os
 import pytest
 
 import wordseg
-from wordseg import utils, Separator
+from wordseg import utils
+from wordseg.separator import Separator
 from wordseg.algos.dpseg import segment
 from . import prep
 
@@ -57,7 +43,7 @@ def test_dpseg_args(prep, args):
 
 
 def test_config_files_are_here():
-    confs = wordseg.algos.dpseg.get_dpseg_conf_files()
+    confs = wordseg.utils.get_config_files('dpseg')
     assert len(confs) > 0
     for conf in confs:
         assert os.path.isfile(conf)
@@ -65,7 +51,11 @@ def test_config_files_are_here():
         assert 'dpseg' in conf
 
 
-@pytest.mark.parametrize('conf', wordseg.algos.dpseg.get_dpseg_conf_files())
+# skip the bi_ideal config because it is time consuming
+@pytest.mark.parametrize(
+    'conf', (f for f in wordseg.utils.get_config_files('dpseg')
+             if 'bi_ideal' not in f))
 def test_dpseg_from_config_file(prep, conf):
-    segmented = segment(prep[:5], nfolds=1, args='--config-file {}'.format(conf))
+    segmented = segment(
+        prep[:5], nfolds=1, args='--config-file {}'.format(conf))
     assert len(list(segmented)) == 5

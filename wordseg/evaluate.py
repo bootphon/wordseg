@@ -1,21 +1,3 @@
-#!/usr/bin/env python
-#
-# Copyright 2012 Mark Johnson
-# Copyright 2017 Mathieu Bernard, Elin Larsen
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-
 """Word segmentation evaluation.
 
 Evaluates a segmented text against it's gold version. Display the
@@ -25,7 +7,8 @@ precision, recall and f-score at type, token and boundary levels.
 
 import codecs
 
-from wordseg import utils, Separator
+from wordseg import utils
+from wordseg.separator import Separator
 
 
 DEFAULT_SEPARATOR = Separator(None, None, ' ')
@@ -142,15 +125,15 @@ def evaluate(text, gold, separator=DEFAULT_SEPARATOR):
                                _stringpos_boundarypos(gold_stringpos))
 
     return {
-        'type_f-score': type_eval.fscore(),
+        'type_fscore': type_eval.fscore(),
         'type_precision': type_eval.precision(),
         'type_recall': type_eval.recall(),
-        'token_f-score': token_eval.fscore(),
+        'token_fscore': token_eval.fscore(),
         'token_precision': token_eval.precision(),
         'token_recall': token_eval.recall(),
-        'bound_f-score': boundary_eval.fscore(),
-        'bound_precision': boundary_eval.precision(),
-        'bound_recall': boundary_eval.recall()}
+        'boundary_fscore': boundary_eval.fscore(),
+        'boundary_precision': boundary_eval.precision(),
+        'boundary_recall': boundary_eval.recall()}
 
 
 @utils.CatchExceptions

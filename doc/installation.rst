@@ -3,41 +3,49 @@
 Installation
 ============
 
-
 The ``wordseg`` package is made of a collection of command-line
 programs and a Python library that can be installed using the
 instructions below.
+
+It is tested on `continuous integration
+<https://travis-ci.org/bootphon/wordseg>`_ to work on Python 2.7 and
+3.5, both on Linux and Mac OS. On Windows, you can use the `Linux
+subsytem for Windows
+<https://msdn.microsoft.com/en-us/commandline/wsl/about>`_, see `here
+<https://github.com/bootphon/wordseg/issues/6>`_ for a discussion.
 
 .. note::
 
    Before going further, please clone the repository from
    github and go in it's root directory::
 
-     git clone https://github.com/mmmaat/wordseg.git ./wordseg
+     git clone https://github.com/bootphon/wordseg.git ./wordseg
      cd ./wordseg
 
 
 Dependencies
 ------------
 
-* The package is implemented in python and C++. Minimal dependencies to
-  install ``wordseg`` are:
+The package is implemented in Python and C++ and requires software to
+work:
 
-  - python3 (python2 is supported but python3 prefered for it's native
-    unicode support),
-  - make and a C++ compiler supporting the ``-std=c++11`` option (should
-    be the case on most modern compilers),
-  - the boost C++ library.
+  - **Python3** (Python2 is supported but lacks of unicode support),
+  - a **C++ compiler** supporting the C++11 standard,
+  - **cmake** for configuration and build (see `here <https://cmake.org/>`_),
+  - the **boost program options** C++ library for option parsing (see `here
+    <http://www.boost.org/doc/libs/1_65_1/doc/html/program_options.html>`_),
+  - the following Python packages; **joblib**, **numpy** and **pandas**.
 
-* Install the required dependencies:
+
+Install the required dependencies:
 
   - on **Ubuntu/Debian**::
 
-      sudo apt-get install python3 python3-pip libboost-dev libboost-program-options-dev
+      sudo apt-get install python3 python3-pip cmake libboost-program-options-dev
 
   - on **Mac OSX**::
 
-      brew install python3 boost
+      brew install python3 boost cmake
 
 
 System-wide installation
@@ -48,18 +56,25 @@ your personal computer (and you do not want to modify/contribute to
 the code). In all other cases, consider installing ``wordseg`` in a
 virtual environment.
 
-* Build and install the ``wordseg`` package::
+* Create a directory where to store intermediate (built) files::
 
-    python3 setup.py build
-    sudo python3 setup.py install
+      mkdir -p build
+      cd build
 
+* Configure the installation with::
 
-* With this method there is no clear uninstallation process, you need to
-  delete the files manually (see https://stackoverflow.com/q/1550226 )::
+    cmake ..
 
-    sudo python3 setup.py install --record files.txt
-    cat files.txt | sudo xargs rm -rf
-    sudo rm files.txt
+  Or use ``cmake-gui ..`` for a graphical interface where you can
+  easily tune configuration variables and compilation options.
+
+* Finally compile and install ``wordseg``::
+
+      make
+      [sudo] make install
+
+* If you planned to modify the wordseg's code, use ``make develop``
+  instead of ``make install``
 
 
 Installation in a virtual environment
@@ -71,38 +86,24 @@ computing cluster) or if you are developing with ``wordseg``.
 
 This installation process is based on the conda_ python package
 manager and can be performed on any Linux, Mac OS or Windows system
-supported by conda.
+supported by conda (but you can virtualenv_ as well).
 
-* First install conda from `here <https://conda.io/miniconda.html>`_
+* First install conda from `here <https://conda.io/miniconda.html>`_.
 
 * Create a new Python 3 virtual environment named *wordseg* and
-  install the required dependencies (include pytest and sphinx for
-  test and documentation, see below)::
+  install some required dependencies::
 
-    conda create --name wordseg python=3 \
-          pytest pytest-runner sphinx sphinx_rtd_theme \
-          joblib numpy pandas
+    conda create --name wordseg python=3 pytest joblib numpy pandas
 
 * Activate your virtual environment::
 
     source activate wordseg
 
-* Install the wordseg package (this will install the commandline tools
-  in your $HOME and make them callable from the terminal). If you do
-  not want to edit the code::
-
-    python setup.py build
-    python setup.py install
-
-  Or if you want to edit the code::
-
-    python setup.py build
-    python setup.py develop
+* Install the wordseg package by following the previous section
+  *System-wide installation*.
 
 * To uninstall it, simply remove the ``wordseg`` directory in your
-  conda installation folder (generally ``~/.conda/envs`` or
-  ``~/.anaconda/envs``)
-
+  conda installation folder (once activated it is ``$CONDA_PREFIX``).
 
 .. note::
 
@@ -114,28 +115,34 @@ supported by conda.
 Running the tests
 -----------------
 
-* To run the test suite have a::
+* From the `build` directory have a::
 
-    python setup.py test
+    make test
 
-* The tests are located in ``./test`` and are executed by
-  pytest_. ``python setup.py test`` is in fact an alias for ``pytest
-  ./test``.
+* The tests are located in ``../test`` and are executed by pytest_. In
+  case of test failure, you may want to rerun the tests with the
+  command ``pytest -v ../test`` to have a more detailed output.
 
 * pytest supports a lot of options. For exemple to stop the execution
   at the first failure, use ``pytest -x``. To execute a single test
-  case, use ``pytest ./test/test_separator.py::test_bad_separators``.
+  case, use ``pytest ../test/test_separator.py::test_bad_separators``.
 
 
 Build the documentation
 -----------------------
 
 To build the html documentation (the one you are currently reading),
-have a::
+first install some dependancies::
 
-  python setup.py build_sphinx
+  sudo apt-get install texlive textlive-latex-extra dvipng
+  [sudo] pip install sphinx sphinx_rtd_theme numpydoc
 
-The main page is then ``./build/sphinx/html/index.html``.
+Then just have a::
+
+  make html
+
+The main page is built as ``build/html/index.html``.
 
 .. _conda: https://conda.io/miniconda.html
 .. _pytest: https://docs.pytest.org/en/latest/
+.. _virtualenv: https://virtualenv.pypa.io/en/stable/

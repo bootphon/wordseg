@@ -10,13 +10,14 @@ matrix:
       python: "3.5"
     - os: osx
       osx_image: xcode8.3
+      compiler: gcc
       language: generic
 
 # install boost on linux only (already here on osx)
 addons:
   apt:
     packages:
-      - libboost-program-options-dev
+      - cmake libboost-program-options-dev libboost-log-dev
 
 # install python3 on osx
 before_install:
@@ -27,11 +28,15 @@ before_install:
 install:
   - pip install --upgrade pip
   - pip install pandas numpy joblib pytest
-  - python setup.py build
-  - python setup.py install
+  - mkdir -p build
+  - cd build
+  - cmake ..
+  - make
+  - make install
+  - cd ..
 
 script:
-  - pytest ./test
+  - pytest ./test -v
 
 cache:
   - pip

@@ -1,0 +1,91 @@
+1 1 Sentence --> Colloc3
+1 1 Sentence --> Colloc3 Sentence
+Colloc3 --> Colloc2s
+Colloc3 --> FunWords3 Colloc2s
+1 1 Colloc2s --> Colloc2
+1 1 Colloc2s --> Colloc2 Colloc2s
+Colloc2 --> Collocs
+Colloc2 --> FunWords2 Collocs
+1 1 Collocs --> Colloc
+1 1 Collocs --> Colloc Collocs
+Colloc --> Words
+Colloc --> FunWords1 Words 
+FunWords1 --> WordFs1
+1 1 WordFs1 --> WordFun1
+1 1 WordFs1 --> WordFun1 WordFs1
+WordFun1 --> SyllableIF
+FunWords2 --> WordFs2
+1 1 WordFs2 --> WordFun2
+1 1 WordFs2 --> WordFun2 WordFs2
+WordFun2 --> SyllableIF
+FunWords3 --> WordFs3
+1 1 WordFs3 --> WordFun3
+1 1 WordFs3 --> WordFun3 WordFs3
+WordFun3 --> SyllableIF
+1 1 Words --> Word
+1 1 Words --> Word Words
+Word --> SyllableIF
+Word --> SyllableI SyllableF
+Word --> SyllableI Syllable SyllableF
+Word --> SyllableI Syllable Syllable SyllableF
+1 1 Syllable --> Onset Rhyme
+1 1 Syllable --> Rhyme
+1 1 SyllableI --> OnsetI Rhyme
+1 1 SyllableI --> Rhyme
+1 1 SyllableF --> Onset RhymeF
+1 1 SyllableF --> RhymeF
+1 1 SyllableIF --> OnsetI RhymeF
+1 1 SyllableIF --> RhymeF
+1 1 Rhyme --> Nucleus Coda
+1 1 Rhyme --> Nucleus
+1 1 RhymeF --> Nucleus CodaF
+1 1 RhymeF --> Nucleus
+Onset --> Consonants
+Coda --> Consonants
+OnsetI --> Consonants
+CodaF --> Consonants
+Nucleus --> Vowels
+1 1 Consonants --> Consonant
+1 1 Consonants --> Consonant Consonants
+1 1 Vowels --> Vowel
+1 1 Vowels --> Vowel Vowels
+1 1 Consonant -->b
+1 1 Consonant -->ch
+1 1 Consonant -->d
+1 1 Consonant -->dh
+1 1 Consonant -->f
+1 1 Consonant -->g
+1 1 Consonant -->hh
+1 1 Consonant -->jh
+1 1 Consonant -->k
+1 1 Consonant -->l
+1 1 Consonant -->m
+1 1 Consonant -->n
+1 1 Consonant -->ng
+1 1 Consonant -->p
+1 1 Consonant -->r
+1 1 Consonant -->s
+1 1 Consonant -->sh
+1 1 Consonant -->t
+1 1 Consonant -->th
+1 1 Consonant -->v
+1 1 Consonant -->w
+1 1 Consonant -->y
+1 1 Consonant -->z
+1 1 Consonant -->zh
+1 1 Vowel -->uh
+1 1 Vowel -->uw
+1 1 Vowel -->ow
+1 1 Vowel -->oy
+1 1 Vowel -->ih
+1 1 Vowel -->iy
+1 1 Vowel -->aa
+1 1 Vowel -->ae
+1 1 Vowel -->ah
+1 1 Vowel -->ao
+1 1 Vowel -->aw
+1 1 Vowel -->ax
+1 1 Vowel -->ay
+1 1 Vowel -->eh
+1 1 Vowel -->er
+1 1 Vowel -->ey

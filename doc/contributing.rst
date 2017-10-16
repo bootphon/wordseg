@@ -4,41 +4,48 @@ Contributing
 ============
 
 The **wordseg** package is free software made for open science, we
-welcome any feedback, suggestions, improvements, feature requests,
-etc...
+welcome all the ideas and contributions.
 
+Reporting bugs, issues or ideas
+-------------------------------
 
-* **Reporting bugs, having troubles:** please open an issue on the
-  wordseg's `github page <https://github.com/mmmaat/wordseg/issues>`_.
+  Please open an issue on the wordseg's `github page
+  <https://github.com/bootphon/wordseg/issues>`_.
 
-* **Pull requests:** if you want to contribute to the wordseg code,
-  you should work on your own branch and submit a pull request to the
-  `wordseg master branch
-  <https://github.com/mmmaat/wordseg/pulls>`_. See `here
+  .. note::
+
+     When reporting installation issues, please include the full
+     output of the `cmake`, `make` and `make install` commands in your
+     message.
+
+Contributing to the code
+------------------------
+
+* To contribute directly to the package, please create a `fork
+  <https://github.com/bootphon/wordseg/fork>`_ of wordseg in your
+  github account.
+
+* Make sure to install wordseg with the ``make develop`` command.
+
+* Submit your work by sending a pull request to the `wordseg master
+  branch <https://github.com/bootphon/wordseg/pulls>`_. See `here
   <https://help.github.com/articles/about-pull-requests/>`_ for
   github's help on pull requests.
 
+* Please make sure all the tests are passing before any pull
+  request. When possible add new tests for your code as well.
 
-Improving this documentation
-----------------------------
+* The package has the following conventions:
 
-This documentation is built with Sphinx_ from the sources in the
-``./doc`` directory. The source files are written in
-**reStructuredText**, a format similar to markdown (a `brief guide here
-<http://www.sphinx-doc.org/en/stable/rest.html>`_).
-
-Once you have updated the sources, you can rebuild the html
-documentation with the command::
-
-  python setup.py build_sphinx
-
-
-Implementing a new algorithm
-----------------------------
-
-.. todo::
-
-   coming soon!
+  * C++ code follows the `google style guide`_
+  * Python code follows the pep8_ standard.
+  * Python documentation follows the numpydoc_ standard.
+  * HTML documentation (located in the ``./doc`` directory) are
+    written in *reStructuredText*, a format similar to markdown (a
+    `brief guide here <http://www.sphinx-doc.org/en/stable/rest.html>`_).
 
 
 .. _Sphinx: http://www.sphinx-doc.org
+.. _pep8: http://www.python.org/dev/peps/pep-0008/
+.. _numpydoc: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
+.. _google style guide: https://google.github.io/styleguide/cppguide.html
