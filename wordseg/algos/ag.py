@@ -121,6 +121,7 @@ where G is the Gamma function.
 
 import collections
 import joblib
+import logging
 import os
 import pkg_resources
 import re
@@ -331,7 +332,7 @@ def _is_parent_in_grammar(grammar_file, parent):
 
 
 def _run_ag_single(text, grammar_file, args, test_text=None,
-                   log=utils.null_logger()):
+                   log_level=logging.ERROR, log_name='wordseg-ag'):
     """Runs the AG program a single time and returns the computed parse trees
 
     Parameters
@@ -361,6 +362,8 @@ def _run_ag_single(text, grammar_file, args, test_text=None,
         If the AG program fails and returns an error code
 
     """
+    log = utils.get_logger(name=log_name, level=log_level)
+
     # setup the train text as a multiline string
     train_text = '\n'.join(utt.strip() for utt in text) + '\n'
 
@@ -389,11 +392,14 @@ def _run_ag_single(text, grammar_file, args, test_text=None,
             shlex.split(command),
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
-            stderr=None)
+            stderr=subprocess.PIPE)
 
-        # send the text from stdin and get back the raw parses from
-        # stdout (ignoring the stderr output)
-        parses, _ = process.communicate(train_text.encode('utf8'))
+        parses, messages = process.communicate(train_text.encode('utf8'))
+
+        # log.debug the AG messages AFTER EXECUTION
+        messages = messages.decode('utf8').split('\n')
+        for msg in messages:
+            log.debug(re.sub('^# ', '', msg).strip())
 
         # fail if AG returns an error code
         if process.returncode:
@@ -629,8 +635,10 @@ def segment(text, grammar_file, segment_category,
     raw_trees = joblib.Parallel(
         n_jobs=njobs, backend="threading", verbose=0)(
             joblib.delayed(_run_ag_single)(
-                text, grammar_file, args, test_text=test_text, log=log)
-            for _ in range(nruns))
+                text, grammar_file, args, test_text=test_text,
+                log_level=log.getEffectiveLevel(),
+                log_name='wordseg-ag - run {}'.format(n + 1))
+            for n in range(nruns))
 
     log.info('collapsing the results%s', '' if ignore_first_parses == 0 else
              ', ignore the {} first parses of each run'.format(
