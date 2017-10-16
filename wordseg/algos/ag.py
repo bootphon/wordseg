@@ -1,7 +1,7 @@
 """Adaptor Grammar
 
 The grammar consists of a sequence of rules, one per line, in the
-following format:
+following format::
 
     [theta [a [b]]] Parent --> Child1 Child2 ...
 
@@ -43,61 +43,84 @@ initial values must be greater than zero.  The -a flag may be useful
 here. If a nonterminal has an a value of 1, this means that the
 nonterminal is not adapted.
 
+* Pitman-Yor Context-Free Grammars
 
-Pitman-Yor Context-Free Grammars
-================================
+  Rules are of format::
 
-Rules are of format
+    [w [a [b]]] X --> Y1 ... Yn
 
-[w [a [b]]] X --> Y1 ... Yn
+  where X is a nonterminal and Y1 ... Yn are either terminals or
+  nonterminals,
 
-where X is a nonterminal and Y1 ... Yn are either terminals or
-nonterminals,
+  w is the Dirichlet hyper-parameter (i.e., pseudo-count) associated
+  with this rule (a positive real)
 
-w is the Dirichlet hyper-parameter (i.e., pseudo-count) associated
-with this rule (a positive real)
+  a is the PY "a" constant associated with X (a positive real less
+  than 1)
 
-a is the PY "a" constant associated with X (a positive real less
-than 1)
-
-b is the PY "b" constant associated with X (a positive real)
+  b is the PY "b" constant associated with X (a positive real)
 
 
-The -h flag causes the program to print out a list of options.
+* Brief recap of Pitman-Yor processes
 
-The -A parses-file causes it to print out analyses of the training data
-for the last few iterations (the number of iterations is specified by the
--N flag).
+  Suppose there are n samples occupying m tables.  Then the probability
+  that the n+1 sample occupies table 1 <= k <= m is:
 
-If you specify the -C flag, these trees are printed in "compact" format,
-i.e., only cached categories are printed (I think the root node is always
-printed, just so we have a tree).
+  .. math::
 
-If you don't specify the -C flag, cached nodes are suffixed by a '#'
-followed by a number, which is the number of customers at this table.
+     P(x_{n+1} = k) = \\frac{n_k - a}{n + b}
 
+  and the probability that the n+1 sample occupies the new table m+1
+  is:
 
-Brief recap of Pitman-Yor processes
-===================================
+  .. math::
 
-Suppose there are n samples occupying m tables.  Then the probability
-that the n+1 sample occupies table 1 <= k <= m is:
+     P(x_{n+1} = m+1) = \\frac{m*a + b}{n + b}
 
-  P(x_{n+1} = k) = (n_k - a)/(n + b)
-
-and the probability that the n+1 sample occupies the new table m+1 is:
-
-  P(x_{n+1} = m+1) = (m*a + b)/(n + b)
-
-The probability of a configuration in which a restaurant contains n
-customers at m tables, with n_k customers at table k is:
+  The probability of a configuration in which a restaurant contains n
+  customers at m tables, with n_k customers at table k is:
 
 
-  a^{-m} G(m+b/a)  G(b)                 G(n_k-a)
-         -------- ------  \prod_{k=1}^m --------
-          G(b/a)  G(n+b)                 G(1-a)
+  .. math::
 
-where G is the Gamma function.
+     a^{-m} \\frac{G(m+b/a)}{G(b/a)} \\frac{G(b)}{G(n+b)} \\prod_{k=1}^m \\frac{G(n_k-a)}{G(1-a)}
+
+  where G is the Gamma function.
+
+* Improving running time
+
+  Several people have been running this code on larger data sets, and
+  long running times have become a problem.
+
+  The "right thing" would be to rewrite the code to make it run
+  efficiently, but until someone gets around to doing that, I've added
+  very simple multi-threading support using OpenMP.
+
+  To compile wordseg-ag with OpenMP support, use the `AG_PARALLEL`
+  option for cmake::
+
+    cmake -DAG_PARALLEL=ON ..
+
+  On my 8 core desktop machine, the multi-threaded version runs about
+  twice as fast as the single threaded version, albeit using on average
+  about 6 cores (i.e., its parallel efficiency is about 33%).
+
+* Quadruple precision
+
+  On very long strings the probabilities estimated by the parser can
+  sometimes underflow, especially during the first couple of
+  iterations when the probability estimates are still very poor.
+
+  The right way to fix this is to rewrite the program so it rescales
+  all of its probabilities during the computation to avoid unflows,
+  but until someone gets around to doing this, I've implemented a
+  hack, which is just to compile the code using new new
+  quadruple-precision floating point maths.
+
+  To compile wordseg-ag on quadruple float precision, use the
+  `AG_QUADRUPLE` option for cmake::
+
+    cmake -DAG_QUADRUPLE=ON ..
 
 """
 
@@ -108,7 +131,6 @@ where G is the Gamma function.
 # not trained on.  These parses are piped into the commands specified by
 # the -U and -V parameters respectively.  Just as for the -X eval-cmd,
 # these commands are only run _once_.
-
 
 # Some notes on this AG implementation.
 #
@@ -761,7 +783,7 @@ def main():
     # initializing standard i/o and arguments
     streamin, streamout, _, log, args = utils.prepare_main(
         name='wordseg-ag',
-        description=__doc__,
+        description="""Adaptor Grammar word segmentation algorithm""",
         add_arguments=_add_arguments)
 
     # build the AG command line (C++ side) from the parsed arguments

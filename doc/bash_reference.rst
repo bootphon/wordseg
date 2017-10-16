@@ -6,9 +6,9 @@ Bash commands reference
 List of wordseg commands
 ------------------------
 
-Once **wordseg** is installed on your plaform, the commands are
+Once wordseg is installed on your plaform, the commands are
 available from the terminal as any other command line tool. The
-commands composing the **wordseg** package are:
+commands are:
 
 * ``wordseg-prep`` prepares a text in a phonological-like form for
   segmentation, basically removing word separators and checking format.
@@ -18,8 +18,8 @@ commands composing the **wordseg** package are:
 
 * ``wordseg-<algorithm>`` computes word segmentation on a prepared
   text, outputing the text with word boundaries added. The algorithms
-  available are Adaptor Grammar, dibs, dpseg, puddle and Transition
-  Probabilities. See more on the :ref:`algorithms` page.
+  available are ``wordseg-ag``, ``wordseg-dibs``, ``wordseg-dpseg``,
+  ``wordseg-puddle`` and ``wordseg-tp``. For details, see the :ref:`algorithms` page.
 
 * ``wordseg-eval`` evaluates a segmented text on a gold version,
   computing the precision, recall and f-score at type, token and
@@ -85,36 +85,6 @@ Input text format
 
    You can specify another separators using the ``-p``, ``-s`` and
    ``-w`` options of the related wordseg commands.
-
-
-Input of wordseg-prep and wordseg-gold
-""""""""""""""""""""""""""""""""""""""
-
-   .. productionlist::
-      input_file: utterances
-      utterances: utterance
-                : utterances
-      utterance: words
-      words: word words
-      word: (syllables | phones) `word_boundary`
-      syllables: syllable syllables
-      syllable: phones `syll_boundary`
-      phones: phone `phone_boundary` phones
-      phone: `phonological_unit`
-
-
-Input of wordseg-<algorithm>
-""""""""""""""""""""""""""""
-
-   .. productionlist::
-      input_file: utterances
-      utterances: utterance
-                : utterances
-      utterance: phones
-      phones: phone " " phones
-      phone: `phonological_unit`
-
-
 
 
 Commands input/output

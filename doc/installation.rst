@@ -3,10 +3,16 @@
 Installation
 ============
 
-
 The ``wordseg`` package is made of a collection of command-line
 programs and a Python library that can be installed using the
 instructions below.
+
+It is tested on `continuous integration
+<https://travis-ci.org/bootphon/wordseg>`_ to work on Python 2.7 and
+3.5, both on Linux and Mac OS. On Windows, you can use the `Linux
+subsytem for Windows
+<https://msdn.microsoft.com/en-us/commandline/wsl/about>`_, see `here
+<https://github.com/bootphon/wordseg/issues/6>`_ for a discussion.
 
 .. note::
 
@@ -20,17 +26,18 @@ instructions below.
 Dependencies
 ------------
 
-* The package is implemented in python and C++. Minimal dependencies to
-  install ``wordseg`` are:
+The package is implemented in Python and C++ and requires software to
+work:
 
-  - cmake_ for building,
-  - the boost_ C++ libraries,
-  - python3 (python2 is supported but python3 preferred for it's native
-    unicode support),
-  - a C++ compiler supporting the ``-std=c++11`` option (should be the
-    case on most modern compilers),
+  - **Python3** (Python2 is supported but lacks of unicode support),
+  - a **C++ compiler** supporting the C++11 standard,
+  - **cmake** for configuration and build (see `here <https://cmake.org/>`_),
+  - the **boost program options** C++ library for option parsing (see `here
+    <http://www.boost.org/doc/libs/1_65_1/doc/html/program_options.html>`_),
+  - the following Python packages; **joblib**, **numpy** and **pandas**.
 
-* Install the required dependencies:
+
+Install the required dependencies:
 
   - on **Ubuntu/Debian**::
 
@@ -39,8 +46,6 @@ Dependencies
   - on **Mac OSX**::
 
       brew install python3 boost cmake
-
-  - optionally you can install ``cmake-gui``
 
 
 System-wide installation
@@ -61,12 +66,12 @@ virtual environment.
     cmake ..
 
   Or use ``cmake-gui ..`` for a graphical interface where you can
-  easily tune installation directories and options.
+  easily tune configuration variables and compilation options.
 
 * Finally compile and install ``wordseg``::
 
       make
-      sudo make install
+      [sudo] make install
 
 * If you planned to modify the wordseg's code, use ``make develop``
   instead of ``make install``
@@ -116,7 +121,7 @@ Running the tests
 
 * The tests are located in ``../test`` and are executed by pytest_. In
   case of test failure, you may want to rerun the tests with the
-  command `pytest -v ../test` to have a more detailed output.
+  command ``pytest -v ../test`` to have a more detailed output.
 
 * pytest supports a lot of options. For exemple to stop the execution
   at the first failure, use ``pytest -x``. To execute a single test
@@ -130,7 +135,7 @@ To build the html documentation (the one you are currently reading),
 first install some dependancies::
 
   sudo apt-get install texlive textlive-latex-extra dvipng
-  pip install sphinx sphinx_rtd_theme numpydoc
+  [sudo] pip install sphinx sphinx_rtd_theme numpydoc
 
 Then just have a::
 
@@ -138,9 +143,6 @@ Then just have a::
 
 The main page is built as ``build/html/index.html``.
 
-
-.. _boost: http://www.boost.org/
-.. _cmake: https://cmake.org/
 .. _conda: https://conda.io/miniconda.html
 .. _pytest: https://docs.pytest.org/en/latest/
 .. _virtualenv: https://virtualenv.pypa.io/en/stable/

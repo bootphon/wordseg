@@ -44,13 +44,6 @@ Contributing to the code
     written in *reStructuredText*, a format similar to markdown (a
     `brief guide here <http://www.sphinx-doc.org/en/stable/rest.html>`_).
 
-Implementing a new algorithm
-----------------------------
-
-.. todo::
-
-   Coming soon, for now open an issue.
-
 
 .. _Sphinx: http://www.sphinx-doc.org
 .. _pep8: http://www.python.org/dev/peps/pep-0008/
