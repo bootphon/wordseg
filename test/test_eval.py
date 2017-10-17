@@ -1,10 +1,8 @@
 """Test of the wordseg_eval module"""
 
-
-import pytest
 from wordseg.evaluate import read_data, evaluate
-
 from . import gold
+
 
 def test_read_data():
     assert read_data([]) == ([], [])

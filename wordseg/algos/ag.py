@@ -139,8 +139,9 @@ nonterminal is not adapted.
 # gold file we do not want to expose here. An alternative (still to
 # code) is to have something like "for i in 1..5 do wordseg-ag |
 # wordseg-eval done > extract_median_result""
-#
 
+
+import codecs
 import collections
 import joblib
 import logging
@@ -348,7 +349,7 @@ def _is_parent_in_grammar(grammar_file, parent):
     Parents are the first word of each line in the grammar file.
 
     """
-    for line in open(grammar_file, 'r'):
+    for line in codecs.open(grammar_file, 'r', encoding='utf8'):
         if line.split(' ')[0] == parent:
             return True
     return False
@@ -402,7 +403,7 @@ def _run_ag_single(text, grammar_file, args, test_text=None,
         # write the test text as a temporary file. ylt extension is
         # the one used in the original AG implementation
         test_tmpfile = os.path.join(temp_dir, 'test.ylt')
-        open(test_tmpfile, 'w', encoding='utf8').write(test_text)
+        codecs.open(test_tmpfile, 'w', encoding='utf8').write(test_text)
 
         # generate the command to run as a subprocess
         command = ('{binary} {grammar} {args} -u {test} -U cat'.format(
@@ -800,7 +801,7 @@ def main():
         if not os.path.isfile(args.test_file):
             raise RuntimeError(
                 'test file not found: {}'.format(args.test_file))
-        test_text = open(args.test_file, 'r', encoding='utf8')
+        test_text = codecs.open(args.test_file, 'r', encoding='utf8')
 
     # call the AG algorithm
     segmented = segment(

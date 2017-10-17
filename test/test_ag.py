@@ -1,5 +1,6 @@
 """Test of the wordseg.algos.ag module"""
 
+import codecs
 import os
 import pytest
 
@@ -48,7 +49,7 @@ def test_mark_jonhson(tmpdir):
     assert os.path.isdir(data_dir)
 
     grammar_file = os.path.join(data_dir, 'ag_testengger.lt')
-    text = open(os.path.join(data_dir, 'ag_testeng.yld'), 'r')
+    text = codecs.open(os.path.join(data_dir, 'ag_testeng.yld'), 'r', encoding='utf8')
     arguments = (
         '-r 1234 -P -D -R -1 -d 100 -a 1e-2 -b 1 -e 1 -f 1 '
         '-g 1e2 -h 1e-2 -n 10 -C -E -A {prs} -N 10 '

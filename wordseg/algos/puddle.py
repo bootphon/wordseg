@@ -27,10 +27,10 @@ class Puddle(object):
     #     all_candidates = []
     #     for k in range(j, len(phonemes)):
     #         try:
-    #             all_candidates.append((k, self.lexicon[''.join(phonemes[i:k+1])]))
+    #              all_candidates.append(
+    #                  (k, self.lexicon[''.join(phonemes[i:k+1])]))
     #         except KeyError:
     #             pass
-    #
     #     j, _ = sorted(all_candidates, key=lambda x: x[1])[-1]
     #     return j
 
@@ -42,7 +42,10 @@ class Puddle(object):
                 return False
 
             following_biphone = ''.join(phonemes[j + 1:j + 1 + self.window])
-            if len(phonemes) != j - i and following_biphone not in self.beginning:
+            if (
+                    len(phonemes) != j - i
+                    and following_biphone not in self.beginning
+            ):
                 return False
 
             return True
@@ -52,17 +55,21 @@ class Puddle(object):
         segmented.append(''.join(phonemes[i:j+1]))
 
         if len(phonemes[i:j+1]) == len(phonemes):
-            self.log.debug('Utterance %s added in lexicon', ''.join(phonemes[i:j+1]))
+            self.log.debug(
+                'utterance %s added in lexicon', ''.join(phonemes[i:j+1]))
         else:
-            self.log.debug('Match %s added in lexicon', ''.join(phonemes[i:j+1]))
+            self.log.debug(
+                'match %s added in lexicon', ''.join(phonemes[i:j+1]))
 
         if len(phonemes[i:j+1]) >= 2:
             w = self.window
             self.beginning.update([''.join(phonemes[i:i+w])])
             self.ending.update([''.join(phonemes[j+1-w:j+1])])
 
-            self.log.debug('biphones %s added in beginning', ''.join(phonemes[i:i+w]))
-            self.log.debug('biphones %s added in ending', ''.join(phonemes[j+1-w:j+1]))
+            self.log.debug(
+                'biphones %s added in beginning', ''.join(phonemes[i:i+w]))
+            self.log.debug(
+                'biphones %s added in ending', ''.join(phonemes[j+1-w:j+1]))
 
         return segmented
 
@@ -105,7 +112,8 @@ class Puddle(object):
                     # j = filter_by_frequency(utterance,i,j)
 
                     # check if the boundary conditions are respected
-                    found = self.filter_by_boundary_condition(utterance, i, j, found)
+                    found = self.filter_by_boundary_condition(
+                        utterance, i, j, found)
 
                     if found:
                         self.log.info('match found : %s', candidate_word)
@@ -126,7 +134,8 @@ class Puddle(object):
                                 utterance[j+1:], segmented=segmented)
 
                         # go to the next chunk and apply the same condition
-                        self.log.info('go to next chunk : %s ', utterance[j+1:])
+                        self.log.info(
+                            'go to next chunk : %s ', utterance[j+1:])
                         break
 
                     else:
@@ -229,7 +238,9 @@ def main():
         description=__doc__,
         add_arguments=add_arguments)
 
-    segmented = segment(streamin, window=args.window, log=log)
+    segmented = segment(
+        streamin, window=args.window,
+        nfolds=args.nfolds, njobs=args.njobs, log=log)
     streamout.write('\n'.join(segmented) + '\n')
 
 

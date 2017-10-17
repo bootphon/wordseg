@@ -114,15 +114,17 @@ def evaluate(text, gold, separator=DEFAULT_SEPARATOR):
                 .format(i+1), g, t)
 
     type_eval = Evaluation()
-    type_eval.update_lists(_stringpos_typepos(text_stringpos),
-                           _stringpos_typepos(gold_stringpos))
+    type_eval.update_lists(
+        _stringpos_typepos(text_stringpos),
+        _stringpos_typepos(gold_stringpos))
 
     token_eval = Evaluation()
     token_eval.update_lists(text_stringpos, gold_stringpos)
 
     boundary_eval = Evaluation()
-    boundary_eval.update_lists(_stringpos_boundarypos(text_stringpos),
-                               _stringpos_boundarypos(gold_stringpos))
+    boundary_eval.update_lists(
+        _stringpos_boundarypos(text_stringpos),
+        _stringpos_boundarypos(gold_stringpos))
 
     return {
         'type_fscore': type_eval.fscore(),
