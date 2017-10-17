@@ -8,7 +8,8 @@ matrix:
       dist: trusty
       language: python
       python: "3.6"
-    - os: osx      
+    - os: osx
+      language: generic
 
 # install boost on linux only (already here on osx)
 addons:
