@@ -18,7 +18,7 @@ addons:
 
 # install python3 on osx
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install python3; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then HOMEBREW_NO_AUTO_UPDATE=1 brew install python3; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then virtualenv venv --python=python3; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then source venv/bin/activate; fi
 
