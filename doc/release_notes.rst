@@ -8,6 +8,13 @@ started as a complete rewrite of the word segmentation pipeline in the
 `CDSwordSeg <https://github.com/alecristia/CDSwordSeg>`_ project.
 
 
+wordseg-0.5.1
+-------------
+
+* Support for punctuation in input of ``wordseg-prep`` with the
+  ``--punctuation`` option (disabled by default).
+
+
 wordseg-0.5
 -----------
 
