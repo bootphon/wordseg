@@ -7,21 +7,19 @@ matrix:
     - os: linux
       dist: trusty
       language: python
-      python: "3.5"
+      python: "3.6"
     - os: osx
-      osx_image: xcode8.3
-      compiler: gcc
       language: generic
 
 # install boost on linux only (already here on osx)
 addons:
   apt:
     packages:
-      - cmake libboost-program-options-dev libboost-log-dev
+      - cmake libboost-program-options-dev 
 
 # install python3 on osx
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install python3; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then HOMEBREW_NO_AUTO_UPDATE=1 brew install python3; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then virtualenv venv --python=python3; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then source venv/bin/activate; fi
 
