@@ -15,13 +15,14 @@ matrix:
 addons:
   apt:
     packages:
-      - cmake libboost-program-options-dev 
+      - cmake libboost-program-options-dev
 
 # install python3 on osx
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then HOMEBREW_NO_AUTO_UPDATE=1 brew install python3; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then virtualenv venv --python=python3; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then source venv/bin/activate; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then CC=gcc-4.9 && CXX=g++-4.9; fi
 
 install:
   - pip install --upgrade pip
