@@ -1,8 +1,8 @@
 # Building script for the ag program (Pitman-Yor Context Free Grammar,
 # a.k.a Adaptor Grammar)
 
-# to avoid a warning (cmake complains for a mix of relative an
-# dabsolute paths for linked libraries)
+# to avoid a warning (cmake complains for a mix of relative and
+# absolute paths for linked libraries)
 if(COMMAND cmake_policy)
   cmake_policy(SET CMP0003 NEW)
 endif(COMMAND cmake_policy)
@@ -14,6 +14,7 @@ find_package(Threads)
 find_package(Boost REQUIRED COMPONENTS program_options)
 
 # compiling a C++11 program
+set(CMAKE_CXX_COMPILER "g++")
 set(CMAKE_CXX_FLAGS "-std=c++11 -Wall")
 
 
