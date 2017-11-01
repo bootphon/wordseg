@@ -41,8 +41,10 @@ class Evaluation:
         if test_set == gold_set:
             self.n_exactmatch += 1
 
-        self.test += len(test_set)
-        self.gold += len(gold_set)
+        #self.test += len(test_set)
+        #self.gold += len(gold_set)
+        self.test += len([x for x in test_set if x != '_'])  # AC: omit empty items for type scoring (should not affect token scoring)
+        self.gold += len([x for x in gold_set if x != '_'])  # AC: type lists are prepared with '_' where there is no match, to keep list lengths the same
         self.correct += len(test_set & gold_set)
 
     def update_lists(self, test_sets, gold_sets):
@@ -81,13 +83,19 @@ def read_data(text, separator=DEFAULT_SEPARATOR):
 
     """
     words, positions = [], []
+    lexicon = {}  # AC: prep lexicon list
     for line in text:
         line = list(separator.split(line.strip(), level='word'))
         words.append(''.join(line))
-
+        
+        for word in line:  # AC: loop over words in line and add to dictionary
+            lexicon[word] = 1
+        
         idx = StringPos()
         positions.append({idx(len(word)) for word in line})
-    return words, positions
+    lexlist = [key for key, value in sorted(lexicon.items())]  # AC: return dict keys (words) as list
+    #return words, positions
+    return words, positions, lexlist  # AC: return 3 objects
 
 
 def _stringpos_boundarypos(stringpos):
@@ -97,10 +105,30 @@ def _stringpos_boundarypos(stringpos):
 def _stringpos_typepos(stringpos):
     return [{pos for pos in line} for line in stringpos]
 
+def lexcheck(textlex, goldlex):  # AC: new function to compare hypothesis and gold lexicons
+    textlist = []
+    goldlist = []
+    for w in textlex:
+        if w in goldlex:
+            textlist.append(w)  # set up matching lists for the true positives
+            goldlist.append(w)
+        else:
+            textlist.append(w)  # false positives
+            goldlist.append('_')  # ensure matching null element in text list
+    for w in goldlex:
+        if w not in goldlist:
+            goldlist.append(w)  # now for the false negatives
+            textlist.append('_')  # ensure matching null element in text list
+    textset = [{w} for w in textlist]
+    goldset = [{w} for w in goldlist]
+    return textset, goldset
+
 
 def evaluate(text, gold, separator=DEFAULT_SEPARATOR):
-    text_words, text_stringpos = read_data(text, separator)
-    gold_words, gold_stringpos = read_data(gold, separator)
+    #text_words, text_stringpos = read_data(text, separator)
+    #gold_words, gold_stringpos = read_data(gold, separator)
+    text_words, text_stringpos, text_lex = read_data(text, separator)  # AC: obtain 3 objects from read_data()
+    gold_words, gold_stringpos, gold_lex = read_data(gold, separator)
 
     if len(gold_words) != len(text_words):
         raise RuntimeError(
@@ -114,9 +142,11 @@ def evaluate(text, gold, separator=DEFAULT_SEPARATOR):
                 .format(i+1), g, t)
 
     type_eval = Evaluation()
-    type_eval.update_lists(
-        _stringpos_typepos(text_stringpos),
-        _stringpos_typepos(gold_stringpos))
+    #type_eval.update_lists(
+    #    _stringpos_typepos(text_stringpos),
+    #    _stringpos_typepos(gold_stringpos))
+    tl, gl = lexcheck(text_lex, gold_lex)  # AC: get text and gold sets from lexicons
+    type_eval.update_lists(tl, gl)  # AC: evalaute
 
     token_eval = Evaluation()
     token_eval.update_lists(text_stringpos, gold_stringpos)
