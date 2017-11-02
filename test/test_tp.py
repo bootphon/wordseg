@@ -7,9 +7,12 @@ from wordseg.algos import tp as tp
 from . import prep
 
 
-@pytest.mark.parametrize('threshold', ['relative', 'absolute'])
-def test_tp(prep, threshold):
-    out = list(tp.segment(prep, threshold=threshold))
+@pytest.mark.parametrize(
+    'threshold, probability',
+    [(t, p) for t in ('relative', 'absolute') for p in ('forward', 'backward')])
+def test_tp(prep, threshold, probability):
+    """Check input and output are the same, once the separators are removed"""
+    out = list(tp.segment(prep, threshold=threshold, probability=probability))
     s = Separator().remove
 
     assert len(out) == len(prep)
