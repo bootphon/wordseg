@@ -117,7 +117,7 @@ def main():
     """Entry point of the 'wordseg-tp' command"""
     # command initialization
     streamin, streamout, separator, log, args = utils.prepare_main(
-        name='wordseg-dibs',
+        name='wordseg-tp',
         description=__doc__,
         add_arguments=add_arguments)
 
