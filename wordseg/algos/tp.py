@@ -77,8 +77,8 @@ def segment(text, threshold='relative', probability='forward',
     Raises
     ------
     ValueError
-        If `threshold` is not 'relative' or 'absolute'. If
-        `probability` is not 'forward' or 'backward'.
+        If `threshold` is not 'relative' or 'absolute'.
+        If `probability` is not 'forward' or 'backward'.
 
     """
     # raise on invalid threshold type
@@ -97,19 +97,21 @@ def segment(text, threshold='relative', probability='forward',
              threshold, probability)
 
     # join all the utterances together, seperated by ' UB '
-    syls = [syl for syl in ' UB '.join(line.strip() for line in text).split()]
+    units = [unit for unit in ' UB '.join(line.strip() for line in text).split()]
 
-    # dictionary of bigram and its forward or backward transition
-    # probability
-    tps = dict(
-        (bigram, float(freq) / collections.Counter(syls)[
-            bigram[0 if probability == 'forward' else 1]])
-        for bigram, freq in collections.Counter(
-                zip(syls[0:-1], syls[1:])).items())
+    # compute and count all the bigrams (two successive units)
+    bigrams = zip(units[0:-1], units[1:])
+
+    # consider the first or second unit of the bigram according to `probability`
+    index = 0 if probability == 'forward' else 1
+
+    # dictionary of bigram and its transition probability
+    tps = {bigram: float(freq) / collections.Counter(units)[bigram[index]]
+           for bigram, freq in collections.Counter(bigrams).items()}
 
     # segment the input given the transition probalities
-    cwords = (_threshold_relative(syls, tps) if threshold == 'relative'
-              else _absolute_threshold(syls, tps))
+    cwords = (_threshold_relative(units, tps) if threshold == 'relative'
+              else _absolute_threshold(units, tps))
 
     # format the segment text for output (' UB ' -> '\n', remove
     # multiple spaces)
