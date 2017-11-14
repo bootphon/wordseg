@@ -10,10 +10,3 @@ The wordseg package provides **a collection of tools for text based
 word segmentation** covering both text preprocessing, segmentation
 algorithms, evaluation and statistics relevant for word segmentation
 studies. It can be used from **bash** and **python**.
-
-
-### Evaluation
-
-Forked from bootphon's wordseg repo and updated with a new evaluation script in order to run type scoring alongside token and boundary scoring.
-
-_Andrew Caines, apc38 at cam.ac.uk, November 2017_
