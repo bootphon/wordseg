@@ -64,6 +64,7 @@ setup(
         'wordseg-prep = wordseg.prepare:main',
         'wordseg-eval = wordseg.evaluate:main',
         'wordseg-stats = wordseg.statistics:main',
+        'wordseg-syll = wordseg.syllabification:main',
         'wordseg-ag = wordseg.algos.ag:main',
         'wordseg-dibs = wordseg.algos.dibs:main',
         'wordseg-dpseg = wordseg.algos.dpseg:main',
