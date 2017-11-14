@@ -73,17 +73,17 @@ From the tutorial directory, we can execute the script and display the
 result in a table with ``../doc/tutorial.sh phonologic.txt | column
 -t``. This should output someting like that::
 
-  score            tp       puddle   dibs
-  ---------------  -------  -------  -------
-  type_f-score     0.3261   0.319    0.03954
-  type_precision   0.3027   0.5297   0.02597
-  type_recall      0.3536   0.2282   0.08281
-  token_f-score    0.3261   0.319    0.03954
-  token_precision  0.3027   0.5297   0.02597
-  token_recall     0.3536   0.2282   0.08281
-  bound_f-score    0.5824   0.462    0.4375
-  bound_precision  0.5343   0.9278   0.28
-  bound_recall     0.6399   0.3075   1
+  score               tp       puddle   dibs
+  ---------------     -------  -------  -------
+  type_fscore         0.2274   0.03011  0.5921
+  type_precision      0.1833   0.03979  0.5889
+  type_recall         0.2992   0.02422  0.5953
+  token_fscore        0.3147   0.06286  0.5414
+  token_precision     0.4312   0.211    0.4679
+  token_recall        0.2477   0.03693  0.6425
+  boundary_fscore     0.6255   0.02736  0.8176
+  boundary_precision  0.9491   1        0.6915
+  boundary_recall     0.4664   0.01387  1
 
 
 Python tutorial
@@ -98,14 +98,14 @@ implements exactly the same process as the bash one:
 We can execute it using ``../doc/tutorial.py phonologic.txt | column
 -t``. As previously, this should output something like::
 
-  score             tp       puddle   dibs
-  ----------------  -------  -------  -------
-  type_f-score      0.3261   0.3836   0.03954
-  type_precision    0.3027   0.569    0.02597
-  type_recall       0.3536   0.2893   0.08281
-  token_f-score     0.3261   0.3836   0.03954
-  token_precision   0.3027   0.569    0.02597
-  token_recall      0.3536   0.2893   0.08281
-  bound_f-score     0.5824   0.5519   0.4375
-  bound_precision   0.5343   0.9289   0.28
-  bound_recall      0.6399   0.3926   1
+  score               tp       puddle   dibs
+  ---------------     -------  -------  -------
+  type_fscore         0.2274   0.03011  0.5921
+  type_precision      0.1833   0.03979  0.5889
+  type_recall         0.2992   0.02422  0.5953
+  token_fscore        0.3147   0.06286  0.5414
+  token_precision     0.4312   0.211    0.4679
+  token_recall        0.2477   0.03693  0.6425
+  boundary_fscore     0.6255   0.02736  0.8176
+  boundary_precision  0.9491   1        0.6915
+  boundary_recall     0.4664   0.01387  1
