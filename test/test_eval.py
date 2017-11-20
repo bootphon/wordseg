@@ -3,7 +3,6 @@
 import pytest
 
 from wordseg.evaluate import read_data, evaluate
-from wordseg.algos import tp
 
 
 def test_read_data():

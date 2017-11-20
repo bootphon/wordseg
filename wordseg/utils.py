@@ -253,7 +253,7 @@ def get_binary(binary):
 def get_config_files(algorithm, extension=None):
     """Returns the example configuration files bundled with algorithms
 
-    Only *ag* and *dpseg* have configuration files.
+    Only *syllabification*, *ag* and *dpseg* have configuration files.
 
     Parameters
     ----------
@@ -280,7 +280,7 @@ def get_config_files(algorithm, extension=None):
     try:
         # case of 'python setup.py install'
         config_dir = pkg_resources.resource_filename(
-            pkg, 'config/{}'.format(algorithm))
+            pkg, 'data/{}'.format(algorithm))
     except KeyError:
         pass
 
@@ -308,7 +308,8 @@ def get_config_files(algorithm, extension=None):
 
 class Argument(object):
     """Command line argument adapter class"""
-    def __init__(self, short_name=None, name=None, type=None, default=None, help=''):
+    def __init__(self, short_name=None, name=None, type=None,
+                 default=None, help=''):
         self.short_name = short_name
         self.name = name
         self.default = default

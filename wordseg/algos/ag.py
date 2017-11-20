@@ -314,7 +314,7 @@ def get_grammar_files():
     """Returns a list of example grammar files bundled with wordseg
 
     Grammar files have the *.lt extension and are stored in the
-    directory `wordseg/config/ag`.
+    directory `wordseg/data/ag`.
 
     Raises
     ------
@@ -325,22 +325,7 @@ def get_grammar_files():
         If 'wordseg' is not correctly installed
 
     """
-    # retrieve the configuration directory, may raise
-    # DistributionNotFound
-    grammar_dir = pkg_resources.resource_filename(
-        pkg_resources.Requirement.parse('wordseg'),
-        'config/ag')
-
-    if not os.path.isdir(grammar_dir):
-        raise RuntimeError(
-            'grammar directory not found: {}'.format(grammar_dir))
-
-    # retrieve all the grammar files in that directory
-    grammar_files = [f for f in os.listdir(grammar_dir) if f.endswith('.lt')]
-    if len(grammar_files) == 0:
-        raise RuntimeError('no *.lt files in {}'.format(grammar_dir))
-
-    return [os.path.join(grammar_dir, f) for f in grammar_files]
+    return utils.get_config_files('ag', '.lt')
 
 
 def _is_parent_in_grammar(grammar_file, parent):

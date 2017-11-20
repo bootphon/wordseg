@@ -1,5 +1,6 @@
 """Defines input data and fixtures common to all wordseg tests"""
 
+import os
 import pytest
 import wordseg.prepare
 import wordseg.separator
@@ -21,6 +22,9 @@ w aa n t ;esyll ;eword s ax m ;esyll ;eword m ao r ;esyll ;eword
 n ow ;esyll ;eword
 '''
 
+@pytest.yield_fixture(scope='session')
+def datadir():
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
 
 @pytest.yield_fixture(scope='session')
 def tags():
