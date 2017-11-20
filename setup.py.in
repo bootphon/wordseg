@@ -36,9 +36,9 @@ def bin_targets():
 
 def data_files(binary):
     """Return a list of exemple configuration files bundled with `binary`"""
-    config_dir = os.path.join(
-        '${CMAKE_CURRENT_SOURCE_DIR}', 'config', binary)
-    return [os.path.join(config_dir, f) for f in os.listdir(config_dir)]
+    data_dir = os.path.join(
+        '${CMAKE_CURRENT_SOURCE_DIR}', 'data', binary)
+    return [os.path.join(data_dir, f) for f in os.listdir(data_dir)]
 
 
 setup(
@@ -65,6 +65,7 @@ setup(
         'wordseg-eval = wordseg.evaluate:main',
         'wordseg-stats = wordseg.statistics:main',
         'wordseg-syll = wordseg.syllabification:main',
+        'wordseg-baseline = wordseg.algos.baseline:main',
         'wordseg-ag = wordseg.algos.ag:main',
         'wordseg-dibs = wordseg.algos.dibs:main',
         'wordseg-dpseg = wordseg.algos.dpseg:main',
@@ -73,5 +74,6 @@ setup(
 
     data_files=[
         ('bin', bin_targets()),
-        ('config/ag', data_files('ag')),
-        ('config/dpseg', data_files('dpseg'))])
+        ('data/syllabification', data_files('syllabification')),
+        ('data/ag', data_files('ag')),
+        ('data/dpseg', data_files('dpseg'))])
