@@ -9,3 +9,4 @@ wordseg/algos/*/build/*
 wordseg_tutorial/*
 test/.cache/*
 .cache/*
+TODO.org
