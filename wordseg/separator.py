@@ -14,6 +14,8 @@ class Separator(object):
     None. If not None, the entries 'phone', 'syllable' and 'word' must
     be all different.
 
+    The following characters are forbidden in separators: !#$%&'*+-.^`|~:\\\"
+
     """
     def __init__(self, phone=' ', syllable=';esyll', word=';eword'):
         # check we have different separators, None excluded
@@ -22,12 +24,16 @@ class Separator(object):
         if len(g1) != len(g2):
             raise ValueError(
                 'cannot init separator: phone, syllable and word must be '
-                'different, they are: "%s", "%s" and "%s"'
+                'different, they are: "{}", "{}" and "{}"'
                 .format(phone, syllable, word))
 
         self.phone = str(phone) if phone else None
         self.syllable = str(syllable) if syllable else None
         self.word = str(word) if word else None
+
+        # ensure the separators are valid
+        for sep in (self.phone, self.syllable, self.word):
+            self.check_separator(sep)
 
         # store the tokens as precompiled regular expressions for
         # faster lookup in strings
@@ -35,6 +41,25 @@ class Separator(object):
             'phone': re.compile(self.phone) if phone else None,
             'syllable': re.compile(self.syllable) if syllable else None,
             'word': re.compile(self.word) if word else None}
+
+    forbidden_chars = "!#$%&'*+-.^`|~:\\\""
+    """Characters forbidden in separators
+
+    They interfer with regular expression processing
+
+    """
+
+    def check_separator(self, sep):
+        """Raise a ValueError if the `sep` contains a forbidden character"""
+        if sep is None:
+            return
+
+        for c in self.forbidden_chars:
+            if c in sep:
+                raise ValueError(
+                    'the separator "{}" contains the illegal character "{}", '
+                    'the following characters are illegal: {}'.format(
+                        sep, c, self.forbidden_chars))
 
     def __str__(self):
         """Returns a string representation of a separator
@@ -60,9 +85,9 @@ class Separator(object):
         level : str
             Token level to split the string with. Must be 'phone',
             'syllable' or 'word', raise ArgumentError otherwise.
-        remove : bool
-            If True, remove all the separators from the returned
-            sub-utterances.
+        remove : bool, optional
+            If True (default), remove all the separators for all
+            levels from the returned sub-utterances.
 
         Returns
         -------
@@ -70,12 +95,12 @@ class Separator(object):
 
         Raises
         ------
-        ArgumentError
+        ValueError
             If the `level` is not 'phone', 'syllable' or 'word'.
 
         """
         if level not in self._regexp.keys():
-            raise ArgumentError(
+            raise ValueError(
                 "level must be 'phone', 'syllable' or 'word', "
                 "it is {}".format(level))
 
@@ -83,18 +108,50 @@ class Separator(object):
         utts = (u for u in re.split(sep, utt)) if sep else [utt]
         return (self.remove(u) for u in utts) if remove else utts
 
-    def remove(self, utt):
-        """Returns the string `utt` with all separators removed
+    def remove(self, utt, level=None):
+        """Returns the string `utt` with separators removed
 
-        Multiple spaces are removed.
+        Parameters
+        ----------
+        utt : str
+           The string to remove the separators from
+        level : str, optional
+           If specified (must be 'phone', 'syllable' or 'word'),
+           remove only the separators of the given `level`. Else
+           remove all the separators.
+
+        Returns
+        -------
+        The utterance with specified separators removed. Multiple
+        spaces are removed as well.
+
+        Raises
+        ------
+        ValueError
+            If the `level` is specified and not 'phone', 'syllable' or
+            'word'.
 
         """
-        if self.phone:
+        if level and level not in self._regexp.keys():
+            raise ValueError(
+                "level must be 'phone', 'syllable' or 'word', "
+                "it is {}".format(level))
+
+        to_remove = ['phone', 'syllable', 'word']
+        if level:
+            for l in ['phone', 'syllable', 'word']:
+                if l != level:
+                    to_remove.remove(l)
+
+        if self.phone and 'phone' in to_remove:
             utt = re.sub(self._regexp['phone'], '', utt)
-        if self.syllable:
+
+        if self.syllable and 'syllable' in to_remove:
             utt = re.sub(self._regexp['syllable'], '', utt)
-        if self.word:
+
+        if self.word and 'word' in to_remove:
             utt = re.sub(self._regexp['word'], '', utt)
+
         return re.sub(' +', ' ', utt)
 
     def iterate(self, type='value'):
@@ -114,7 +171,7 @@ class Separator(object):
 
         Raises
         ------
-        ArgumentError
+        ValueError
             If the `type` is not 'value' or 'pair'.
 
         """
@@ -127,5 +184,5 @@ class Separator(object):
             yield ('syllable', self.syllable)
             yield ('word', self.word)
         else:
-            raise ArgumentError(
+            raise ValueError(
                 'iteration type must be "value" or "pair", it is "{}"'.format(type))
