@@ -21,8 +21,16 @@ commands are:
 
 * **wordseg-<algorithm>** computes word segmentation on a prepared
   text, outputing the text with word boundaries added. The algorithms
-  available are **wordseg-ag**, **wordseg-dibs**, **wordseg-dpseg**,
-  **wordseg-puddle** and **wordseg-tp**. For details, see the :ref:*algorithms* page.
+  available are(For details, see the :ref:*algorithms* page):
+
+  - **wordseg-ag** is adaptor grammar,
+  - **wordseg-dibs** is diphone based segmentation,
+  - **wordseg-dpseg**,
+  - **wordseg-puddle**,
+  - **wordseg-tp** is transitional probabilities.
+
+  We also provide **wordseg-baseline** that produces a random
+  segmentation given the probability of a word boundary.
 
 * **wordseg-eval** evaluates a segmented text on a gold version,
   computing the precision, recall and f-score at type, token and

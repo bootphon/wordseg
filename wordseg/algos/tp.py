@@ -97,12 +97,14 @@ def segment(text, threshold='relative', probability='forward',
              threshold, probability)
 
     # join all the utterances together, seperated by ' UB '
-    units = [unit for unit in ' UB '.join(line.strip() for line in text).split()]
+    units = [unit for unit in ' UB '.join(
+        line.strip() for line in text).split()]
 
     # compute and count all the bigrams (two successive units)
     bigrams = zip(units[0:-1], units[1:])
 
-    # consider the first or second unit of the bigram according to `probability`
+    # consider the first or second unit of the bigram according to
+    # `probability`
     index = 0 if probability == 'forward' else 1
 
     # dictionary of bigram and its transition probability

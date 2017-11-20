@@ -9,6 +9,7 @@ import pytest
 import wordseg.evaluate
 import wordseg.prepare
 import wordseg.algos.ag
+import wordseg.algos.baseline
 import wordseg.algos.dibs
 import wordseg.algos.dpseg
 import wordseg.algos.puddle
@@ -19,6 +20,7 @@ from . import tags
 
 
 algos = {
+    'baseline': wordseg.algos.baseline,
     'ag': wordseg.algos.ag,
     'dibs': wordseg.algos.dibs,
     'dpseg': wordseg.algos.dpseg,

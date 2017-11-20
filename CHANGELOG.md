@@ -4,6 +4,9 @@
 
 * New forward/backward option in **wordseg-tp**.
 
+* New command **wordseg-baseline** that produces a random
+  segmentation given the probability of a word boundary.
+
 * New command **wordseg-syll** estimates syllable boundaries on a text
   using the maximal onset principle. Exemples of onsets and vowels
   files for syllabifications are given in the directory `data/syllabification`.
