@@ -5,7 +5,8 @@ import subprocess
 
 
 @pytest.mark.parametrize(
-    'cmd', ['prep', 'eval', 'stats', 'ag', 'dibs', 'dpseg', 'tp', 'puddle'])
+    'cmd', ['prep', 'eval', 'stats', 'syll',
+            'ag', 'dibs', 'dpseg', 'tp', 'puddle'])
 def test_command_help(cmd):
     command = 'wordseg-' + cmd
     subprocess.check_call([command, '--help'])
