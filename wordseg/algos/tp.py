@@ -51,7 +51,8 @@ def _absolute_threshold(syls, tps):
     return cwords
 
 
-def segment(text, threshold='relative', log=utils.null_logger()):
+def segment(text, threshold='relative', probability='forward',
+            log=utils.null_logger()):
     """Returns a word segmented version of `text` using the TP algorithm
 
     Parameters
@@ -60,8 +61,13 @@ def segment(text, threshold='relative', log=utils.null_logger()):
         A sequence of lines with syllable (or phoneme) boundaries
         marked by spaces and no word boundaries. Each line in the
         sequence corresponds to a single and complete utterance.
-    threshold : str
+    threshold : str, optional
         Type of threshold to use, must be 'relative' or 'absolute'.
+    probability : str, optional
+        Type of transition probabilities to compute, must be 'forward'
+        or 'backward'.
+    log : logging.Logger, optional
+        The logging instance where to send messages.
 
     Returns
     -------
@@ -72,6 +78,7 @@ def segment(text, threshold='relative', log=utils.null_logger()):
     ------
     ValueError
         If `threshold` is not 'relative' or 'absolute'.
+        If `probability` is not 'forward' or 'backward'.
 
     """
     # raise on invalid threshold type
@@ -80,21 +87,33 @@ def segment(text, threshold='relative', log=utils.null_logger()):
             "invalid threshold, must be 'relative' or 'absolute', it is '{}'"
             .format(threshold))
 
-    log.info('running TP with %s threshold', threshold)
+    # raise on invalid probability type
+    if probability not in ('forward', 'backward'):
+        raise ValueError(
+            "invalid probability type, must be 'forward' or 'backward',"
+            "it is {}".format(probability))
+
+    log.info('running TP with %s threshold and %s probabilities',
+             threshold, probability)
 
     # join all the utterances together, seperated by ' UB '
-    syls = [syl for syl in ' UB '.join(line.strip() for line in text).split()]
+    units = [unit for unit in ' UB '.join(
+        line.strip() for line in text).split()]
 
-    # dictionary of bigram and its forward transition probability
-    # (bigram[0] is the first syllable of the bigram)
-    tps = dict(
-        (bigram, float(freq) / collections.Counter(syls)[bigram[0]])
-        for bigram, freq in collections.Counter(
-                zip(syls[0:-1], syls[1:])).items())
+    # compute and count all the bigrams (two successive units)
+    bigrams = zip(units[0:-1], units[1:])
+
+    # consider the first or second unit of the bigram according to
+    # `probability`
+    index = 0 if probability == 'forward' else 1
+
+    # dictionary of bigram and its transition probability
+    tps = {bigram: float(freq) / collections.Counter(units)[bigram[index]]
+           for bigram, freq in collections.Counter(bigrams).items()}
 
     # segment the input given the transition probalities
-    cwords = (_threshold_relative(syls, tps) if threshold == 'relative'
-              else _absolute_threshold(syls, tps))
+    cwords = (_threshold_relative(units, tps) if threshold == 'relative'
+              else _absolute_threshold(units, tps))
 
     # format the segment text for output (' UB ' -> '\n', remove
     # multiple spaces)
@@ -111,18 +130,29 @@ def add_arguments(parser):
         transition probabilities. When absolute, the threshold is set
         to the mean transition probability over the entire text.''')
 
+    parser.add_argument(
+        '-p', '--probability', type=str,
+        choices=['forward', 'backward'], default='forward',
+        help='''Compute forward or backward transition probabilities''')
+
 
 @utils.CatchExceptions
 def main():
     """Entry point of the 'wordseg-tp' command"""
     # command initialization
     streamin, streamout, separator, log, args = utils.prepare_main(
-        name='wordseg-dibs',
+        name='wordseg-tp',
         description=__doc__,
         add_arguments=add_arguments)
 
-    # segment it and output the result
-    text = segment(streamin, threshold=args.threshold, log=log)
+    # segment the input text
+    text = segment(
+        streamin,
+        threshold=args.threshold,
+        probability=args.probability,
+        log=log)
+
+    # output the result
     streamout.write('\n'.join(text) + '\n')
 
 

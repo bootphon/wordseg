@@ -8,9 +8,9 @@ programs and a Python library that can be installed using the
 instructions below.
 
 It is tested on `continuous integration
-<https://travis-ci.org/bootphon/wordseg>`_ to work on Python 2.7 and
-3.5, both on Linux and Mac OS. On Windows, you can use the `Linux
-subsytem for Windows
+<https://travis-ci.org/bootphon/wordseg>`_ to work on Python 2 and 3,
+both on Linux and Mac OS. On Windows, you can use the `Linux subsytem
+for Windows
 <https://msdn.microsoft.com/en-us/commandline/wsl/about>`_, see `here
 <https://github.com/bootphon/wordseg/issues/6>`_ for a discussion.
 

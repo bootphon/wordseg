@@ -41,8 +41,11 @@ class Evaluation:
         if test_set == gold_set:
             self.n_exactmatch += 1
 
-        self.test += len(test_set)
-        self.gold += len(gold_set)
+        # omit empty items for type scoring (should not affect token
+        # scoring). Type lists are prepared with '_' where there is no
+        # match, to keep list lengths the same
+        self.test += len([x for x in test_set if x != '_'])
+        self.gold += len([x for x in gold_set if x != '_'])
         self.correct += len(test_set & gold_set)
 
     def update_lists(self, test_sets, gold_sets):
@@ -75,32 +78,66 @@ def read_data(text, separator=DEFAULT_SEPARATOR):
     :param Separator separator: token separation to split the
         utterances into words
 
-    :return: two lists (words, positions) where `words` are the input
-        utterences with word separators removed, and `positions`
-        stores the start/stop index of each word for each utterance.
+    :return: three lists (words, positions, lexicon) where `words` are
+        the input utterences with word separators removed, `positions`
+        stores the start/stop index of each word for each utterance,
+        and `lexicon` is the list of words
 
     """
-    words, positions = [], []
+    words = []
+    positions = []
+    lexicon = {}
+
     for line in text:
         line = list(separator.split(line.strip(), level='word'))
         words.append(''.join(line))
 
+        # loop over words in line and add to dictionary
+        for word in line:
+            lexicon[word] = 1
+
         idx = StringPos()
         positions.append({idx(len(word)) for word in line})
-    return words, positions
+
+    # return the words lexicon as a sorted list
+    lexicon = [key for key, value in sorted(lexicon.items())]
+    return words, positions, lexicon
 
 
 def _stringpos_boundarypos(stringpos):
     return [{left for left, _ in line if left > 0} for line in stringpos]
 
 
-def _stringpos_typepos(stringpos):
-    return [{pos for pos in line} for line in stringpos]
+def _lexicon_check(textlex, goldlex):
+    """Compare hypothesis and gold lexicons"""
+    textlist = []
+    goldlist = []
+    for w in textlex:
+        if w in goldlex:
+            # set up matching lists for the true positives
+            textlist.append(w)
+            goldlist.append(w)
+        else:
+            # false positives
+            textlist.append(w)
+            # ensure matching null element in text list
+            goldlist.append('_')
+
+    for w in goldlex:
+        if w not in goldlist:
+            # now for the false negatives
+            goldlist.append(w)
+            # ensure matching null element in text list
+            textlist.append('_')
+
+    textset = [{w} for w in textlist]
+    goldset = [{w} for w in goldlist]
+    return textset, goldset
 
 
 def evaluate(text, gold, separator=DEFAULT_SEPARATOR):
-    text_words, text_stringpos = read_data(text, separator)
-    gold_words, gold_stringpos = read_data(gold, separator)
+    text_words, text_stringpos, text_lex = read_data(text, separator)
+    gold_words, gold_stringpos, gold_lex = read_data(gold, separator)
 
     if len(gold_words) != len(text_words):
         raise RuntimeError(
@@ -113,16 +150,18 @@ def evaluate(text, gold, separator=DEFAULT_SEPARATOR):
                 'gold and train differ at line {}: gold="{}", train="{}"'
                 .format(i+1), g, t)
 
+    # get text and gold sets from lexicons
     type_eval = Evaluation()
-    type_eval.update_lists(_stringpos_typepos(text_stringpos),
-                           _stringpos_typepos(gold_stringpos))
+    tl, gl = _lexicon_check(text_lex, gold_lex)
+    type_eval.update_lists(tl, gl)
 
     token_eval = Evaluation()
     token_eval.update_lists(text_stringpos, gold_stringpos)
 
     boundary_eval = Evaluation()
-    boundary_eval.update_lists(_stringpos_boundarypos(text_stringpos),
-                               _stringpos_boundarypos(gold_stringpos))
+    boundary_eval.update_lists(
+        _stringpos_boundarypos(text_stringpos),
+        _stringpos_boundarypos(gold_stringpos))
 
     return {
         'type_fscore': type_eval.fscore(),

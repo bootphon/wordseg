@@ -27,5 +27,5 @@ set(CMAKE_CXX_FLAGS "-std=c++11 -DNDEBUG")
 file(GLOB SOURCES src/*.cc include/*)
 
 add_executable(dpseg ${SOURCES})
-include_directories(include)
+include_directories(include ${Boost_INCLUDE_DIRS})
 target_link_libraries(dpseg ${Boost_LIBRARIES})

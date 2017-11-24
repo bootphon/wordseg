@@ -3,7 +3,7 @@
 """Test of the 'wordseg-prep' command and it's underlying functions"""
 
 import pytest
-from wordseg import utils
+
 from wordseg.separator import Separator
 from wordseg.prepare import check_utterance, prepare, _pairwise
 
@@ -83,3 +83,14 @@ def test_prepare_tolerant():
     prepared = list(prepare(utterances, tolerant=True))
     assert len(prepared) == len(good_utterances)
     assert prepared == list(prepare(good_utterances))
+
+
+@pytest.mark.parametrize(
+    'utt', ['n i2 ;eword s. w o5 ;eword s. əɜ n ;eword m o-ɜ ;eword',
+            'ɑ5 ;eword j iɜ ;eword (en) aɜ m (zh) ;eword',
+            't u b l i ;eword p o i i s^ s^ ;eword'])
+def test_punctuation(utt):
+    with pytest.raises(ValueError):
+        list(prepare([utt], check_punctuation=True))
+
+    list(prepare([utt], check_punctuation=False))

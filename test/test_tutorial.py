@@ -1,5 +1,6 @@
 """Test of the doc/tutorial.{py, sh} scripts"""
 
+import codecs
 import os
 import pytest
 import subprocess
@@ -17,5 +18,6 @@ def test_tutorial(tags, tmpdir, ext):
     assert os.path.isfile(script)
 
     p = os.path.join(str(tmpdir), 'input.txt')
-    open(p, 'w').write('\n'.join(tags) + '\n')
-    subprocess.check_call([script, p], cwd=tmpdir)
+    codecs.open(p, 'w', encoding='utf8').write('\n'.join(tags) + '\n')
+
+    subprocess.check_call([script, p], cwd=str(tmpdir))

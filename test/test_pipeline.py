@@ -2,11 +2,14 @@
 
 """Test of the segmentation pipeline from raw text to eval"""
 
+import codecs
 import os
 import pytest
+
 import wordseg.evaluate
 import wordseg.prepare
 import wordseg.algos.ag
+import wordseg.algos.baseline
 import wordseg.algos.dibs
 import wordseg.algos.dpseg
 import wordseg.algos.puddle
@@ -17,6 +20,7 @@ from . import tags
 
 
 algos = {
+    'baseline': wordseg.algos.baseline,
     'ag': wordseg.algos.ag,
     'dibs': wordseg.algos.dibs,
     'dpseg': wordseg.algos.dpseg,
@@ -64,9 +68,11 @@ def test_pipeline(algo, encoding, tags, tmpdir):
             os.path.dirname(wordseg.algos.ag.get_grammar_files()[0]),
             'Colloc0_enFestival.lt')
         if encoding == 'unicode':
-            grammar_unicode = add_unicode(open(grammar_file, 'r'))
+            grammar_unicode = add_unicode(
+                codecs.open(grammar_file, 'r', encoding='utf8'))
             grammar_file = os.path.join(str(tmpdir), 'grammar.lt')
-            open(grammar_file, 'w').write('\n'.join(grammar_unicode))
+            codecs.open(grammar_file, 'w', encoding='utf8').write(
+                '\n'.join(grammar_unicode))
         segmented = list(algos[algo].segment(
             prepared_text, grammar_file, 'Colloc0', nruns=1))
     else:
