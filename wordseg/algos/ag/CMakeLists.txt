@@ -4,9 +4,12 @@
 # looking for -pthread
 find_package(Threads)
 
+# looking for boost libraries
+find_package(Boost REQUIRED COMPONENTS iostreams)
+
+
 # compiling a C++11 program
 set(CMAKE_CXX_FLAGS "-std=c++11 -Wall")
-
 
 option(AG_QUADRUPLE "compile ag with quadruple precision floating point numbers" OFF)
 if(AG_QUADRUPLE)
