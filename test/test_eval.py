@@ -1,3 +1,5 @@
+# coding: utf-8
+
 """Test of the wordseg_eval module"""
 
 
@@ -16,3 +18,9 @@ def test_read_data():
 def test_evaluate(gold):
     for v in evaluate(gold, gold).values():
         assert v == 1.0
+
+
+def test_ipa():
+    text = ['juː;ewordviː;eword mɔː;eword kʊkɪz;eword']
+    gold = ['juː viː mɔː kʊkɪz']
+    evaluate(text, gold)
