@@ -1,5 +1,8 @@
+# coding: utf-8
+
 """Manage token separation at phone, syllable and word levels"""
 
+import itertools
 import re
 
 
@@ -75,8 +78,124 @@ class Separator(object):
             ', '.join('{}: "{}"'.format(k, v) for k, v
                       in self.iterate(type='pair') if v))
 
+    def _check_level(self, level):
+        """Raises ValueError if `level` is not defined in the separator"""
+        if level not in self._regexp.keys():
+            raise ValueError(
+                "level must be 'phone', 'syllable' or 'word', "
+                "it is {}".format(level))
+
+    def strip(self, utterance, level=None):
+        """Removes leading and ending separators of an `utterance`
+
+        Parameters
+        ---------
+        utterance : str
+            The utterance to be striped.
+        level : str, optional
+            Specify the level boundaries to strip. If not specified
+            remove all the boundaries. If specified, must be 'phone',
+            'syllable' or 'word'.
+
+        Returns
+        -------
+        The striped `utterance`
+
+        """
+        # order matters: remove word separators, then syllables and
+        # finally phones
+        to_remove = ['word', 'syllable', 'phone']
+        if level:
+            self._check_level(level)
+            to_remove = [level]
+
+        # build a regular expression for separator suppression,
+        # considers also spaces within contiguous separators
+        pattern = '((' + '|'.join('({})'.format(
+            self.__dict__[l]) for l in to_remove) + ')+\s*)+'
+
+        # remove leading separators
+        utterance = re.sub('^' + pattern, '', utterance)
+        #remove ending ones
+        utterance = re.sub(pattern + '$', '', utterance)
+
+        return utterance.strip()
+
+
+    def tokenize(self, utterance, level):
+        """Yields the tokens in `utterance` at the given `level`
+
+        Iterates on phones, syllable or words within a given
+        utterance, other levels being ignored.
+
+        Parameters
+        ----------
+        utterance : str
+            The utterance to be tokenized.
+        level : str
+            The level to tokenize the utterance at, must be 'phone',
+            'syllable' or 'word'.
+
+        Yields
+        ------
+        token : str
+            The successive phones, syllables or words tokenized from
+            the utterance. Empty tokens are ignored, tokens are
+            striped.
+
+        Raises
+        ------
+        ValueError
+            If the `level` is not 'phone', 'syllable' or 'word'.
+
+        Examples
+        --------
+        >>> s = Separator(phone=' ', word=';eword')
+        >>> t = 'j uː ;eword n oʊ ;eword dʒ ʌ s t ;eword'
+        >>> list(s.tokenize(t, 'word'))
+        ['j uː', 'n oʊ', 'dʒ ʌ s t']
+        >>> list(s.tokenize(t, 'phone'))
+        ['j', 'uː', 'n', 'oʊ', 'dʒ', 'ʌ', 's', 't']
+
+        """
+        self._check_level(level)
+
+        # check if level defined in the separator
+        if self._regexp[level] is None:
+            raise ValueError(
+                'asking for {0} tokens but {0} separator is not defined'
+                .format(level))
+
+        # auxiliary function tokenizing at a given level
+        def _tokenize(utterance, level):
+            if not self._regexp[level]:
+                return [utterance]
+
+            for token in re.split(self._regexp[level], utterance):
+                if len(token):
+                    yield token
+
+        # word tokens
+        tokens = _tokenize(utterance, 'word')
+
+        # syllable tokens
+        if level in ('phone', 'syllable'):
+            tokens = itertools.chain(
+                syll for word in tokens for syll in _tokenize(word, 'syllable'))
+
+        # phone tokens
+        if level == 'phone':
+            tokens = itertools.chain(
+                phn for syll in tokens for phn in _tokenize(syll, 'phone'))
+
+        # strip the tokens
+        return (self.strip(t) for t in tokens)
+
+
     def split(self, utt, level, remove=True):
         """Split the string `utt` at a given token `level`
+
+        Low-level method, better to use tokenize() instead.
 
         Parameters
         ----------
@@ -91,7 +210,7 @@ class Separator(object):
 
         Returns
         -------
-        A sequence of substrings of `utt`.
+        The list of tokens extracted from `utt`
 
         Raises
         ------
@@ -99,14 +218,20 @@ class Separator(object):
             If the `level` is not 'phone', 'syllable' or 'word'.
 
         """
-        if level not in self._regexp.keys():
-            raise ValueError(
-                "level must be 'phone', 'syllable' or 'word', "
-                "it is {}".format(level))
+        self._check_level(level)
 
         sep = self._regexp[level]
-        utts = (u for u in re.split(sep, utt)) if sep else [utt]
-        return (self.remove(u) for u in utts) if remove else utts
+        tokens = re.split(sep, utt)
+
+        if remove:
+            tokens = (self.remove(u) for u in tokens)
+        else:
+            tokens = (re.sub(' +', ' ', u) for u in tokens)
+
+        # remove any leading ' '
+        tokens = (t.lstrip(' ') for t in tokens)
+
+        return list(tokens)
 
     def remove(self, utt, level=None):
         """Returns the string `utt` with separators removed
@@ -132,10 +257,8 @@ class Separator(object):
             'word'.
 
         """
-        if level and level not in self._regexp.keys():
-            raise ValueError(
-                "level must be 'phone', 'syllable' or 'word', "
-                "it is {}".format(level))
+        if level:
+            self._check_level(level)
 
         to_remove = ['phone', 'syllable', 'word']
         if level:
@@ -143,14 +266,14 @@ class Separator(object):
                 if l != level:
                     to_remove.remove(l)
 
-        if self.phone and 'phone' in to_remove:
-            utt = re.sub(self._regexp['phone'], '', utt)
+        if self.word and 'word' in to_remove:
+            utt = re.sub(self._regexp['word'], '', utt)
 
         if self.syllable and 'syllable' in to_remove:
             utt = re.sub(self._regexp['syllable'], '', utt)
 
-        if self.word and 'word' in to_remove:
-            utt = re.sub(self._regexp['word'], '', utt)
+        if self.phone and 'phone' in to_remove:
+            utt = re.sub(self._regexp['phone'], '', utt)
 
         return re.sub(' +', ' ', utt)
 

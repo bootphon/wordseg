@@ -33,8 +33,8 @@ def _test_basic(text, gold, expected):
 
 
 def test_basic_1():
-    gold = ['the dog bites the dog']
     text = ['the dog bites thedog']
+    gold = ['the dog bites the dog']
     expected = {
         'type_fscore': 0.8571428571428571,
         'type_precision': 0.75,
@@ -97,8 +97,8 @@ def test_basic_4():
 
 
 def test_basic_5():
-    gold = ['the bandage of the band age']
     text = ['the band age of the band age']
+    gold = ['the bandage of the band age']
     expected = {
         'type_fscore': 0.8888888888888888,
         'type_precision': 1.0,
