@@ -108,7 +108,7 @@ if(PYTHON_SPHINX)
     COMMAND ${CMAKE_COMMAND} -E touch ${DOC_BINARY_DIR}/timestamp
     DEPENDS ${DOC_SOURCES})
 
-  add_custom_target(html DEPENDS ${DOC_BINARY_DIR}/timestamp)
+  add_custom_target(html DEPENDS ${DOC_BINARY_DIR}/timestamp ${PROJECT_PYTHON_SOURCES})
 
   # dont use CMAKE_INSTALL_PREFIX but use the python path instead
   get_filename_component(DOC_DEST ${PYTHON_EXECUTABLE} DIRECTORY)

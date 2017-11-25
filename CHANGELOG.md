@@ -1,37 +1,41 @@
-# on master branch (not yet released)
+on master branch (not yet released)
+-----------------------------------
 
-## Features
+* Features
 
-* New forward/backward option in **wordseg-tp**.
+    * New forward/backward option in **wordseg-tp**.
 
-* New command **wordseg-baseline** that produces a random
-  segmentation given the probability of a word boundary.
+    * New command **wordseg-baseline** that produces a random
+      segmentation given the probability of a word boundary.
 
-* New command **wordseg-syll** estimates syllable boundaries on a text
-  using the maximal onset principle. Exemples of onsets and vowels
-  files for syllabifications are given in the directory `data/syllabification`.
+    * New command **wordseg-syll** estimates syllable boundaries on a
+      text using the maximal onset principle. Exemples of onsets and
+      vowels files for syllabifications are given in the directory
+      `data/syllabification`.
 
-* For citation purposes a DOI is now automatically attached to each
-  wordseg release.
+    * For citation purposes a DOI is now automatically attached to
+      each wordseg release.
 
-## Bugfixes
+* Bugfixes
 
-* The following characters are now forbidden in separators, they
-  interfer with regular expression matching:
+    * The following characters are now forbidden in separators, they
+      interfer with regular expression matching:
 
-        !#$%&'*+-.^`|~:\\\"
+            !#$%&'*+-.^`|~:\\\"
 
-* Type scoring is now correctly implemented in **wordseg-eval** (#10,
-  #14).
+    * Type scoring is now correctly implemented in **wordseg-eval**
+      (#10, #14).
 
 
-# wordseg-0.5.1
+wordseg-0.5.1
+-------------
 
 * Support for punctuation in input of **wordseg-prep** with the
-  `--punctuation` option (#10).
+  ``--punctuation`` option (#10).
 
 
-# wordseg-0.5
+wordseg-0.5
+-----------
 
 * Implementation of Adaptor Grammar as ``wordseg-ag``,
 * Installation now relies on cmake (was python setuptools),
@@ -39,7 +43,8 @@
 * Various bugfixes.
 
 
-# wordseg-0.4.1
+wordseg-0.4.1
+-------------
 
 * First public release, adaptation from Alex Cristia's
   (CDSWordSeg)[https://github.com/alecristia/CDSwordSeg].
