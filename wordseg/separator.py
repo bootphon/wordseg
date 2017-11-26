@@ -122,7 +122,7 @@ class Separator(object):
         return utterance.strip()
 
 
-    def tokenize(self, utterance, level):
+    def tokenize(self, utterance, level, keep_boundaries=True):
         """Yields the tokens in `utterance` at the given `level`
 
         Iterates on phones, syllable or words within a given
@@ -135,6 +135,9 @@ class Separator(object):
         level : str
             The level to tokenize the utterance at, must be 'phone',
             'syllable' or 'word'.
+        keep_boundaries : bool, optional
+            When True (default) preserve the sublevel boundaries in
+            the output. When Fals all token boundaries are removed.
 
         Yields
         ------
@@ -154,6 +157,8 @@ class Separator(object):
         >>> t = 'j uː ;eword n oʊ ;eword dʒ ʌ s t ;eword'
         >>> list(s.tokenize(t, 'word'))
         ['j uː', 'n oʊ', 'dʒ ʌ s t']
+        >>> list(s.tokenize(t, 'word', keep_boundaries=False))
+        ['juː', 'noʊ', 'dʒʌst']
         >>> list(s.tokenize(t, 'phone'))
         ['j', 'uː', 'n', 'oʊ', 'dʒ', 'ʌ', 's', 't']
 
@@ -189,7 +194,13 @@ class Separator(object):
                 phn for syll in tokens for phn in _tokenize(syll, 'phone'))
 
         # strip the tokens
-        return (self.strip(t) for t in tokens)
+        tokens = (self.strip(t) for t in tokens)
+
+        # delete intermediate token boundaries when asked
+        if not keep_boundaries:
+            tokens = (self.remove(t) for t in tokens)
+
+        return (t for t in tokens if len(t))
 
 
     def split(self, utt, level, remove=True):
@@ -309,3 +320,7 @@ class Separator(object):
         else:
             raise ValueError(
                 'iteration type must be "value" or "pair", it is "{}"'.format(type))
+
+    def levels(self):
+        """Return the list of defined token levels"""
+        return sorted([k for k, v in self.iterate(type='pair') if v])

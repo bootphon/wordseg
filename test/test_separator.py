@@ -8,6 +8,15 @@ import re
 from wordseg.separator import Separator
 
 
+def test_levels():
+    assert Separator(phone='a', syllable='b', word='c').levels() \
+        == ['phone', 'syllable', 'word']
+    assert Separator(phone='a', syllable='b', word=None).levels() \
+        == ['phone', 'syllable']
+    assert Separator(phone='a', syllable=None, word=None).levels() \
+        == ['phone']
+
+
 def test_iterate():
     sep = Separator()
     gold = [' ', ';esyll', ';eword']
@@ -144,4 +153,36 @@ def test_tokenize():
     assert list(s.tokenize(t, 'syllable')) \
         == ['j_uː', 'n_oʊ', 'dʒ_ʌ_s', 't']
     assert list(s.tokenize(t, 'phone')) \
+        == ['j', 'uː', 'n', 'oʊ', 'dʒ', 'ʌ', 's', 't']
+
+
+def test_tokenize_noboundaries():
+    s = Separator(phone=None, syllable=' ', word=';eword')
+    t = 'j uː ;eword n oʊ ;eword dʒ ʌ s t ;eword'
+    assert list(s.tokenize(t, 'word', keep_boundaries=False)) \
+        == ['juː', 'noʊ', 'dʒʌst']
+    assert list(s.tokenize(t, 'syllable', keep_boundaries=False)) \
+        == ['j', 'uː', 'n', 'oʊ', 'dʒ', 'ʌ', 's', 't']
+
+    s = Separator(phone=' ', word='_')
+    t = 'j uː _ n oʊ _ dʒ ʌ s t _'
+    assert list(s.tokenize(t, 'word', keep_boundaries=False)) \
+        == ['juː', 'noʊ', 'dʒʌst']
+    assert list(s.tokenize(t, 'phone', keep_boundaries=False)) \
+        == ['j', 'uː', 'n', 'oʊ', 'dʒ', 'ʌ', 's', 't']
+
+    s = Separator(phone='_', word=' ')
+    t = 'j_uː_ n_oʊ_ dʒ_ʌ_s_t_ '
+    assert list(s.tokenize(t, 'word', keep_boundaries=False)) \
+        == ['juː', 'noʊ', 'dʒʌst']
+    assert list(s.tokenize(t, 'phone', keep_boundaries=False)) \
+        == ['j', 'uː', 'n', 'oʊ', 'dʒ', 'ʌ', 's', 't']
+
+    s = Separator(phone='_', syllable=';', word=' ')
+    t = 'j_uː_ n_oʊ_ dʒ_ʌ_s_;t_ '
+    assert list(s.tokenize(t, 'word', keep_boundaries=False)) \
+        == ['juː', 'noʊ', 'dʒʌst']
+    assert list(s.tokenize(t, 'syllable', keep_boundaries=False)) \
+        == ['juː', 'noʊ', 'dʒʌs', 't']
+    assert list(s.tokenize(t, 'phone', keep_boundaries=False)) \
         == ['j', 'uː', 'n', 'oʊ', 'dʒ', 'ʌ', 's', 't']

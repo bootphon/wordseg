@@ -3,6 +3,9 @@ on master branch (not yet released)
 
 * Features
 
+    * New methods for basic statistics and normalized segmentation
+      entropy in **wordseg-stats**
+
     * New forward/backward option in **wordseg-tp**.
 
     * New command **wordseg-baseline** that produces a random
