@@ -73,34 +73,41 @@ class StringPos(object):
 def read_data(text, separator=DEFAULT_SEPARATOR):
     """Load text data for evaluation
 
-    :param list(str) text: a list of utterances
+    Parameters
+    ----------
+    text : list of str
+        The list of utterances to read for the evaluation
+    separator : Separator
+        Separators to tokenize the text with
 
-    :param Separator separator: token separation to split the
-        utterances into words
-
-    :return: three lists (words, positions, lexicon) where `words` are
-        the input utterences with word separators removed, `positions`
-        stores the start/stop index of each word for each utterance,
-        and `lexicon` is the list of words
+    Returns
+    -------
+    (words, positions, lexicon) : three lists
+        where `words` are the input utterences with word separators
+        removed, `positions` stores the start/stop index of each word
+        for each utterance, and `lexicon` is the list of words
 
     """
     words = []
     positions = []
     lexicon = {}
 
-    for line in text:
-        line = list(separator.split(line.strip(), level='word'))
-        words.append(''.join(line))
+    for utt in text:
+        # the utterance with word separators removed
+        words.append(separator.remove(utt, 'word'))
+
+        # utt = list(separator.split(utt.strip(), level='word'))
+        utt = list(separator.tokenize(utt, 'word'))
 
         # loop over words in line and add to dictionary
-        for word in line:
+        for word in utt:
             lexicon[word] = 1
 
         idx = StringPos()
-        positions.append({idx(len(word)) for word in line})
+        positions.append({idx(len(word)) for word in utt})
 
     # return the words lexicon as a sorted list
-    lexicon = [key for key, value in sorted(lexicon.items())]
+    lexicon = sorted([k for k in lexicon.keys()])
     return words, positions, lexicon
 
 
@@ -148,7 +155,7 @@ def evaluate(text, gold, separator=DEFAULT_SEPARATOR):
         if g != t:
             raise RuntimeError(
                 'gold and train differ at line {}: gold="{}", train="{}"'
-                .format(i+1), g, t)
+                .format(i+1, g, t))
 
     # get text and gold sets from lexicons
     type_eval = Evaluation()

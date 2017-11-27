@@ -2,14 +2,7 @@
 
 """Extract statistics relevant for word segmenation corpora"""
 
-# From https://github.com/alecristia/CDSwordSeg/blob/master/recipes/CatalanSpanish/_describe_gold.sh
-# and https://github.com/ConstantineLignos/WordSegmentation.
-# Copyright (C) 2010, 2011 Constantine Lignos
-
 import collections
-import itertools
-import pandas as pd
-
 from math import log2
 
 from wordseg import utils
@@ -30,15 +23,15 @@ class CorpusStatistics(object):
         log.info('loaded %s utterances', len(self.corpus))
 
         # tokenize the text at each defined level ('word', 'syllable'
-        # and/or 'phone') TODO can be optimize we are tokenizing the
-        # entire text up to 3 times
+        # and/or 'phone') TODO can be optimized we are tokenizing the
+        # entire text up to 3 times (implement nested tokenization)
         self.tokens = {}
         for level in self.separator.levels():
             self.tokens[level] = [
                 list(self.separator.tokenize(utt, level, keep_boundaries=False))
                 for utt in self.corpus]
 
-        # estimates token frequencies at each level
+        # estimates word frequencies
         self.unigram = self._unigram('word')
 
     def _unigram(self, level):
@@ -49,14 +42,32 @@ class CorpusStatistics(object):
         return {c[0]: c[1] / total_count for c in count}
 
     def describe_corpus(self):
-        """Basic description of the corpus
+        """Basic description of the corpus at word level
 
-        Python implementation of https://github.com/alecristia/
-        CDSwordSeg/blob/master/recipes/CatalanSpanish/_describe_gold.sh
+        Returns
+        -------
+        stats : dict
+            A dictionnary made of the following entries (all counts
+            being on the entire corpus)::
 
-        Raises
-        ------
-        If 'phone' and 'word' tokens are not definide in the separator.
+            - 'nutts': number of utterances
+            - 'nswu': number of utterances containing a single world
+            - 'nwtok': number of word tokens
+            - 'nwtyp': number of types
+            - 'nhapax': number of word types with a frequency of 1 (hapax)
+            - 'mattr': mean ratio of unique words per chunk of 10 words
+
+            If the corpus is tokeninzed at 'phone' level, the
+            following entries are added::
+
+            - 'awl': average number of phones per word
+            - 'nse': normalized segmenation entropy
+
+        Notes
+        -----
+        This method is a Python implementation of the script [1]_.
+
+        .. [1]_ https://github.com/alecristia/CDSwordSeg/blob/master/recipes/CatalanSpanish/_describe_gold.sh
 
         """
         # length of utterances in number of words
@@ -71,16 +82,16 @@ class CorpusStatistics(object):
 
         stats = {
             # number of utterances
-            'nutterances': len(self.corpus),
+            'nutts': len(self.corpus),
             # number of single word utterances
-            'nutterances_single_word': wlen.count(1),
+            'nswu': wlen.count(1),
             # number of word tokens
-            'nword_tokens': sum(wlen),
+            'nwtok': sum(wlen),
             # number of word types
-            'nword_types': len(self.unigram),
+            'nwtyp': len(self.unigram),
             # number of word types with a frequency of 1 (hapax)
-            'nword_hapax': list(self.unigram.values()).count(1 / sum(wlen)),
-            # mean ratio of uniques words per chunk of 10 words
+            'nhapax': list(self.unigram.values()).count(1 / sum(wlen)),
+            # mean ratio of unique words per chunk of 10 words
             'mattr': sum(nuniques) / len(nuniques)
         }
 
@@ -88,6 +99,8 @@ class CorpusStatistics(object):
         if 'phone' in self.separator.levels():
             stats['awl'] = sum(
                 len(utt) for utt in self.tokens['phone']) / sum(wlen)
+
+            stats['nse'] = self.normalized_segmentation_entropy()
 
         return stats
 
@@ -107,7 +120,7 @@ class CorpusStatistics(object):
 
         Raises
         ------
-
+        KeyError if the corpus is not tokenized at 'phone' and 'word' levels.
 
         Notes
         -----
@@ -161,12 +174,13 @@ def main():
         separator=Separator())
 
     stats = CorpusStatistics(streamin, separator, log=log)
+
+    # print out basic stats at word level
     basics = stats.describe_corpus()
-    streamout.write(' '.join(basics.keys()) + ' nse\n')
+    streamout.write(' '.join(basics.keys()) + '\n')
     streamout.write(
         ' '.join(str(v) if isinstance(v, int) else '{0:0.4f}'.format(v)
-                 for v in basics.values()) + ' {0:0.4f}'.format(
-                         stats.normalized_segmentation_entropy()) + '\n')
+                 for v in basics.values()) + '\n')
 
 
 if __name__ == '__main__':

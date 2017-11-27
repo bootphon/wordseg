@@ -78,9 +78,9 @@ class Separator(object):
             ', '.join('{}: "{}"'.format(k, v) for k, v
                       in self.iterate(type='pair') if v))
 
-    def _check_level(self, level):
+    def check_level(self, level):
         """Raises ValueError if `level` is not defined in the separator"""
-        if level not in self._regexp.keys():
+        if level not in self.levels():
             raise ValueError(
                 "level must be 'phone', 'syllable' or 'word', "
                 "it is {}".format(level))
@@ -106,7 +106,7 @@ class Separator(object):
         # finally phones
         to_remove = ['word', 'syllable', 'phone']
         if level:
-            self._check_level(level)
+            self.check_level(level)
             to_remove = [level]
 
         # build a regular expression for separator suppression,
@@ -120,7 +120,6 @@ class Separator(object):
         utterance = re.sub(pattern + '$', '', utterance)
 
         return utterance.strip()
-
 
     def tokenize(self, utterance, level, keep_boundaries=True):
         """Yields the tokens in `utterance` at the given `level`
@@ -136,8 +135,9 @@ class Separator(object):
             The level to tokenize the utterance at, must be 'phone',
             'syllable' or 'word'.
         keep_boundaries : bool, optional
-            When True (default) preserve the sublevel boundaries in
-            the output. When Fals all token boundaries are removed.
+            When True (default) preserve the sublevel token boundaries
+            in the output. When False all token boundaries are
+            removed.
 
         Yields
         ------
@@ -163,7 +163,7 @@ class Separator(object):
         ['j', 'uː', 'n', 'oʊ', 'dʒ', 'ʌ', 's', 't']
 
         """
-        self._check_level(level)
+        self.check_level(level)
 
         # check if level defined in the separator
         if self._regexp[level] is None:
@@ -203,7 +203,7 @@ class Separator(object):
         return (t for t in tokens if len(t))
 
 
-    def split(self, utt, level, remove=True):
+    def split(self, utt, level, keep_boundaries=False):
         """Split the string `utt` at a given token `level`
 
         Low-level method, better to use tokenize() instead.
@@ -215,13 +215,14 @@ class Separator(object):
         level : str
             Token level to split the string with. Must be 'phone',
             'syllable' or 'word', raise ArgumentError otherwise.
-        remove : bool, optional
-            If True (default), remove all the separators for all
+        keep_boundaries : bool, optional
+            If False (default), remove all the separators for all
             levels from the returned sub-utterances.
 
         Returns
         -------
-        The list of tokens extracted from `utt`
+        tokens : generator
+             The tokens extracted from `utt`, may include empty tokens.
 
         Raises
         ------
@@ -229,20 +230,20 @@ class Separator(object):
             If the `level` is not 'phone', 'syllable' or 'word'.
 
         """
-        self._check_level(level)
+        self.check_level(level)
 
         sep = self._regexp[level]
         tokens = re.split(sep, utt)
 
-        if remove:
-            tokens = (self.remove(u) for u in tokens)
-        else:
+        if keep_boundaries:
             tokens = (re.sub(' +', ' ', u) for u in tokens)
+        else:
+            tokens = (self.remove(u) for u in tokens)
 
         # remove any leading ' '
         tokens = (t.lstrip(' ') for t in tokens)
 
-        return list(tokens)
+        return tokens
 
     def remove(self, utt, level=None):
         """Returns the string `utt` with separators removed
@@ -269,7 +270,7 @@ class Separator(object):
 
         """
         if level:
-            self._check_level(level)
+            self.check_level(level)
 
         to_remove = ['phone', 'syllable', 'word']
         if level:

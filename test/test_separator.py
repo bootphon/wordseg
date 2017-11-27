@@ -113,18 +113,26 @@ def test_remove_re():
         Separator(re.escape('[ab]'), None, None)
 
 
-def test_split():
+@pytest.mark.parametrize('text, expected, keep_boundaries', [
+    ('..p.s.p.', ['..p.s.p.'], True),
+    ('..p.s.p.', ['.....'], False),
+    ('..p.s.p.w', ['..p.s.p.', ''], True),
+    ('..p.s.p.w', ['.....', ''], False),
+    ('..p.s.p.w..p.s.w', ['.....', '....', ''], False),
+    ('..p.s.p.w..p.s.', ['.....', '....'], False),
+    ('..p.s.p.w..p.s.', ['..p.s.p.', '..p.s.'], True),
+])
+def test_split_vs_tokenize(text, expected, keep_boundaries):
     s = Separator(phone='p', syllable='s', word='w')
-    assert s.split('..p.s.p.', 'word', remove=False) == ['..p.s.p.']
-    assert s.split('..p.s.p.w', 'word', remove=False) == ['..p.s.p.', '']
-    assert s.split('aapasapaw', 'word', remove=False) == ['aapasapa', '']
-    assert s.split('..p.s.p.w', 'word', remove=True) == ['.....', '']
-    assert s.split('..p.s.p.w..p.s.', 'word', remove=True) == ['.....', '....']
-    assert s.split('..p.s.p.w..p.s.w', 'word', remove=True) \
-        == ['.....', '....', '']
+
+    assert list(s.split(text, 'word', keep_boundaries=keep_boundaries)) \
+        == expected
+
+    assert list(s.tokenize(text, 'word', keep_boundaries=keep_boundaries)) \
+        == [e for e in expected if len(e)]
 
 
-def test_tokenize():
+def test_tokenize_2():
     s = Separator(phone=None, syllable=' ', word=';eword')
     t = 'j uː ;eword n oʊ ;eword dʒ ʌ s t ;eword'
     assert list(s.tokenize(t, 'word')) \

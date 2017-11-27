@@ -49,7 +49,8 @@ def test_descibe_corpus2(tags):
     print(stats)
     assert stats == pytest.approx({
         'nutts': 13, 'nswu': 4, 'nwtok': 34, 'nwtyp': 24,
-        'nhapax': 19, 'mattr': 0.7166666666666667, 'awl': 3.5588235294117645})
+        'nhapax': 19, 'mattr': 0.7166666666666667,
+        'awl': 3.5588235294117645, 'nse': 0.06298494117721846})
 
 
 def test_entropy(tags):

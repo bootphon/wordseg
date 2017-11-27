@@ -22,9 +22,10 @@ def test_gold_on_gold():
 
 
 def test_ipa():
-    text = ['juː;ewordviː;eword mɔː;eword kʊkɪz;eword']
+    separator = Separator(phone=None, syllable=None, word=' ')
+    text = ['juːviː mɔː kʊkɪz ']
     gold = ['juː viː mɔː kʊkɪz']
-    evaluate(text, gold, separator=Separator(word=';eword'))
+    evaluate(text, gold, separator=separator)
 
 
 # auxiliary function
