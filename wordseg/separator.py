@@ -165,12 +165,6 @@ class Separator(object):
         """
         self.check_level(level)
 
-        # check if level defined in the separator
-        if self._regexp[level] is None:
-            raise ValueError(
-                'asking for {0} tokens but {0} separator is not defined'
-                .format(level))
-
         # auxiliary function tokenizing at a given level
         def _tokenize(utterance, level):
             if not self._regexp[level]:
@@ -181,15 +175,18 @@ class Separator(object):
                     yield token
 
         # word tokens
-        tokens = _tokenize(utterance, 'word')
+        if self.word:
+            tokens = _tokenize(utterance, 'word')
+        else:
+            tokens = [utterance]
 
         # syllable tokens
-        if level in ('phone', 'syllable'):
+        if level in ('phone', 'syllable') and self.syllable:
             tokens = itertools.chain(
                 syll for word in tokens for syll in _tokenize(word, 'syllable'))
 
         # phone tokens
-        if level == 'phone':
+        if level == 'phone' and self.phone:
             tokens = itertools.chain(
                 phn for syll in tokens for phn in _tokenize(syll, 'phone'))
 
@@ -323,5 +320,27 @@ class Separator(object):
                 'iteration type must be "value" or "pair", it is "{}"'.format(type))
 
     def levels(self):
-        """Return the list of defined token levels"""
+        """Return the list of defined token levels from inner to outer"""
+        # curiously levels order and alphabetical order are the same
         return sorted([k for k, v in self.iterate(type='pair') if v])
+
+    def upper_levels(self, level):
+        """Return the list of levels upper than the given one
+
+        Raise ValuError when `level` is not defined
+
+        Exemples
+        --------
+        >>> s = Separator(phone='p', syllable='s', word='w')
+        >>> s.upper_levels('phone')
+        ['syllable', 'word']
+        >>> s.upper_levels('word')
+        []
+        >>> s = Separator(phone='p', syllable=None, word='w')
+        >>> s.upper_levels('phone')
+        ['word']
+
+        """
+        self.check_level(level)
+        levels = self.levels()
+        return levels[levels.index(level)+1:]

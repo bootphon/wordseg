@@ -3,6 +3,7 @@
 """Extract statistics relevant for word segmenation corpora"""
 
 import collections
+import json
 from math import log2
 
 from wordseg import utils
@@ -11,33 +12,49 @@ from wordseg.separator import Separator
 
 class CorpusStatistics(object):
     def __init__(self, corpus, separator, log=utils.null_logger()):
+        self.log = log
+
         self.separator = separator
         if not self.separator.word:
             raise ValueError('word separator not defined')
         if not self.separator.phone:
             log.warning('phone separator not defined, some stats ignored')
-        log.info('token separator is: %s', self.separator)
+        self.log.info('token separator is %s', self.separator)
 
         # force to list and ignore empty lines
         self.corpus = list(utt.strip() for utt in corpus if len(utt.strip()))
-        log.info('loaded %s utterances', len(self.corpus))
+        self.log.info('loaded %s utterances', len(self.corpus))
+        if len(self.corpus) == 0:
+            raise ValueError('no text to load')
 
         # tokenize the text at each defined level ('word', 'syllable'
         # and/or 'phone') TODO can be optimized we are tokenizing the
-        # entire text up to 3 times (implement nested tokenization)
+        # entire text up to 3 times (implement nested tokenization).
         self.tokens = {}
-        for level in self.separator.levels():
-            self.tokens[level] = [
-                list(self.separator.tokenize(utt, level, keep_boundaries=False))
-                for utt in self.corpus]
+        for level in self.separator.levels()[::-1]:
+            self.log.debug('tokenizing %s', level)
+            l = [list(self.separator.tokenize(utt, level, keep_boundaries=False))
+                 for utt in self.corpus]
+            self.tokens[level] = l
 
-        # estimates word frequencies
-        self.unigram = self._unigram('word')
+            ntokens = sum(len(t) for t in self.tokens[level])
+            self.log.info('parsed %s %ss', ntokens, level)
+            if ntokens == 0:
+                raise ValueError('{}s expected but 0 parsed'.format(level))
+
+            # estimates token frequencies
+        self.unigram = {}
+        for level in self.separator.levels()[::-1]:
+            self.unigram[level] = self._unigram(level)
+
 
     def _unigram(self, level):
         """Return dictionary of (token: frequency) items"""
-        count =  collections.Counter(
-            (t for utt in self.tokens[level] for t in utt)).most_common()
+        count = self.top_frequency_tokens(level)
+
+        self.log.info('5 most common {}s: {}'.format(
+            level, [t for t, c in count[:5]]))
+
         total_count = sum(c[1] for c in count)
         return {c[0]: c[1] / total_count for c in count}
 
@@ -88,9 +105,9 @@ class CorpusStatistics(object):
             # number of word tokens
             'nwtok': sum(wlen),
             # number of word types
-            'nwtyp': len(self.unigram),
+            'nwtyp': len(self.unigram['word']),
             # number of word types with a frequency of 1 (hapax)
-            'nhapax': list(self.unigram.values()).count(1 / sum(wlen)),
+            'nhapax': list(self.unigram['word'].values()).count(1 / sum(wlen)),
             # mean ratio of unique words per chunk of 10 words
             'mattr': sum(nuniques) / len(nuniques)
         }
@@ -101,6 +118,33 @@ class CorpusStatistics(object):
                 len(utt) for utt in self.tokens['phone']) / sum(wlen)
 
             stats['nse'] = self.normalized_segmentation_entropy()
+
+        return stats
+
+    def describe_tokens(self, level):
+        stats = {}
+
+        # tokens
+
+        # length of utterances in number of words
+        tokens_len = [len(utt) for utt in self.tokens[level]]
+        # number of tokens
+        stats['tokens'] = sum(tokens_len)
+        # mean number of tokens per utterance, word and syllable
+        stats['tokens/utt'] = stats['tokens'] / len(self.corpus)
+        for l in self.separator.upper_levels(level):
+            nupper = sum(len(utt) for utt in self.tokens[l])
+            stats['tokens/{}'.format(l)] = stats['tokens'] / nupper
+
+        # types
+
+        types_count = self.top_frequency_tokens(level)
+        # number of types
+        stats['types'] = len(types_count)
+        # mean number of token per types
+        stats['token/types'] = stats['tokens'] / stats['types']
+        # number of types occuring only once in the corpus
+        stats['uniques'] = len([k for k, v in types_count if v == 1])
 
         return stats
 
@@ -155,7 +199,7 @@ class CorpusStatistics(object):
         N = sum(len(utt) for utt in self.tokens['phone'])
 
         # word lexicon with probabilities
-        P = self.unigram
+        P = self.unigram['word']
 
         # the probability of each word in the text
         probs = (P[word] for utt in self.tokens['word'] for word in utt)
@@ -167,20 +211,34 @@ class CorpusStatistics(object):
 @utils.CatchExceptions
 def main():
     """Entry point of the 'wordseg-stats' command"""
+    # options description
+    def add_arguments(parser):
+        parser.add_argument(
+            '--json', action='store_true',
+            help='print the results in JSON format, else print in raw text')
+
     # command initialization
     streamin, streamout, separator, log, args = utils.prepare_main(
         name='wordseg-stats',
         description=__doc__,
+        add_arguments=add_arguments,
         separator=Separator())
 
     stats = CorpusStatistics(streamin, separator, log=log)
 
-    # print out basic stats at word level
-    basics = stats.describe_corpus()
-    streamout.write(' '.join(basics.keys()) + '\n')
-    streamout.write(
-        ' '.join(str(v) if isinstance(v, int) else '{0:0.4f}'.format(v)
-                 for v in basics.values()) + '\n')
+    res = {}
+    res['corpus'] = stats.describe_corpus()
+    for level in separator.levels()[::-1]:
+        res[level + 's'] = stats.describe_tokens(level)
+
+    if args.json:
+        streamout.write((json.dumps(res, indent=4)) + '\n')
+    else:
+        out = ''
+        for name, stats in res.items():
+            for k, v in stats.items():
+               out += ' '.join((name, k, str(v))) + '\n'
+        streamout.write(out)
 
 
 if __name__ == '__main__':

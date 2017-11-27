@@ -147,6 +147,13 @@ def test_tokenize_2():
     assert list(s.tokenize(t, 'phone')) \
         == ['j', 'uː', 'n', 'oʊ', 'dʒ', 'ʌ', 's', 't']
 
+    s = Separator(phone=' ', syllable=None, word='_')
+    t = 'j uː _ n oʊ _ dʒ ʌ s t _'
+    assert list(s.tokenize(t, 'word')) \
+        == ['j uː', 'n oʊ', 'dʒ ʌ s t']
+    assert list(s.tokenize(t, 'phone')) \
+        == ['j', 'uː', 'n', 'oʊ', 'dʒ', 'ʌ', 's', 't']
+
     s = Separator(phone='_', word=' ')
     t = 'j_uː_ n_oʊ_ dʒ_ʌ_s_t_ '
     assert list(s.tokenize(t, 'word')) \
@@ -194,3 +201,17 @@ def test_tokenize_noboundaries():
         == ['juː', 'noʊ', 'dʒʌs', 't']
     assert list(s.tokenize(t, 'phone', keep_boundaries=False)) \
         == ['j', 'uː', 'n', 'oʊ', 'dʒ', 'ʌ', 's', 't']
+
+
+def test_upper_levels():
+    s = Separator(phone='p', syllable='s', word='w')
+    assert s.upper_levels('phone') == ['syllable', 'word']
+    assert s.upper_levels('syllable') == ['word']
+    assert s.upper_levels('word') == []
+
+    s = Separator(phone='p', syllable=None, word='w')
+    assert s.upper_levels('phone') == ['word']
+    assert s.upper_levels('word') == []
+
+    with pytest.raises(ValueError):
+        s.upper_levels('unexisting_level')

@@ -21,22 +21,25 @@ def test_top_frequency():
 
 def test_unigram():
     sep = Separator(phone=None, syllable=None, word=' ')
-
     text = ['hello world', 'hello you']
     stats = CorpusStatistics(text, separator=sep)
-    assert stats.unigram == pytest.approx(
+    assert stats.unigram['word'] == pytest.approx(
         {'hello': .50, 'world': 0.25, 'you': 0.25})
 
-    text = []
+    sep = Separator(phone='_', syllable=None, word=' ')
+    text = ['he_llo_ wo_rl_d_', 'he_llo_ you_']
     stats = CorpusStatistics(text, separator=sep)
-    assert stats.unigram == {}
+    assert stats.unigram['word'] == pytest.approx(
+        {'hello': .50, 'world': 0.25, 'you': 0.25})
+    assert stats.unigram['phone'] == \
+        {'d': 0.125, 'he': 0.25, 'llo': 0.25, 'rl': 0.125,
+         'wo': 0.125, 'you': 0.125}
 
 
 def test_descibe_corpus1():
     stats = CorpusStatistics(utts, separator=Separator(
         phone=None, syllable=None, word=' ')).describe_corpus()
 
-    print(stats)
     assert stats == pytest.approx({
         'nutts': 2, 'nswu': 0, 'nwtok': 26, 'nwtyp': 22,
         'nhapax': 18, 'mattr': 0.9125000000000003})
@@ -46,7 +49,6 @@ def test_descibe_corpus2(tags):
     stats = CorpusStatistics(tags, separator=Separator(
         phone=' ', syllable=';esyll', word=';eword')).describe_corpus()
 
-    print(stats)
     assert stats == pytest.approx({
         'nutts': 13, 'nswu': 4, 'nwtok': 34, 'nwtyp': 24,
         'nhapax': 19, 'mattr': 0.7166666666666667,
