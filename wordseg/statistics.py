@@ -4,7 +4,7 @@
 
 import collections
 import json
-from math import log2
+from math import log
 
 from wordseg import utils
 from wordseg.separator import Separator
@@ -291,7 +291,7 @@ class CorpusStatistics(object):
         probs = (P[word] for utt in self.tokens['word'] for word in utt)
 
         # compute the entropy
-        return -1 * sum(p * log2(p) / (N - 1) for p in probs)
+        return -1 * sum(p * log(p, 2) / (N - 1) for p in probs)
 
 
 @utils.CatchExceptions
