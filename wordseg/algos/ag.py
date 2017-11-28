@@ -1,4 +1,4 @@
-"""Adaptor Grammar
+"""Learn parse trees from a grammar (Adaptor Grammar)
 
 The grammar consists of a sequence of rules, one per line, in the
 following format::
@@ -146,7 +146,6 @@ import collections
 import joblib
 import logging
 import os
-import pkg_resources
 import re
 import shlex
 import shutil
@@ -313,7 +312,7 @@ DEFAULT_ARGS = ('-E -d 0 -a 0.0001 -b 10000 -e 1 -f 1 '
 def get_grammar_files():
     """Returns a list of example grammar files bundled with wordseg
 
-    Grammar files have the *.lt extension and are stored in the
+    Grammar files have the \*.lt extension and are stored in the
     directory `wordseg/data/ag`.
 
     Raises

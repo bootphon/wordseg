@@ -70,20 +70,7 @@ input text file (in phonological form) as argument:
    :language: bash
 
 From the tutorial directory, we can execute the script and display the
-result in a table with ``../doc/tutorial.sh phonologic.txt | column
--t``. This should output someting like that::
-
-  score               baseline  tp        puddle    dibs
-  ------------------  --------  --------  --------  --------
-  type_fscore         0.1079    0.2094    0.03662   0.01944
-  type_precision      0.08258   0.1692    0.05497   0.1379
-  type_recall         0.1556    0.2745    0.02745   0.01046
-  token_fscore        0.1096    0.2123    0.02763   0.02921
-  token_precision     0.125     0.201     0.06401   0.0198
-  token_recall        0.09755   0.225     0.01762   0.05567
-  boundary_fscore     0.2373    0.4584    0.05077   0.4512
-  boundary_precision  0.287     0.4267    0.9744    0.2913
-  boundary_recall     0.2023    0.4952    0.02606   1
+result in a table with ``../doc/tutorial.sh phonologic.txt``.
 
 
 Python tutorial
@@ -95,17 +82,52 @@ implements exactly the same process as the bash one:
 .. literalinclude:: tutorial.py
    :language: python
 
-We can execute it using ``../doc/tutorial.py phonologic.txt | column
--t``. As previously, this should output something like::
+We can execute it using ``../doc/tutorial.py phonologic.txt``.
 
-  score               baseline  tp        puddle    dibs
-  ------------------  --------  --------  --------  --------
-  type_fscore         0.1068    0.2094    0.03662   0.01944
-  type_precision      0.08205   0.1692    0.05497   0.1379
-  type_recall         0.1529    0.2745    0.02745   0.01046
-  token_fscore        0.1029    0.2123    0.02763   0.02921
-  token_precision     0.1184    0.201     0.06401   0.0198
-  token_recall        0.09091   0.225     0.01762   0.05567
-  boundary_fscore     0.2414    0.4584    0.05077   0.4512
-  boundary_precision  0.2961    0.4267    0.9744    0.2913
-  boundary_recall     0.2037    0.4952    0.02606   1
+Expected output
+---------------
+
+The bash and python give the same result, it should be something like::
+
+  * Statistics
+
+  {
+  "corpus": {
+          "nutts": 1000,
+          "nutts_single_word": 22,
+          "nword_tokens": 3916,
+          "nword_types": 765,
+          "nword_hapax": 457,
+          "mattr": 0.7125704045058399,
+          "entropy": 0.061493838936541596
+      },
+  "words": {
+          "tokens": 3916,
+          "tokens/utt": 3.916,
+          "types": 765,
+          "token/types": 5.118954248366013,
+          "uniques": 457
+      },
+  "phones": {
+          "tokens": 11010,
+          "tokens/utt": 11.01,
+          "tokens/word": 2.8115423901940755,
+          "types": 58,
+          "token/types": 189.82758620689654,
+          "uniques": 2
+      }
+  }
+
+  * Evaluation
+
+  score              baseline tp       puddle   dibs
+  ------------------ -------- -------- -------- --------
+  type_fscore	        0.1194	0.2094	 0.03662  0.01944
+  type_precision	0.09207	0.1692	 0.05497  0.1379
+  type_recall	        0.1699	0.2745	 0.02745  0.01046
+  token_fscore	        0.1152	0.2123	 0.02763  0.02921
+  token_precision	0.1325	0.201	 0.06401  0.0198
+  token_recall	        0.1019	0.225	 0.01762  0.05567
+  boundary_fscore	0.2517	0.4584	 0.05077  0.4512
+  boundary_precision	0.3083	0.4267	 0.9744	  0.2913
+  boundary_recall	0.2126	0.4952	 0.02606  1

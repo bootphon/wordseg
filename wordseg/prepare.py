@@ -1,10 +1,16 @@
 """Prepare an input text for word segmentation
 
-The input text must be in a phonologized form (TODO define that). The
-input text is checked for errors in formatting (presence of
-punctuation, missing separators, etc...). The program fails on the
-first encountered error, or ignore them if the "--tolerant" option is
-used.
+* The input text must be in a phonologized form (a suite of phones,
+  syllables or words tokens as specified by the token separator).
+
+* The input text is checked for errors in formatting (presence of
+  punctuation, missing separators, etc...).
+
+* The output text contains space separated phones (or syllables
+  according to the *unit* option).
+
+* The program fails on the first encountered error, or ignore them if
+  the *tolerant* option is used.
 
 """
 
@@ -41,7 +47,7 @@ def check_utterance(utterance, separator=Separator(), check_punctuation=True):
     utterance : str
         The utterance to be checked
     separator : Separator, optional
-        The phonological levels separation in the `utterance`
+        The token separators used in the `utterance`
     check_punctuation : bool, optional
         When True (default), forbid any punctuation character in the
         utterance and raise ValueError if any punctuation is
@@ -56,14 +62,15 @@ def check_utterance(utterance, separator=Separator(), check_punctuation=True):
     ------
     ValueError
         If one of the following errors is detected:
+
         * `utterance` is empty or is not a string
         * `utterance` contains any punctuation character (once the
-           separators are removed), only if `check_punctuation` is
-           True
+          separators are removed), only if `check_punctuation` is
+          True
         * `utterance` begins with a separator
         * `utterance` does not end with a word separator
         * `utterance` contains syllable tokens but a word does not end
-           with a syllable separator
+          with a syllable separator
 
     """
     # utterance is empty or not a string (or unicode for python2)
@@ -145,7 +152,7 @@ def prepare(text, separator=Separator(), unit='phone',
 
     Returns
     -------
-    generator
+    prepared_text : generator
         Utterances from the `text` with separators removed, prepared
         for segmentation at a syllable or phoneme representation level
         (separated by space).
@@ -201,7 +208,7 @@ def prepare(text, separator=Separator(), unit='phone',
 def gold(text, separator=Separator()):
     """Returns a gold text from a phonologized one
 
-    The returned gold text is the ground-truth segmentationg. It has
+    The returned gold text is the ground-truth segmentation. It has
     phone and syllable separators removed and word separators replaced
     by a single space ' '. It is used to evaluate the output of
     segmentation algorithms.
@@ -217,8 +224,8 @@ def gold(text, separator=Separator()):
 
     Returns
     -------
-    generator
-        Gold text with separators removed and words separated by
+    gold_text : generator
+        Gold utterances with separators removed and words separated by
         spaces. The returned text is the gold version, against which
         the algorithms are evaluated.
 
@@ -253,7 +260,9 @@ def main():
             '-P', '--punctuation', action='store_true',
             help='punctuation characters are not considered illegal')
 
-        parser.add_argument(
+        group = [g for g in parser._action_groups
+                 if g.title == 'input/output arguments'][0]
+        group.add_argument(
             '-g', '--gold', type=str, metavar='<gold-file>',
             help='''generates the gold text to the specified file,
             do not generate gold if no file specified''')

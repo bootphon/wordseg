@@ -121,16 +121,17 @@ def segment(text, threshold='relative', probability='forward',
     return re.sub(' +', ' ', segtext).split(' UB ')
 
 
-def add_arguments(parser):
+def _add_arguments(parser):
     """Add algorithm specific options to the parser"""
-    parser.add_argument(
+    group = parser.add_argument_group('algorithm parameters')
+    group.add_argument(
         '-t', '--threshold', type=str,
         choices=['relative', 'absolute'], default='relative',
         help='''Use a relative or absolute threshold for boundary decisions on
         transition probabilities. When absolute, the threshold is set
         to the mean transition probability over the entire text.''')
 
-    parser.add_argument(
+    group.add_argument(
         '-p', '--probability', type=str,
         choices=['forward', 'backward'], default='forward',
         help='''Compute forward or backward transition probabilities''')
@@ -143,7 +144,7 @@ def main():
     streamin, streamout, separator, log, args = utils.prepare_main(
         name='wordseg-tp',
         description=__doc__,
-        add_arguments=add_arguments)
+        add_arguments=_add_arguments)
 
     # segment the input text
     text = segment(

@@ -1,4 +1,15 @@
-"""dibs word segmentation algorithm"""
+# coding: utf-8
+
+"""Diphone based segmentation algorithm
+
+This algorithm uses diphone probabilities to decide whether a specific
+sequence is likely to span a word boundary (typically because the
+diphone is rare) or not.
+
+For details, see Daland, R., Pierrehumbert, J.B., "Learning
+diphone-based segmentation". Cognitive science 35(1), 119–155 (2011).
+
+"""
 
 import codecs
 import os
@@ -6,7 +17,7 @@ import os
 from wordseg import utils
 
 
-class Counter(dict):
+class _Counter(dict):
     def increment(self, key, value=1):
         self[key] = self.get(key, 0) + value
 
@@ -14,18 +25,18 @@ class Counter(dict):
         return self.get(key, 0)
 
 
-class Summary(object):
+class _Summary(object):
     def __init__(self, multigraphemic=False, wordsep='##'):
         self.wordsep = wordsep
         self.multigraphemic = multigraphemic
-        self.summary = Counter()
+        self.summary = _Counter()
 
-        self.phraseinitial = Counter()
-        self.phrasefinal = Counter()
-        self.lexicon = Counter()
+        self.phraseinitial = _Counter()
+        self.phrasefinal = _Counter()
+        self.lexicon = _Counter()
 
-        self.internaldiphones = Counter()
-        self.spanningdiphones = Counter()
+        self.internaldiphones = _Counter()
+        self.spanningdiphones = _Counter()
 
     def readstream(self, instream):
         for line in instream:
@@ -67,7 +78,7 @@ class Summary(object):
                             word[-1]+wordseq[i_word+1][0])
 
     def diphones(self):
-        alldiphones = Counter(self.internaldiphones)
+        alldiphones = _Counter(self.internaldiphones)
         for diphone in self.spanningdiphones:
             alldiphones.increment(diphone, self.spanningdiphones[diphone])
         return(alldiphones)
@@ -91,9 +102,9 @@ class Summary(object):
             outstream.write(data + '\t' + outdic(self.__dict__[data]))
 
 
-class Dibs(Counter):
+class _Dibs(_Counter):
     def __init__(self, multigraphemic=False, threshold=0.5, wordsep=' '):
-        super(Dibs, self).__init__()
+        super(_Dibs, self).__init__()
         self.multigraphemic = multigraphemic
         self.threshold = threshold
         self.wordsep = wordsep
@@ -139,13 +150,13 @@ class Dibs(Counter):
                         [str(self.get(x + y, None)) for y in cols]))
 
 
-def norm2pdf(fdf):
-    return Counter([(item[0], float(item[1]) / sum(fdf.values()))
+def _norm2pdf(fdf):
+    return _Counter([(item[0], float(item[1]) / sum(fdf.values()))
                     for item in fdf.items()])
 
 
-def baseline(speech, pwb=None):
-    dib = Dibs(multigraphemic=speech.multigraphemic, wordsep=speech.wordsep)
+def _baseline(speech, pwb=None):
+    dib = _Dibs(multigraphemic=speech.multigraphemic, wordsep=speech.wordsep)
     within, across = speech.internaldiphones, speech.spanningdiphones
 
     for diphone in speech.diphones():
@@ -155,17 +166,17 @@ def baseline(speech, pwb=None):
     return dib
 
 
-def phrasal(speech, pwb=None, log=utils.null_logger()):
-    px2_ = norm2pdf(speech.phrasefinal)
-    p_2y = norm2pdf(speech.phraseinitial)
-    pxy = norm2pdf(speech.diphones())
+def _phrasal(speech, pwb=None, log=utils.null_logger()):
+    px2_ = _norm2pdf(speech.phrasefinal)
+    p_2y = _norm2pdf(speech.phraseinitial)
+    pxy = _norm2pdf(speech.diphones())
     pwb = pwb or (
         float(speech.summary['nTokens'] - speech.summary['nLines']) /
         (speech.summary['nPhones'] - speech.summary['nLines']))
 
     log.info('phrasal: pwb = %s', pwb)
 
-    dib = Dibs(multigraphemic=speech.multigraphemic, wordsep=speech.wordsep)
+    dib = _Dibs(multigraphemic=speech.multigraphemic, wordsep=speech.wordsep)
     for diphone in speech.diphones():
         x = (diphone[0],) if speech.multigraphemic else diphone[0]
         y = (diphone[1],) if speech.multigraphemic else diphone[1]
@@ -177,9 +188,9 @@ def phrasal(speech, pwb=None, log=utils.null_logger()):
     return dib
 
 
-def lexical(speech, lexicon=None, pwb=None, log=utils.null_logger()):
-    wordinitial = Counter()
-    wordfinal = Counter()
+def _lexical(speech, lexicon=None, pwb=None, log=utils.null_logger()):
+    wordinitial = _Counter()
+    wordfinal = _Counter()
     lexicon = lexicon or speech.lexicon
 
     for word in lexicon:
@@ -190,16 +201,16 @@ def lexical(speech, lexicon=None, pwb=None, log=utils.null_logger()):
             wordinitial.increment(word[0])
             wordfinal.increment(word[-1])
 
-    px2_ = norm2pdf(wordfinal)
-    p_2y = norm2pdf(wordinitial)
-    pxy = norm2pdf(speech.diphones())
+    px2_ = _norm2pdf(wordfinal)
+    p_2y = _norm2pdf(wordinitial)
+    pxy = _norm2pdf(speech.diphones())
     pwb = pwb or (
         float(speech.summary['nTokens'] - speech.summary['nLines']) /
         (speech.summary['nPhones'] - speech.summary['nLines']))
 
     log.info('lexical: pwb = %s', pwb)
 
-    dib = Dibs(multigraphemic=speech.multigraphemic, wordsep=speech.wordsep)
+    dib = _Dibs(multigraphemic=speech.multigraphemic, wordsep=speech.wordsep)
     for diphone in speech.diphones():
         x = (diphone[0],) if speech.multigraphemic else diphone[0]
         y = (diphone[1],) if speech.multigraphemic else diphone[1]
@@ -220,15 +231,14 @@ def segment(text, prob_word_boundary=None, train_text=None,
 
     text = list(text)
 
-    # TODO wow!!!
     if not train_text:
-        log.warning('using the input text for training!')
+        log.warning('using the input text for training')
         train_text = text
 
-    training = Summary(multigraphemic=True, wordsep=' ')
+    training = _Summary(multigraphemic=True, wordsep=' ')
     training.readstream(train_text)
 
-    phrasal_dibs = phrasal(training, pwb=prob_word_boundary, log=log)
+    phrasal_dibs = _phrasal(training, pwb=prob_word_boundary, log=log)
     segmented = phrasal_dibs.test(text)
 
     if diphones:
@@ -237,21 +247,22 @@ def segment(text, prob_word_boundary=None, train_text=None,
     return segmented
 
 
-def add_arguments(parser):
+def _add_arguments(parser):
     """Add Dibs command specific options to the `parser`"""
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument(
+    group = parser.add_argument_group('algorithm parameters')
+    group1 = group.add_mutually_exclusive_group()
+    group1.add_argument(
         '-p', '--prob-word-boundary', metavar='<float>', type=float,
         help='''Word boundary probability, must be in [0, 1]''')
 
-    group.add_argument(
+    group1.add_argument(
         '-t', '--train', metavar='<int or file>', type=str, default='200',
         help='''Dibs requires a little train corpus to compute some statistics.
         If the argument is a file, read this file as a train corpus. If
         the argument is a positive integer N, take the N first lines of the
         <input-file> (train) file for testing, default is %(default)s''')
 
-    parser.add_argument(
+    group.add_argument(
         '-d', '--diphones', metavar='<output-file>',
         help='''optional filename to write diphones,
         ignore diphones output if this argument is not specified''')
@@ -263,7 +274,7 @@ def main():
     streamin, streamout, _, log, args = utils.prepare_main(
         name='wordseg-dibs',
         description=__doc__,
-        add_arguments=add_arguments)
+        add_arguments=_add_arguments)
 
     # load the test input as a list
     test_text = [line for line in streamin]

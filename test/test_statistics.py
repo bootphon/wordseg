@@ -59,8 +59,7 @@ def test_descibe_corpus2(tags):
         'nword_tokens': 34,
         'nword_types': 24,
         'nword_hapax': 19,
-        'mattr': 0.7166666666666667,
-        'entropy': 0.06298494117721846})
+        'mattr': 0.7166666666666667})
 
 
 def test_entropy(tags):

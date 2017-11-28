@@ -1,6 +1,6 @@
 """Baseline algorithm for word segmentation
 
-This algorithm randomly adds word boundaries after the input phones
+This algorithm randomly adds word boundaries after the input tokens
 with a given probability.
 
 """
@@ -12,20 +12,30 @@ from wordseg import utils
 def segment(text, probability=0.2):
     """Random word segmentation given a boundary probability
 
+    Given a probability :math:`p`, the probability :math:`P(t_i)` to
+    add a word boundary after each token :math:`t_i` is:
+
+    .. math::
+
+        P(t_i) = P(X < p), X \sim \mathcal{U}(0, 1).
+
     Parameters
     ----------
     text : sequence
-        The input sequence of utterances to segment
+        The input utterances to segment, tokens are
+        assumed to be space separated.
     probability: float, optional
-        The probability to have a word boundary after an input token
+        The probability to append a word boundary after each token.
 
     Yields
     ------
-    The randomly segmented utterances
+    segmented_text : generator
+        The randomly segmented utterances.
 
     Raises
     ------
-    ValueError if the probability is not a float or is not in [0, 1].
+    ValueError
+        if the probability is not a float in [0, 1].
 
     """
     # make sure the probability is valid
@@ -41,7 +51,7 @@ def segment(text, probability=0.2):
             for token in utt.strip().split(' '))
 
 
-def add_arguments(parser):
+def _add_arguments(parser):
     """Add algorithm specific options to the parser"""
     parser.add_argument(
         '-p', '--probability', type=float, default=0.2, metavar='<float>',
@@ -60,7 +70,7 @@ def main():
     streamin, streamout, _, log, args = utils.prepare_main(
         name='wordseg-puddle',
         description=__doc__,
-        add_arguments=add_arguments)
+        add_arguments=_add_arguments)
 
     # setup the seed for random number generation
     if args.seed:

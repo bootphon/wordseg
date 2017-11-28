@@ -3,6 +3,9 @@
 # prepare the input for segmentation and generate the gold text
 cat $1 | wordseg-prep --gold gold.txt > prepared.txt
 
+# compute statistics on the tokenized input text
+cat $1 | wordseg-stats --json > stats.json
+
 # segment the prepared text with different algorithms (we show few
 # options for them, use --help to list all of them)
 cat prepared.txt | wordseg-baseline -p 0.2 > segmented.baseline.txt
@@ -16,7 +19,15 @@ do
     cat segmented.$algo.txt | wordseg-eval gold.txt > eval.$algo.txt
 done
 
+# display the statistics computed on the input text
+echo "* Statistics"
+echo
+cat stats.json
+
 # concatenate the evaluations in a table
+echo
+echo "* Evaluation"
+echo
 echo "score baseline tp puddle dibs"
 echo "------------------ -------- -------- -------- --------"
 for i in $(seq 1 9)

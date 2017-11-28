@@ -22,9 +22,9 @@ on master branch (not yet released)
 * Bugfixes
 
     * The following characters are now forbidden in separators, they
-      interfer with regular expression matching:
+      interfer with regular expression matching::
 
-            !#$%&'*+-.^`|~:\\\"
+        !#$%&'*+-.^`|~:\\\"
 
     * Type scoring is now correctly implemented in **wordseg-eval**
       (#10, #14).
@@ -50,14 +50,15 @@ wordseg-0.4.1
 -------------
 
 * First public release, adaptation from Alex Cristia's
-  (CDSWordSeg)[https://github.com/alecristia/CDSwordSeg].
+  `CDSWordSeg <https://github.com/alecristia/CDSwordSeg>`_.
 * Four algorithms (tp, puddle, dpseg, dibs).
 * Segmentation prepocessing and evaluation.
 * Unit tests and documentation.
 * On the `original implementation
   <https://github.com/lawphill/phillips-pearl2014>`_, we applied the
   following changes:
-  - conversion to C++11 standard,
-  - replaced ``tr1/unsorted_map`` and ``mt19937`` by the standard library,
-  - code cleanup, removed useless functions and code,
-  - complete rewrite of the build process (Makefile, link on boost).
+
+  * conversion to C++11 standard,
+  * replaced ``tr1/unsorted_map`` and ``mt19937`` by the standard library,
+  * code cleanup, removed useless functions and code,
+  * complete rewrite of the build process (Makefile, link on boost).

@@ -11,11 +11,8 @@ class Separator(object):
 
     A Separator is made of 3 entries *phone*, *syllable* and *word*
     defining the token separators for each of these levels within an
-    utterance.
-
-    A token separator can be a simple string, a regular expression or
-    None. If not None, the entries 'phone', 'syllable' and 'word' must
-    be all different.
+    utterance. A token separator can be a string or None. If not None,
+    the entries 'phone', 'syllable' and 'word' must be all different.
 
     The following characters are forbidden in separators: !#$%&'*+-.^`|~:\\\"
 
@@ -89,7 +86,7 @@ class Separator(object):
         """Removes leading and ending separators of an `utterance`
 
         Parameters
-        ---------
+        ----------
         utterance : str
             The utterance to be striped.
         level : str, optional
@@ -116,7 +113,7 @@ class Separator(object):
 
         # remove leading separators
         utterance = re.sub('^' + pattern, '', utterance)
-        #remove ending ones
+        # remove ending ones
         utterance = re.sub(pattern + '$', '', utterance)
 
         return utterance.strip()
@@ -153,6 +150,7 @@ class Separator(object):
 
         Examples
         --------
+        >>> from wordseg.separator import Separator
         >>> s = Separator(phone=' ', word=';eword')
         >>> t = 'j uː ;eword n oʊ ;eword dʒ ʌ s t ;eword'
         >>> list(s.tokenize(t, 'word'))
@@ -183,12 +181,14 @@ class Separator(object):
         # syllable tokens
         if level in ('phone', 'syllable') and self.syllable:
             tokens = itertools.chain(
-                syll for word in tokens for syll in _tokenize(word, 'syllable'))
+                syll for word in tokens
+                for syll in _tokenize(word, 'syllable'))
 
         # phone tokens
         if level == 'phone' and self.phone:
             tokens = itertools.chain(
-                phn for syll in tokens for phn in _tokenize(syll, 'phone'))
+                phn for syll in tokens
+                for phn in _tokenize(syll, 'phone'))
 
         # strip the tokens
         tokens = (self.strip(t) for t in tokens)
@@ -199,19 +199,19 @@ class Separator(object):
 
         return (t for t in tokens if len(t))
 
+    def split(self, utterance, level, keep_boundaries=False):
+        """Split the `utterance` at a given token `level`
 
-    def split(self, utt, level, keep_boundaries=False):
-        """Split the string `utt` at a given token `level`
-
-        Low-level method, better to use tokenize() instead.
+        This method is sensitive to either the `utterance` is striped
+        or not. It may output empty tokens.
 
         Parameters
         ----------
-        utt : str
+        utterance : str
             The string to split in tokens.
         level : str
             Token level to split the string with. Must be 'phone',
-            'syllable' or 'word', raise ArgumentError otherwise.
+            'syllable' or 'word'.
         keep_boundaries : bool, optional
             If False (default), remove all the separators for all
             levels from the returned sub-utterances.
@@ -226,11 +226,15 @@ class Separator(object):
         ValueError
             If the `level` is not 'phone', 'syllable' or 'word'.
 
+        See Also
+        --------
+        tokenize : an higher-level method to split an utterance
+
         """
         self.check_level(level)
 
         sep = self._regexp[level]
-        tokens = re.split(sep, utt)
+        tokens = re.split(sep, utterance)
 
         if keep_boundaries:
             tokens = (re.sub(' +', ' ', u) for u in tokens)
@@ -242,12 +246,12 @@ class Separator(object):
 
         return tokens
 
-    def remove(self, utt, level=None):
-        """Returns the string `utt` with separators removed
+    def remove(self, utterance, level=None):
+        """Returns the `utterance` with separators removed
 
         Parameters
         ----------
-        utt : str
+        utterance : str
            The string to remove the separators from
         level : str, optional
            If specified (must be 'phone', 'syllable' or 'word'),
@@ -262,44 +266,42 @@ class Separator(object):
         Raises
         ------
         ValueError
-            If the `level` is specified and not 'phone', 'syllable' or
-            'word'.
+            If the `level` is specified and is not 'phone', 'syllable'
+            or 'word'.
 
         """
         if level:
             self.check_level(level)
 
-        to_remove = ['phone', 'syllable', 'word']
+        to_remove = {'phone', 'syllable', 'word'}
         if level:
-            for l in ['phone', 'syllable', 'word']:
-                if l != level:
-                    to_remove.remove(l)
+            to_remove = {level}
 
         if self.word and 'word' in to_remove:
-            utt = re.sub(self._regexp['word'], '', utt)
+            utterance = re.sub(self._regexp['word'], '', utterance)
 
         if self.syllable and 'syllable' in to_remove:
-            utt = re.sub(self._regexp['syllable'], '', utt)
+            utterance = re.sub(self._regexp['syllable'], '', utterance)
 
         if self.phone and 'phone' in to_remove:
-            utt = re.sub(self._regexp['phone'], '', utt)
+            utterance = re.sub(self._regexp['phone'], '', utterance)
 
-        return re.sub(' +', ' ', utt)
+        return re.sub(' +', ' ', utterance)
 
     def iterate(self, type='value'):
-        """Returns a generator on phone, syllable and word tokens, in that order
+        """Yields on phone, syllable and word tokens, in that order
 
         Parameters
         ----------
         type : str, optional
-            Type of separator representation to be yield, must be
+            Type of separator representation to return, must be
             'value' or 'pair'.
 
         Yields
         ------
         token : str or tuple
-            In the form *token_value* if `type` is 'value'. In the
-            form (*token_name*, *token_value*) if `type` is 'pair'.
+            In the form **token_value** if `type` is 'value'. In the
+            form **(token_name, token_value)** if `type` is 'pair'.
 
         Raises
         ------
@@ -317,20 +319,31 @@ class Separator(object):
             yield ('word', self.word)
         else:
             raise ValueError(
-                'iteration type must be "value" or "pair", it is "{}"'.format(type))
+                'iteration type must be "value" or "pair", it is "{}"'
+                .format(type))
 
     def levels(self):
-        """Return the list of defined token levels from inner to outer"""
+        """The list of defined token levels from inner to outer"""
         # curiously levels order and alphabetical order are the same
+        # (phone < syllable < word)
         return sorted([k for k, v in self.iterate(type='pair') if v])
 
     def upper_levels(self, level):
-        """Return the list of levels upper than the given one
+        """Lists the defined levels upper than the given one
 
-        Raise ValuError when `level` is not defined
+        Parameters
+        ----------
+        level : str
+            Must be 'phone', 'syllable' or 'word'.
 
-        Exemples
+        Raises
+        ------
+        ValuError
+            when `level` is not defined in the separator.
+
+        Examples
         --------
+        >>> from wordseg.separator import Separator
         >>> s = Separator(phone='p', syllable='s', word='w')
         >>> s.upper_levels('phone')
         ['syllable', 'word']
@@ -341,6 +354,9 @@ class Separator(object):
         ['word']
 
         """
+        # ensure the required level exists
         self.check_level(level)
-        levels = self.levels()
-        return levels[levels.index(level)+1:]
+
+        # extract tue upper levels
+        index = self.levels().index(level)
+        return self.levels()[index+1:]

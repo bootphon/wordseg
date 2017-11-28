@@ -13,10 +13,24 @@ from wordseg.separator import Separator
 class CorpusStatistics(object):
     """Estimates descriptive statistics from a text corpus
 
+    Parameters
+    ----------
+    corpus : sequence of str
+        The text to describe is a suite of tokenized utterances.
+    separator : Separator
+        The token separators used in the `text`.
+    log : logging.Logger
+        Where to send log messages, disabled by default.
+
     Attributes
     ----------
-
-    TODO
+    tokens : dict
+        For all levels defined in `separator`, tokens[level] is the
+        `corpus` utterances tokenized at that level. Each utterance is
+        a list of tokens without any separator.
+    unigram : dict
+        For all levels defined in `separator`, unigram[level] is the
+        tokens frequency as a dict (token: frequency).
 
     """
     def __init__(self, corpus, separator, log=utils.null_logger()):
@@ -43,9 +57,9 @@ class CorpusStatistics(object):
         self.tokens = {}
         for level in self.separator.levels()[::-1]:
             self.log.debug('tokenizing %s', level)
-            l = [list(self.separator.tokenize(utt, level, keep_boundaries=False))
-                 for utt in self.corpus]
-            self.tokens[level] = l
+            self.tokens[level] = [list(
+                self.separator.tokenize(utt, level, keep_boundaries=False))
+                                  for utt in self.corpus]
 
             ntokens = sum(len(t) for t in self.tokens[level])
             self.log.info('parsed %s %ss', ntokens, level)
@@ -78,6 +92,33 @@ class CorpusStatistics(object):
         total_count = sum(c[1] for c in count)
         return {c[0]: c[1] / total_count for c in count}
 
+    def describe_all(self):
+        """Full description of the corpus at utterance and token levels
+
+        This method is a simple wrapper on the other statistical
+        methods. It call all the methods available for the defined
+        separator (some of them requires 'phone' tokens) and wraps the
+        results in a dictionary.
+
+        """
+        # store the output statistics in a dictionary
+        results = {}
+
+        # corpus description at utterance level
+        results['corpus'] = self.describe_corpus()
+
+        # if phone are defined, compute the corpus entropy
+        if self.separator.phone:
+            results['corpus']['entropy'] \
+                = self.normalized_segmentation_entropy()
+
+        # for each defined token level (from word to phone),
+        # describe the corpus at that level
+        for level in self.separator.levels()[::-1]:
+            results[level + 's'] = self.describe_tokens(level)
+
+        return results
+
     def describe_corpus(self):
         """Basic description of the corpus at word level
 
@@ -85,25 +126,22 @@ class CorpusStatistics(object):
         -------
         stats : dict
             A dictionnary made of the following entries (all counts
-            being on the entire corpus)::
+            being on the entire corpus):
 
             - 'nutts': number of utterances
-            - 'nutts_single_word': number of utterances containing a single world
+            - 'nutts_single_word': number of utterances made of a single world
             - 'nword_tokens': number of word tokens
             - 'nword_types': number of types
             - 'nword_hapax': number of word types with a frequency of 1 (hapax)
             - 'mattr': mean ratio of unique words per chunk of 10 words
 
-            If the corpus is tokeninzed at 'phone' level, the
-            following entry are added::
-
-            - 'entropy': normalized segmenation entropy
-
         Notes
         -----
-        This method is a Python implementation of the script [1]_.
+        This method is a Python implementation of `this script`_ from
+        CDSWordSeg.
 
-        .. [1]_ https://github.com/alecristia/CDSwordSeg/blob/master/recipes/CatalanSpanish/_describe_gold.sh
+        .. _this script: https://github.com/alecristia/CDSwordSeg/blob/master/
+           recipes/CatalanSpanish/_describe_gold.sh
 
         """
         # length of utterances in number of words
@@ -125,12 +163,31 @@ class CorpusStatistics(object):
             'mattr': self._mattr('word', size=10)
         }
 
-        if 'phone' in self.separator.levels():
-            stats['entropy'] = self.normalized_segmentation_entropy()
-
         return stats
 
     def describe_tokens(self, level):
+        """Basic description of the corpus at tokens level
+
+        Parameters
+        ----------
+        level : str
+            The tokens level to describe. Must be 'phone', 'syllable'
+            or 'word'.
+
+        Returns
+        -------
+        stats : dict
+            A dictionnary made of the following entries (all counts
+            being on the entire corpus):
+
+            - 'tokens': number of tokens
+            - 'tokens/utt': mean number of tokens per utterance
+            - 'tokens/LEVEL': mean number of tokens per upper level token
+            - 'types': number of types
+            - 'tokens/type': mean number of token per types
+            - 'uniques': number of types occuring only once in the corpus
+
+        """
         stats = {}
 
         # length of utterances in number of words
@@ -253,21 +310,18 @@ def main():
         add_arguments=add_arguments,
         separator=Separator())
 
+    # compute the statistics
     stats = CorpusStatistics(streamin, separator, log=log)
+    results = stats.describe_all()
 
-    res = {}
-    res['corpus'] = stats.describe_corpus()
-    for level in separator.levels()[::-1]:
-        res[level + 's'] = stats.describe_tokens(level)
-
+    # display the results either as a JSON string or in raw text
     if args.json:
-        streamout.write((json.dumps(res, indent=4)) + '\n')
+        streamout.write((json.dumps(results, indent=4)) + '\n')
     else:
-        out = ''
-        for name, stats in res.items():
-            for k, v in stats.items():
-               out += ' '.join((name, k, str(v))) + '\n'
-        streamout.write(out)
+        out = (' '.join((name, k, str(v)))
+               for name, stats in results.items()
+               for k, v in stats.items())
+        streamout.write('\n'.join(out) + '\n')
 
 
 if __name__ == '__main__':

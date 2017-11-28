@@ -1,6 +1,6 @@
-"""Word segmentation evaluation.
+"""Word segmentation evaluation
 
-Evaluates a segmented text against it's gold version. Display the
+Evaluates a segmented text against it's gold version: outputs the
 precision, recall and f-score at type, token and boundary levels.
 
 """
@@ -11,11 +11,12 @@ from wordseg import utils
 from wordseg.separator import Separator
 
 
-DEFAULT_SEPARATOR = Separator(None, None, ' ')
-"""Separation for words only, separated by ' '"""
+_DEFAULT_SEPARATOR = Separator(None, None, ' ')
+"""Separation for space separated words only"""
 
 
-class Evaluation:
+class _Evaluation:
+    """Auxiliary class to estimates precision, recall and fscore"""
     def __init__(self):
         self.test = 0
         self.gold = 0
@@ -58,7 +59,7 @@ class Evaluation:
             self.update(t, g)
 
 
-class StringPos(object):
+class _StringPos(object):
     """Compute start and stop index of words in an utterance"""
     def __init__(self):
         self.idx = 0
@@ -70,22 +71,23 @@ class StringPos(object):
         return start, self.idx
 
 
-def read_data(text, separator=DEFAULT_SEPARATOR):
+def read_data(text, separator=_DEFAULT_SEPARATOR):
     """Load text data for evaluation
 
     Parameters
     ----------
     text : list of str
-        The list of utterances to read for the evaluation
-    separator : Separator
-        Separators to tokenize the text with
+        The list of utterances to read for the evaluation.
+    separator : Separator, optional
+        Separators to tokenize the text with, default to space
+        separated words.
 
     Returns
     -------
     (words, positions, lexicon) : three lists
         where `words` are the input utterences with word separators
         removed, `positions` stores the start/stop index of each word
-        for each utterance, and `lexicon` is the list of words
+        for each utterance, and `lexicon` is the list of words.
 
     """
     words = []
@@ -103,7 +105,7 @@ def read_data(text, separator=DEFAULT_SEPARATOR):
         for word in utt:
             lexicon[word] = 1
 
-        idx = StringPos()
+        idx = _StringPos()
         positions.append({idx(len(word)) for word in utt})
 
     # return the words lexicon as a sorted list
@@ -142,30 +144,63 @@ def _lexicon_check(textlex, goldlex):
     return textset, goldset
 
 
-def evaluate(text, gold, separator=DEFAULT_SEPARATOR):
+def evaluate(text, gold, separator=_DEFAULT_SEPARATOR):
+    """Scores a segmented text against its gold version
+
+    Parameters
+    ----------
+    text : sequence of str
+        A suite of word utterances.
+    gold : sequence of str
+        A suite of word utterances.
+    separator : Separator, optional
+        The token separation in `text` and `gold`, only word level is
+        considered, default to space separated words.
+
+    Returns
+    -------
+    scores : dict
+        A dictionnary with the following entries:
+
+        * 'type_fscore'
+        * 'type_precision'
+        * 'type_recall'
+        * 'token_fscore'
+        * 'token_precision'
+        * 'token_recall'
+        * 'boundary_fscore'
+        * 'boundary_precision'
+        * 'boundary_recall'
+
+    Raises
+    ------
+    ValueError
+        If `gold` and `text` have different size or differ in tokens
+
+    """
     text_words, text_stringpos, text_lex = read_data(text, separator)
     gold_words, gold_stringpos, gold_lex = read_data(gold, separator)
 
     if len(gold_words) != len(text_words):
-        raise RuntimeError(
+        raise ValueError(
             'gold and train have different size: len(gold)={}, len(train)={}'
             .format(len(gold_words), len(text_words)))
 
     for i, (g, t) in enumerate(zip(gold_words, text_words)):
         if g != t:
-            raise RuntimeError(
+            raise ValueError(
                 'gold and train differ at line {}: gold="{}", train="{}"'
                 .format(i+1, g, t))
 
     # get text and gold sets from lexicons
-    type_eval = Evaluation()
+    type_eval = _Evaluation()
     tl, gl = _lexicon_check(text_lex, gold_lex)
     type_eval.update_lists(tl, gl)
 
-    token_eval = Evaluation()
+    token_eval = _Evaluation()
     token_eval.update_lists(text_stringpos, gold_stringpos)
 
-    boundary_eval = Evaluation()
+    boundary_eval = _Evaluation()
     boundary_eval.update_lists(
         _stringpos_boundarypos(text_stringpos),
         _stringpos_boundarypos(gold_stringpos))
@@ -188,7 +223,7 @@ def main():
     streamin, streamout, separator, log, args = utils.prepare_main(
         name='wordseg-eval',
         description=__doc__,
-        separator=DEFAULT_SEPARATOR,
+        separator=_DEFAULT_SEPARATOR,
         add_arguments=lambda parser: parser.add_argument(
             'gold', metavar='<gold-file>',
             help='gold file to evaluate the input data on'))
