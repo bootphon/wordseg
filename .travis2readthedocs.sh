@@ -42,8 +42,13 @@ cd $GH_REPO_NAME
 # later is the new documentation.
 rm -rf *
 
-echo "Configure the project in $(pwd) with $TRAVIS_CMAKELISTS..."
-cmake $TRAVIS_CMAKELISTS || exit 1
+echo "Configure the project in $(pwd)..."
+cp -a ../doc .
+cp -a ../wordseg .
+cp -a ../CHANGELOG.rst .
+cp -a ../build/setup.py .
+cp -a ../build/html/conf.py ./doc
+rm -f ./doc/conf.py.in
 
 echo "Uploading the project to github readthedocs-pages branch"
 # add all the configured files
