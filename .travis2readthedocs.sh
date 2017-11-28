@@ -17,8 +17,14 @@
 
 set -e
 
-echo "Setting up the script in $(pwd)"
-ls -lA
+SOURCE=$(pwd)
+TARGET=$SOURCE/configured
+echo "Setting up the script in $TRAVIS_ROOT"
+
+ls -lA $SOURCE
+ls -lA $SOURCE/doc
+ls -lA $SOURCE/wordseg
+ls -lA $SOURCE/build
 
 # Set the push default to simple i.e. push only the current branch.
 git config --global push.default simple
@@ -29,23 +35,22 @@ git config user.email "travis@travis-ci.org"
 
 # get the readthedocs-pages branch in a clean working directory for
 # this script
-git clone -b readthedocs-pages https://git@$GH_REPO_REF configured
-cd configured
+git clone -b readthedocs-pages https://git@$GH_REPO_REF $TARGET
 
 # Remove everything currently in the gh-pages branch.  GitHub is smart
 # enough to know which files have changed and which files have stayed
 # the same and will only update the changed files. So the gh-pages
 # branch can be safely cleaned, and it is sure that everything pushed
 # later is the new documentation.
-rm -rf *
+rm -rf $TARGET/*
 
-echo "Configure the project in $(pwd)..."
-cp -a ../doc .
-cp -a ../wordseg .
-cp -a ../CHANGELOG.rst .
-cp -a ../build/setup.py .
-cp -a ../build/html/conf.py ./doc
-rm -f ./doc/conf.py.in
+echo "Configure the project in $(pwd)"
+cp -a $SOURCE/doc $TARGET
+cp -a $SOURCE/wordseg $TARGET
+cp -a $SOURCE/CHANGELOG.rst $TARGET
+cp -a $SOURCE/build/setup.py $TARGET
+cp -a $SOURCE/build/html/conf.py $TARGET/doc
+rm -f $TARGET/doc/conf.py.in
 
 echo "Uploading the project to github readthedocs-pages branch"
 # add all the configured files
