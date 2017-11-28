@@ -33,8 +33,8 @@ cd $GH_REPO_NAME
 # later is the new documentation.
 rm -rf *
 
-echo "Configure the project..."
-cmake $TRAVIS_CMAKELISTS || exit 1
+# echo "Configure the project..."
+# cmake $TRAVIS_CMAKELISTS || exit 1
 
 echo "Uploading the project to github readthedocs-pages branch"
 
@@ -46,6 +46,7 @@ git config user.name "Travis CI"
 git config user.email "travis@travis-ci.org"
 
 # add all the configured files
+cp -a ../build/* .
 git add --all
 
 # Commit the added files with a title and description containing the
