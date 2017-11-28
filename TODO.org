@@ -1,0 +1,50 @@
+* for wordseg-0.6 [4/6]
+- [X] debug the type/token evaluation
+- [X] implement wordseg-syll [5/5]
+  - [X] adaptation of new-syllabify-corpus.pl
+  - [X] add unit tests
+  - [X] onset building as a separate function
+  - [X] support input in ortho/phono form
+  - [X] write a little doc
+- [X] implement wordseg-baseline
+- [X] add the "corpus description" and entropy in wordseg-stats [2/4]
+  - [X] implemement and entropy
+  - [X] implement a CorpusStatisics class
+  - [ ] add tests for describe_tokens
+  - [ ] add stats in tutorial
+- [ ] debug wordseg-dibs
+  must output the same results as the original one from R. Daland
+- [ ] implement a wordseg-cha (or a separate cha2clean package?)
+  From the cha2sel and sel2clean scripts. I realize the "selection and
+  cleaning" stage is gone -- i.e., if someone starts with .cha files
+  they'll have to re-implement the selection and cleaning that we have
+  in the CDSwordseg. I agree that this is conceptually separate and
+  would be different for every input style, so perhaps we should have
+  a mini-package that JUST does the cleaning for the CHA files. I
+  wouldn't want for this knowledge to disappear forever because I
+  think many in the community are re-inventing this wheel, and
+  sometimes not perfectly... (I know we had loads of bugs there...)
+* for a next release [1/9]
+- [X] write a ChangeLog.md
+- [ ] implement wordseg-oracle
+  An alternative baseline explored by Lignos (2012) is a random oracle
+  segmenter (RandOracle). The random oracle segments a corpus by
+  treating each possible boundary location as a Bernoulli trial. The
+  segmenter is an “oracle” in that it knows the true probability of a
+  boundary in the corpus. The random oracle inserts boundaries with
+  this same probability. This acts as a baseline for comparison,
+  representing the performance that could be achieved by randomly
+  guessing at the true boundary rate. Any model which does not surpass
+  the RandOracle model should have low enough performance that it
+  could be ruled out as a possible model of early infant
+  segmentation.
+- [ ] debug wordseg-ag so that it can compile painlessly on MacOS
+- [ ] optimize wordseg-tp (slower than before according to Georgia)
+- [ ] refactor segment() in ag and dpseg
+  We want an easy access to arguments from Python and from config file
+- [ ] optimize dpseg and ag
+- [ ] refactor C++ code in ag
+  C++11, stdlib, etc.
+- [ ] make a wordseg.so for dpseg/ag common code
+- [ ] refactor the html documentation
+  less pages for general, more pages for API, Python docstrings in website

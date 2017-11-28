@@ -11,9 +11,18 @@ from wordseg.separator import Separator
 
 
 class CorpusStatistics(object):
+    """Estimates descriptive statistics from a text corpus
+
+    Attributes
+    ----------
+
+    TODO
+
+    """
     def __init__(self, corpus, separator, log=utils.null_logger()):
         self.log = log
 
+        # check the separator have words and possibly phones
         self.separator = separator
         if not self.separator.word:
             raise ValueError('word separator not defined')
@@ -22,7 +31,8 @@ class CorpusStatistics(object):
         self.log.info('token separator is %s', self.separator)
 
         # force to list and ignore empty lines
-        self.corpus = list(utt.strip() for utt in corpus if len(utt.strip()))
+        self.corpus = [
+            utt for utt in (utt.strip() for utt in corpus) if len(utt)]
         self.log.info('loaded %s utterances', len(self.corpus))
         if len(self.corpus) == 0:
             raise ValueError('no text to load')
@@ -42,15 +52,25 @@ class CorpusStatistics(object):
             if ntokens == 0:
                 raise ValueError('{}s expected but 0 parsed'.format(level))
 
-            # estimates token frequencies
+        # estimates token frequencies
         self.unigram = {}
         for level in self.separator.levels()[::-1]:
             self.unigram[level] = self._unigram(level)
 
+    def _mattr(self, level, size=10):
+        """Return the mean ratio of unique tokens per chunk of `size`"""
+        # the list of all the tokens
+        tokens = [w for u in self.tokens[level] for w in u]
+
+        # ratio of uniques words per chunk of `size` words
+        nuniques = [len(set(tokens[x:x + size])) / size
+                    for x in range(len(tokens) - size)]
+
+        return sum(nuniques) / len(nuniques)
 
     def _unigram(self, level):
         """Return dictionary of (token: frequency) items"""
-        count = self.top_frequency_tokens(level)
+        count = self.most_common_tokens(level)
 
         self.log.info('5 most common {}s: {}'.format(
             level, [t for t, c in count[:5]]))
@@ -68,17 +88,16 @@ class CorpusStatistics(object):
             being on the entire corpus)::
 
             - 'nutts': number of utterances
-            - 'nswu': number of utterances containing a single world
-            - 'nwtok': number of word tokens
-            - 'nwtyp': number of types
-            - 'nhapax': number of word types with a frequency of 1 (hapax)
+            - 'nutts_single_word': number of utterances containing a single world
+            - 'nword_tokens': number of word tokens
+            - 'nword_types': number of types
+            - 'nword_hapax': number of word types with a frequency of 1 (hapax)
             - 'mattr': mean ratio of unique words per chunk of 10 words
 
             If the corpus is tokeninzed at 'phone' level, the
-            following entries are added::
+            following entry are added::
 
-            - 'awl': average number of phones per word
-            - 'nse': normalized segmenation entropy
+            - 'entropy': normalized segmenation entropy
 
         Notes
         -----
@@ -90,65 +109,75 @@ class CorpusStatistics(object):
         # length of utterances in number of words
         wlen = [len(utt) for utt in self.tokens['word']]
 
-        # the list of all words in the corpus
-        words = [w for u in self.tokens['word'] for w in u]
-
-        # ratio of uniques words per chunk of 10 words
-        nuniques = [
-            len(set(words[x:x+10])) / 10 for x in range(len(words) - 10)]
-
         stats = {
             # number of utterances
             'nutts': len(self.corpus),
             # number of single word utterances
-            'nswu': wlen.count(1),
+            'nutts_single_word': wlen.count(1),
             # number of word tokens
-            'nwtok': sum(wlen),
+            'nword_tokens': sum(wlen),
             # number of word types
-            'nwtyp': len(self.unigram['word']),
+            'nword_types': len(self.unigram['word']),
             # number of word types with a frequency of 1 (hapax)
-            'nhapax': list(self.unigram['word'].values()).count(1 / sum(wlen)),
+            'nword_hapax': list(
+                self.unigram['word'].values()).count(1 / sum(wlen)),
             # mean ratio of unique words per chunk of 10 words
-            'mattr': sum(nuniques) / len(nuniques)
+            'mattr': self._mattr('word', size=10)
         }
 
-        # average word length in number of phonemes
         if 'phone' in self.separator.levels():
-            stats['awl'] = sum(
-                len(utt) for utt in self.tokens['phone']) / sum(wlen)
-
-            stats['nse'] = self.normalized_segmentation_entropy()
+            stats['entropy'] = self.normalized_segmentation_entropy()
 
         return stats
 
     def describe_tokens(self, level):
         stats = {}
 
-        # tokens
-
         # length of utterances in number of words
         tokens_len = [len(utt) for utt in self.tokens[level]]
+
         # number of tokens
         stats['tokens'] = sum(tokens_len)
+
         # mean number of tokens per utterance, word and syllable
         stats['tokens/utt'] = stats['tokens'] / len(self.corpus)
+
         for l in self.separator.upper_levels(level):
             nupper = sum(len(utt) for utt in self.tokens[l])
             stats['tokens/{}'.format(l)] = stats['tokens'] / nupper
 
         # types
+        types_count = self.most_common_tokens(level)
 
-        types_count = self.top_frequency_tokens(level)
         # number of types
         stats['types'] = len(types_count)
+
         # mean number of token per types
         stats['token/types'] = stats['tokens'] / stats['types']
+
         # number of types occuring only once in the corpus
         stats['uniques'] = len([k for k, v in types_count if v == 1])
 
         return stats
 
-    def top_frequency_tokens(self, level, n=None):
+    def most_common_tokens(self, level, n=None):
+        """Return the most common tokens and their count
+
+        Parameters
+        ----------
+        level : str
+            Must be 'phone', 'syllable' or word'.
+        n : int, optional
+            When specified returns only the `n` most commons tokens,
+            when omitted or None returns all the tokens.
+
+        Returns
+        -------
+        counts : list
+           The list of (token, count) values sorted in decreasing
+           count order.
+
+        """
         return collections.Counter(
             (t for utt in self.tokens[level] for t in utt)).most_common(n)
 

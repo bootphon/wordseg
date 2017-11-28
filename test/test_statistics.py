@@ -11,11 +11,11 @@ utts = ['i mean the cops are just looking for people that look younger',
         'ten people call so she\'s like it\'s easy she\'s like i get paid to']
 
 
-def test_top_frequency():
+def test_most_common():
     stats = CorpusStatistics(utts, separator=Separator(
         phone=None, syllable=None, word=' '))
 
-    top_freq = stats.top_frequency_tokens('word', n=4)
+    top_freq = stats.most_common_tokens('word', n=4)
     assert dict(top_freq) == {'i': 2, 'people': 2, 'she\'s': 2, 'like': 2}
 
 
@@ -41,8 +41,12 @@ def test_descibe_corpus1():
         phone=None, syllable=None, word=' ')).describe_corpus()
 
     assert stats == pytest.approx({
-        'nutts': 2, 'nswu': 0, 'nwtok': 26, 'nwtyp': 22,
-        'nhapax': 18, 'mattr': 0.9125000000000003})
+        'nutts': 2,
+        'nutts_single_word': 0,
+        'nword_tokens': 26,
+        'nword_types': 22,
+        'nword_hapax': 18,
+        'mattr': 0.9125000000000003})
 
 
 def test_descibe_corpus2(tags):
@@ -50,9 +54,13 @@ def test_descibe_corpus2(tags):
         phone=' ', syllable=';esyll', word=';eword')).describe_corpus()
 
     assert stats == pytest.approx({
-        'nutts': 13, 'nswu': 4, 'nwtok': 34, 'nwtyp': 24,
-        'nhapax': 19, 'mattr': 0.7166666666666667,
-        'awl': 3.5588235294117645, 'nse': 0.06298494117721846})
+        'nutts': 13,
+        'nutts_single_word': 4,
+        'nword_tokens': 34,
+        'nword_types': 24,
+        'nword_hapax': 19,
+        'mattr': 0.7166666666666667,
+        'entropy': 0.06298494117721846})
 
 
 def test_entropy(tags):
