@@ -15,12 +15,19 @@
 # - GH_REPO_REF         : The GitHub reference to the repository.
 # - GH_REPO_TOKEN       : Secure token to the github repository.
 
-echo 'Setting up the script...'
 set -e
 
 # create a clean working directory for this script
 mkdir configured
 cd configured
+echo 'Setting up the script in $(pwd)'
+
+# Set the push default to simple i.e. push only the current branch.
+git config --global push.default simple
+
+# Pretend to be an user called Travis CI.
+git config user.name "Travis CI"
+git config user.email "travis@travis-ci.org"
 
 # get the readthedocs-pages branch
 git clone -b readthedocs-pages https://git@$GH_REPO_REF
@@ -33,21 +40,14 @@ cd $GH_REPO_NAME
 # later is the new documentation.
 rm -rf *
 
-# echo "Configure the project..."
-# cmake $TRAVIS_CMAKELISTS || exit 1
+echo "Configure the project with $TRAVIS_CMAKELISTS..."
+cmake $TRAVIS_CMAKELISTS || exit 1
 
 echo "Uploading the project to github readthedocs-pages branch"
-
-# Set the push default to simple i.e. push only the current branch.
-git config --global push.default simple
-
-# Pretend to be an user called Travis CI.
-git config user.name "Travis CI"
-git config user.email "travis@travis-ci.org"
-
 # add all the configured files
-cp -a ../build/* .
+ls -lA
 git add --all
+git status
 
 # Commit the added files with a title and description containing the
 # Travis CI build number and the GitHub commit reference that issued
@@ -59,6 +59,7 @@ git commit \
 # Force push to the remote gh-pages branch.
 # The ouput is redirected to /dev/null to hide any sensitive credential data
 # that might otherwise be exposed.
+echo "Pushing to ${GH_REPO_REF}"
 git push --force "https://${GH_REPO_TOKEN}@${GH_REPO_REF}" > /dev/null 2>&1
 
 echo "Done"
