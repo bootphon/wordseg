@@ -20,10 +20,6 @@ set -e
 echo "Setting up the script in $(pwd)"
 ls -lA
 
-# create a clean working directory for this script
-mkdir configured
-cd configured
-
 # Set the push default to simple i.e. push only the current branch.
 git config --global push.default simple
 
@@ -31,9 +27,10 @@ git config --global push.default simple
 git config user.name "Travis CI"
 git config user.email "travis@travis-ci.org"
 
-# get the readthedocs-pages branch
-git clone -b readthedocs-pages https://git@$GH_REPO_REF
-cd $GH_REPO_NAME
+# get the readthedocs-pages branch in a clean working directory for
+# this script
+git clone -b readthedocs-pages https://git@$GH_REPO_REF configured
+cd configured
 
 # Remove everything currently in the gh-pages branch.  GitHub is smart
 # enough to know which files have changed and which files have stayed
