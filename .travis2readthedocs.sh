@@ -34,7 +34,7 @@ cd $GH_REPO_NAME
 rm -rf *
 
 echo "Configure the project..."
-cmake $TRAVIS_CMAKELIST || exit 1
+cmake $TRAVIS_CMAKELISTS || exit 1
 
 echo "Uploading the project to github readthedocs-pages branch"
 
