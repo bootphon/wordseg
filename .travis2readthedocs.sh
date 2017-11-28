@@ -17,10 +17,12 @@
 
 set -e
 
+echo "Setting up the script in $(pwd)"
+ls -lA
+
 # create a clean working directory for this script
 mkdir configured
 cd configured
-echo 'Setting up the script in $(pwd)'
 
 # Set the push default to simple i.e. push only the current branch.
 git config --global push.default simple
@@ -40,7 +42,7 @@ cd $GH_REPO_NAME
 # later is the new documentation.
 rm -rf *
 
-echo "Configure the project with $TRAVIS_CMAKELISTS..."
+echo "Configure the project in $(pwd) with $TRAVIS_CMAKELISTS..."
 cmake $TRAVIS_CMAKELISTS || exit 1
 
 echo "Uploading the project to github readthedocs-pages branch"

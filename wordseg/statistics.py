@@ -77,10 +77,10 @@ class CorpusStatistics(object):
         tokens = [w for u in self.tokens[level] for w in u]
 
         # ratio of uniques words per chunk of `size` words
-        nuniques = [len(set(tokens[x:x + size])) / size
+        nuniques = [float(len(set(tokens[x:x + size]))) / size
                     for x in range(len(tokens) - size)]
 
-        return sum(nuniques) / len(nuniques)
+        return float(sum(nuniques)) / len(nuniques)
 
     def _unigram(self, level):
         """Return dictionary of (token: frequency) items"""
@@ -89,7 +89,7 @@ class CorpusStatistics(object):
         self.log.info('5 most common {}s: {}'.format(
             level, [t for t, c in count[:5]]))
 
-        total_count = sum(c[1] for c in count)
+        total_count = float(sum(c[1] for c in count))
         return {c[0]: c[1] / total_count for c in count}
 
     def describe_all(self):
@@ -158,7 +158,7 @@ class CorpusStatistics(object):
             'nword_types': len(self.unigram['word']),
             # number of word types with a frequency of 1 (hapax)
             'nword_hapax': list(
-                self.unigram['word'].values()).count(1 / sum(wlen)),
+                self.unigram['word'].values()).count(1 / float(sum(wlen))),
             # mean ratio of unique words per chunk of 10 words
             'mattr': self._mattr('word', size=10)
         }
@@ -197,10 +197,10 @@ class CorpusStatistics(object):
         stats['tokens'] = sum(tokens_len)
 
         # mean number of tokens per utterance, word and syllable
-        stats['tokens/utt'] = stats['tokens'] / len(self.corpus)
+        stats['tokens/utt'] = stats['tokens'] / float(len(self.corpus))
 
         for l in self.separator.upper_levels(level):
-            nupper = sum(len(utt) for utt in self.tokens[l])
+            nupper = float(sum(len(utt) for utt in self.tokens[l]))
             stats['tokens/{}'.format(l)] = stats['tokens'] / nupper
 
         # types
@@ -210,7 +210,7 @@ class CorpusStatistics(object):
         stats['types'] = len(types_count)
 
         # mean number of token per types
-        stats['token/types'] = stats['tokens'] / stats['types']
+        stats['token/types'] = float(stats['tokens']) / stats['types']
 
         # number of types occuring only once in the corpus
         stats['uniques'] = len([k for k, v in types_count if v == 1])
@@ -291,7 +291,7 @@ class CorpusStatistics(object):
         probs = (P[word] for utt in self.tokens['word'] for word in utt)
 
         # compute the entropy
-        return -1 * sum(p * log(p, 2) / (N - 1) for p in probs)
+        return -1 * sum(p * log(p, 2) / float(N - 1) for p in probs)
 
 
 @utils.CatchExceptions

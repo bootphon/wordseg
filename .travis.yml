@@ -1,10 +1,14 @@
 # This will run on Travis' 'new' container-based infrastructure
 sudo: false
 
-# Blacklist
+# no need of git history
+git:
+  depth: 1
+
+# test only the master branch
 branches:
-  except:
-    - readthedocs-pages
+  only:
+  - master
 
 env:
   global:
