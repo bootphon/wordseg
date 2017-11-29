@@ -41,8 +41,8 @@ extensions = ['sphinx.ext.autosummary',
               'numpydoc']
 
 # The suffix(es) of source filenames. Support both markdown and rst
-source_parsers = {'.md': 'recommonmark.parser.CommonMarkParser'}
-source_suffix = ['.rst', '.md']
+#source_parsers = {'.md': 'recommonmark.parser.CommonMarkParser'}
+source_suffix = ['.rst']  #, '.md']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['wordseg_templates']

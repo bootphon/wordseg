@@ -54,8 +54,10 @@ cp -a $SOURCE/build/html/conf.py $TARGET/doc
 
 # remove *.in, __pycache__ and *.pyc files
 rm -f $TARGET/doc/conf.py.in
+find $TARGET -type f -name *.pyc -delete
 # find $TARGET -type d -name __pycache__ -exec rm -rf {} \;
-# find $TARGET -type f -name *.pyc -delete
+
+
 
 echo "Uploading the project to github readthedocs-pages branch"
 # add all the configured files

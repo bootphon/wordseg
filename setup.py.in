@@ -7,7 +7,7 @@ by cmake.
 """
 
 import os
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 long_description = '''
@@ -36,29 +36,44 @@ def bin_targets():
 
 def data_files(binary):
     """Return a list of exemple configuration files bundled with `binary`"""
-    data_dir = os.path.join(
-        '${CMAKE_CURRENT_SOURCE_DIR}', 'data', binary)
-    return [os.path.join(data_dir, f) for f in os.listdir(data_dir)]
+    if on_readthedocs():
+        return []
+    else:
+        data_dir = os.path.join(
+            '${CMAKE_CURRENT_SOURCE_DIR}', 'data', binary)
+        return [os.path.join(data_dir, f) for f in os.listdir(data_dir)]
 
+def requires():
+    """The python dependancies required to install wordseg"""
+    if on_readthedocs():
+        return [
+            'six',
+            'joblib',
+            'numpydoc',
+            'sphinx']
+    else:
+        return [
+            'six',
+            'joblib',
+            'numpy',
+            'pandas',
+            'numpydoc',
+            'pytest',
+            'sphinx',
+            'sphinx_rtd_theme']
 
 setup(
     name='wordseg',
     version='${PROJECT_VERSION}',
+    author='${PROJECT_AUTHOR}',
     description='tools for text based word segmentation',
     long_description=long_description,
-    author='Alex Cristia, Mathieu Bernard, Elin Larsen',
     url='https://github.com/bootphon/wordseg',
     license='GPL3',
     zip_safe=True,
 
-    package_dir={
-        'wordseg': '${CMAKE_CURRENT_SOURCE_DIR}/wordseg',
-        'wordseg.algos': '${CMAKE_CURRENT_SOURCE_DIR}/wordseg/algos'},
-    packages=['wordseg', 'wordseg.algos'],
-
-    install_requires=(['six', 'joblib', 'numpydoc'] if on_readthedocs() else
-                      ['six', 'joblib', 'numpy', 'pandas', 'numpydoc']),
-    tests_require=['pytest'],
+    install_requires=requires(),
+    packages=find_packages(exclude=['test']),  # ['wordseg', 'wordseg.algos'],
 
     entry_points={'console_scripts': [
         'wordseg-prep = wordseg.prepare:main',
