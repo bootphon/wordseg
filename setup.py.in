@@ -62,6 +62,8 @@ def requires():
             'sphinx',
             'sphinx_rtd_theme']
 
+package_prefix = '' if on_readthedocs() else '${CMAKE_CURRENT_SOURCE_DIR}/'
+
 setup(
     name='wordseg',
     version='${PROJECT_VERSION}',
@@ -73,7 +75,10 @@ setup(
     zip_safe=True,
 
     install_requires=requires(),
-    packages=find_packages(exclude=['test']),  # ['wordseg', 'wordseg.algos'],
+    packages=['wordseg', 'wordseg.algos'],
+    package_dir={
+        'wordseg': package_prefix + 'wordseg',
+        'wordseg.algos': package_prefix + 'wordseg/algos'},
 
     entry_points={'console_scripts': [
         'wordseg-prep = wordseg.prepare:main',

@@ -14,7 +14,6 @@ env:
   global:
     - GH_REPO_NAME: wordseg
     - GH_REPO_REF: github.com/bootphon/wordseg.git
-    - TRAVIS_CMAKELISTS: $TRAVIS_BUILD_DIR/CMakeLists.txt
 
 # install boost and cmake on linux only (already here on osx)
 addons:
