@@ -2,10 +2,14 @@
 
 # Inspired by https://gist.github.com/vidavidorra/548ffbcdae99d752da02
 #
-# Push the configured project to the readthedocs-pages branch. The
-# push then trigger the documentation build on readthedocs.org
+# This script is executed by Travis after tests success.
 #
-# Reqyuired instalkled packages: cmake
+# Configure the project to make the configuration buildable on
+# readthedocs. Push the configured project to the readthedocs-pages
+# branch. The push then trigger the documentation build on
+# readthedocs.org
+#
+# Required installed packages: cmake sphinx
 #
 # Required global variables:
 # - TRAVIS_BUILD_NUMBER : The number of the current build.
@@ -17,14 +21,10 @@
 
 set -e
 
-SOURCE=$(pwd)
-TARGET=$SOURCE/configured
-echo "Setting up the script in $TRAVIS_ROOT"
+SOURCE=$TRAVIS_BUILD_DIR
+TARGET=$SOURCE/readthedocs-pages
 
-ls -lA $SOURCE
-ls -lA $SOURCE/doc
-ls -lA $SOURCE/wordseg
-ls -lA $SOURCE/build
+echo "Setting up the script in $SOURCE"
 
 # Set the push default to simple i.e. push only the current branch.
 git config --global push.default simple
@@ -44,7 +44,7 @@ git clone -b readthedocs-pages https://git@$GH_REPO_REF $TARGET
 # later is the new documentation.
 rm -rf $TARGET/*
 
-echo "Configure the project in $(pwd)"
+echo "Configure the project in $(TARGET)"
 cp -a $SOURCE/doc $TARGET
 cp -a $SOURCE/wordseg $TARGET
 cp -a $SOURCE/CHANGELOG.rst $TARGET
@@ -54,7 +54,8 @@ rm -f $TARGET/doc/conf.py.in
 
 echo "Uploading the project to github readthedocs-pages branch"
 # add all the configured files
-ls -lA
+ls -lA $TARGET
+cd $TARGET
 git add --all
 git status
 
