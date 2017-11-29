@@ -1,4 +1,4 @@
-* for wordseg-0.6 [4/6]
+* for wordseg-0.6 [3/6]
 - [X] debug the type/token evaluation
 - [X] implement wordseg-syll [5/5]
   - [X] adaptation of new-syllabify-corpus.pl
@@ -7,11 +7,11 @@
   - [X] support input in ortho/phono form
   - [X] write a little doc
 - [X] implement wordseg-baseline
-- [X] add the "corpus description" and entropy in wordseg-stats [2/4]
+- [-] add the "corpus description" and entropy in wordseg-stats [3/4]
   - [X] implemement and entropy
   - [X] implement a CorpusStatisics class
   - [ ] add tests for describe_tokens
-  - [ ] add stats in tutorial
+  - [X] add stats in tutorial
 - [ ] debug wordseg-dibs
   must output the same results as the original one from R. Daland
 - [ ] implement a wordseg-cha (or a separate cha2clean package?)

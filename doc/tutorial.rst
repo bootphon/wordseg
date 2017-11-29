@@ -120,14 +120,14 @@ The bash and python give the same result, it should be something like::
 
   * Evaluation
 
-  score              baseline tp       puddle   dibs
+  score                 baseline  tp        puddle    dibs
   ------------------ -------- -------- -------- --------
-  type_fscore	        0.1194	0.2094	 0.03662  0.01944
-  type_precision	0.09207	0.1692	 0.05497  0.1379
-  type_recall	        0.1699	0.2745	 0.02745  0.01046
-  token_fscore	        0.1152	0.2123	 0.02763  0.02921
-  token_precision	0.1325	0.201	 0.06401  0.0198
-  token_recall	        0.1019	0.225	 0.01762  0.05567
-  boundary_fscore	0.2517	0.4584	 0.05077  0.4512
-  boundary_precision	0.3083	0.4267	 0.9744	  0.2913
-  boundary_recall	0.2126	0.4952	 0.02606  1
+  type_fscore	        0.1194 	  0.2094    0.03662   0.01944
+  type_precision	0.09207	  0.1692    0.05497   0.1379
+  type_recall	        0.1699	  0.2745    0.02745   0.01046
+  token_fscore	        0.1152	  0.2123    0.02763   0.02921
+  token_precision	0.1325	  0.201	    0.06401   0.0198
+  token_recall	        0.1019	  0.225	    0.01762   0.05567
+  boundary_fscore	0.2517	  0.4584    0.05077   0.4512
+  boundary_precision	0.3083	  0.4267    0.9744    0.2913
+  boundary_recall	0.2126	  0.4952    0.02606   1

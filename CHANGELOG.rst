@@ -19,6 +19,8 @@ on master branch (not yet released)
     * For citation purposes a DOI is now automatically attached to
       each wordseg release.
 
+    * Improved documentation.
+
 * Bugfixes
 
     * The following characters are now forbidden in separators, they

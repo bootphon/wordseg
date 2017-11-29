@@ -14,7 +14,6 @@
 # Required global variables:
 # - TRAVIS_BUILD_NUMBER : The number of the current build.
 # - TRAVIS_COMMIT       : The commit that the current build is testing.
-# - TRAVIS_CMAKELISTS   : The CMakeLists.txt configuration file.
 # - GH_REPO_NAME        : The name of the repository.
 # - GH_REPO_REF         : The GitHub reference to the repository.
 # - GH_REPO_TOKEN       : Secure token to the github repository.
@@ -57,11 +56,8 @@ rm -f $TARGET/doc/conf.py.in
 find $TARGET -type f -name *.pyc -delete
 # find $TARGET -type d -name __pycache__ -exec rm -rf {} \;
 
-
-
 echo "Uploading the project to github readthedocs-pages branch"
 # add all the configured files
-ls -lA $TARGET
 cd $TARGET
 git add --all
 git status

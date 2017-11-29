@@ -1,6 +1,6 @@
 """Estimates syllable boundaries on a text using the maximal onset principle.
 
-This algorithm fully syllabify a text from a list of onsets and
+This algorithm fully syllabifies a text from a list of onsets and
 vowels. Input text must be in orthographic form (with word separators
 only) or in phonemized form (with both word and phone
 separators). Output text has syllable separators added at estimated
@@ -169,8 +169,9 @@ def syllabify(text, onsets, vowels, separator=Separator(),
 
     Raises
     ------
-    ValueError is `separator.syllable` is found in the text, if
-    `onsets` or `vowels` are empty.
+    ValueError
+        if `separator.syllable` is found in the text, or if `onsets`
+        or `vowels` are empty.
 
     """
     # ensure onsets and vowels are not empty

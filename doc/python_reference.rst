@@ -11,10 +11,10 @@ Python API Reference
 
 .. toctree::
    :maxdepth: 2
-   :caption: Segmentation tools (prepare and analyse)
 
    algorithms
    prepare
+   syllabification
    evaluate
    statistics
    separator
