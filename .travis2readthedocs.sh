@@ -44,13 +44,18 @@ git clone -b readthedocs-pages https://git@$GH_REPO_REF $TARGET
 # later is the new documentation.
 rm -rf $TARGET/*
 
-echo "Configure the project in $(TARGET)"
+echo "Configure the project in $TARGET"
+# copy all targeted files
 cp -a $SOURCE/doc $TARGET
 cp -a $SOURCE/wordseg $TARGET
 cp -a $SOURCE/CHANGELOG.rst $TARGET
 cp -a $SOURCE/build/setup.py $TARGET
 cp -a $SOURCE/build/html/conf.py $TARGET/doc
+
+# remove *.in, __pycache__ and *.pyc files
 rm -f $TARGET/doc/conf.py.in
+find $TARGET -type d -name __pycache__ -exec rm -rf {} \;
+find $TARGET -type f -name *.pyc -delete
 
 echo "Uploading the project to github readthedocs-pages branch"
 # add all the configured files

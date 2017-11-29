@@ -56,8 +56,8 @@ setup(
         'wordseg.algos': '${CMAKE_CURRENT_SOURCE_DIR}/wordseg/algos'},
     packages=['wordseg', 'wordseg.algos'],
 
-    install_requires=(['six', 'joblib'] if on_readthedocs() else
-                      ['six', 'joblib', 'numpy', 'pandas']),
+    install_requires=(['six', 'joblib', 'numpydoc'] if on_readthedocs() else
+                      ['six', 'joblib', 'numpy', 'pandas', 'numpydoc']),
     tests_require=['pytest'],
 
     entry_points={'console_scripts': [
