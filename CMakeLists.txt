@@ -11,15 +11,21 @@
 #
 #   make
 #   [sudo] make install
-
+#
+# Test the code with:
+#
+#   make test
+#
+# Build the docupmentation with:
+#
+#   make html
 
 cmake_minimum_required(VERSION 2.4)
 
 
-# Project-wide configuration.
-#
-# Setup project name, authorship, version and build type.
+## Project-wide configuration.
 
+# Setup project name, authorship, version and build type.
 project(wordseg)
 set(PROJECT_AUTHOR "Alex Cristia, Mathieu Bernard, Elin Larsen")
 
@@ -40,8 +46,8 @@ message(STATUS "Project is wordseg-${PROJECT_VERSION}")
 message(STATUS "Setting build type to ${CMAKE_BUILD_TYPE}")
 
 
-# C++ part.
-#
+## C++ part.
+
 # Compilation of the wordseg algorithms implemented in C++. See the
 # CMakeLists.txt in their subdirectories.
 
@@ -49,8 +55,8 @@ add_subdirectory(wordseg/algos/ag)
 add_subdirectory(wordseg/algos/dpseg)
 
 
-# Python part.
-#
+## Python part.
+
 # Create setup.py from setup.py.in and links 'make wordseg' to a call
 # to setup.py.
 
@@ -74,7 +80,6 @@ add_custom_target(wordseg ALL
   DEPENDS ag dpseg
   SOURCES ${PROJECT_PYTHON_SOURCES})
 
-
 # make install -> python setup.py install
 install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY} install)")
 
@@ -85,8 +90,8 @@ add_custom_target(develop
   DEPENDS wordseg)
 
 
-# Documentation part
-#
+## Documentation part
+
 # Build the HTML pages from the doc/ directory, defines the 'make
 # html' target
 
@@ -121,10 +126,9 @@ if(PYTHON_SPHINX)
 endif()
 
 
-# Tests part
-#
-# Defines the "make test" target and bound it to pytest.
+## Tests part
 
+# Defines the "make test" target and bound it to pytest.
 
 include(CTest)
 

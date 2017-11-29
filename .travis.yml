@@ -48,7 +48,7 @@ matrix:
 
 install:
   - pip install --upgrade pip
-  - pip install pandas numpy joblib pytest
+  - pip install pandas numpy joblib pytest sphinx
   - mkdir -p build
   - cd build
   - cmake ..
