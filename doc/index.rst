@@ -6,26 +6,27 @@
 Welcome to the wordseg's documentation page
 ===========================================
 
-The wordseg package provides **a collection of tools for text based
-word segmentation** covering both text preprocessing, segmentation
-algorithms, evaluation and statistics relevant for word segmentation
-studies. It can be used from **bash** and **python**.
+* Provides **a collection of tools for text based word segmentation**.
 
-The segmentation algorithms available are ag, dibs, dpseg, puddle and
-tp (see :ref:`algorithms`).  We provide a set of usefull commands for
-text preparation, segmentation and evaluation than be used in
-conjunction to any other bash utilities (see :ref:`commands`). The
-package can also be used as a Python library (see :ref:`python`).
+* Covers the whole segmentation pipeline: data preprocessing,
+  algorithms, evaluation and descriptive statistics.
 
-We provide an :ref:`installation` guide and a :ref:`tutorial` to help
-you getting in. The **wordseg** package is a free software made for
-open science, we welcome all the contributions (see
-:ref:`contributing`).
+* Implements 6 segmentation algorithms and a baseline (see
+  :ref:`algorithms`).
+
+* From **bash**: provides a set of commands for text preparation,
+  segmentation and evaluation than be used in conjunction to any other
+  bash utilities (see :ref:`commands`),
+
+* From **python**: provides the ``wordseg`` Python package (see :ref:`python`).
 
 .. note::
 
-   The source code of **wordseg** is available on it's `github page
-   <https://github.com/bootphon/wordseg>`_
+   * The source code of **wordseg** is available on it's `github page
+     <https://github.com/bootphon/wordseg>`_,
+
+   * The latest release is available for download `here
+     <https://github.com/bootphon/wordseg/releases/latest>`_.
 
 
 .. toctree::
@@ -34,7 +35,6 @@ open science, we welcome all the contributions (see
 
    installation
    tutorial
-   algorithms
    bash_reference
    python_reference
    release_notes

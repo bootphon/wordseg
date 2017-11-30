@@ -15,7 +15,7 @@ import logging
 from wordseg import utils, folding
 
 
-class Puddle(object):
+class _Puddle(object):
     def __init__(self, window=2, log=utils.null_logger()):
         self.log = log
         self.window = window
@@ -153,7 +153,7 @@ class Puddle(object):
 def _puddle(text, window, log_level=logging.ERROR, log_name='wordseg-puddle'):
     """Runs the puddle algorithm on the `text`"""
     # create a new puddle segmenter (with an empty lexicon)
-    puddle = Puddle(
+    puddle = _Puddle(
         window=window,
         log=utils.get_logger(name=log_name, level=log_level))
 
@@ -171,7 +171,7 @@ def segment(text, window=2, nfolds=5, njobs=1, log=utils.null_logger()):
         marked by spaces and no word boundaries. Each line in the
         sequence corresponds to a single and comlete utterance.
     window : int, optional
-        TODO
+        Number of phonemes to be taken into account for boundary constraint.
     nfolds : int, optional
         The number of folds to segment the `text` on.
     njobs : int, optional
@@ -210,7 +210,7 @@ def segment(text, window=2, nfolds=5, njobs=1, log=utils.null_logger()):
     return (utt for utt in output_text if utt)
 
 
-def add_arguments(parser):
+def _add_arguments(parser):
     """Add algorithm specific options to the parser"""
     parser.add_argument(
         '-f', '--nfolds', type=int, metavar='<int>', default=5,
@@ -236,7 +236,7 @@ def main():
     streamin, streamout, _, log, args = utils.prepare_main(
         name='wordseg-puddle',
         description=__doc__,
-        add_arguments=add_arguments)
+        add_arguments=_add_arguments)
 
     segmented = segment(
         streamin, window=args.window,

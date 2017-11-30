@@ -1,8 +1,11 @@
+# coding: utf-8
+
 """Test of the wordseg_eval module"""
 
 import pytest
 
 from wordseg.evaluate import read_data, evaluate
+from wordseg.separator import Separator
 
 
 def test_read_data():
@@ -18,14 +21,21 @@ def test_gold_on_gold():
         assert v == 1.0
 
 
+def test_ipa():
+    separator = Separator(phone=None, syllable=None, word=' ')
+    text = ['juːviː mɔː kʊkɪz ']
+    gold = ['juː viː mɔː kʊkɪz']
+    evaluate(text, gold, separator=separator)
+
+
 # auxiliary function
 def _test_basic(text, gold, expected):
     assert evaluate(text, gold) == pytest.approx(expected)
 
 
 def test_basic_1():
-    gold = ['the dog bites the dog']
     text = ['the dog bites thedog']
+    gold = ['the dog bites the dog']
     expected = {
         'type_fscore': 0.8571428571428571,
         'type_precision': 0.75,
@@ -88,8 +98,8 @@ def test_basic_4():
 
 
 def test_basic_5():
-    gold = ['the bandage of the band age']
     text = ['the band age of the band age']
+    gold = ['the bandage of the band age']
     expected = {
         'type_fscore': 0.8888888888888888,
         'type_precision': 1.0,

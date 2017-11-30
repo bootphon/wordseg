@@ -58,7 +58,7 @@ def test_remove_phones():
 
 
 @pytest.mark.parametrize(
-    'text', ['', 'ab c', 'a;b;', 'a;b; c;', 'n;o; s;e; k;a;e; '])
+    'text', ['', 'ab c', 'a;b;', 'a;b; ', 'a;b; c;', 'n;o; s;e; k;a;e; '])
 def test_remove_restore_phones(text):
     separator = Separator(phone=';', syllable='_', word=' ')
 

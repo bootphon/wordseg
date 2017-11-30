@@ -388,7 +388,9 @@ def get_parser(description=None, separator=Separator()):
     """
     parser = argparse.ArgumentParser(
         description=description,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog='see the online documentation at https://wordseg.readthedocs.io'
+    )
 
     # add verbose/quiet options to control log level
     group = parser.add_mutually_exclusive_group()
@@ -405,30 +407,35 @@ def get_parser(description=None, separator=Separator()):
 
     # add token separation arguments
     if separator.phone or separator.syllable or separator.word:
+        group = parser.add_argument_group(
+            'token separation arguments',
+            'use "" to disable a separator, for example -p "" -s "" -w " "')
+
         if separator.phone:
-            parser.add_argument(
+            group.add_argument(
                 '-p', '--phone-separator', metavar='<str>',
                 default=separator.phone,
                 help='phone separator, default is "%(default)s"')
 
         if separator.syllable:
-            parser.add_argument(
+            group.add_argument(
                 '-s', '--syllable-separator', metavar='<str>',
                 default=separator.syllable,
                 help='syllable separator, default is "%(default)s"')
 
         if separator.word:
-            parser.add_argument(
+            group.add_argument(
                 '-w', '--word-separator', metavar='<str>',
                 default=separator.word,
                 help='word separator, default is "%(default)s"')
 
     # add input and output arguments to the parser
-    parser.add_argument(
+    group = parser.add_argument_group('input/output arguments')
+    group.add_argument(
         'input', default=sys.stdin, nargs='?', metavar='<input-file>',
         help='input text file to read, if not specified read from stdin')
 
-    parser.add_argument(
+    group.add_argument(
         '-o', '--output', default=sys.stdout, metavar='<output-file>',
         help='output text file to write, if not specified write to stdout')
 

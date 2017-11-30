@@ -41,9 +41,8 @@ commands are:
 
 .. note::
 
-   To get all the details of a command arguments, have a::
-
-     wordseg-<command> --help
+   * To get all the details of a command arguments, have a ``wordseg-<command> --help``,
+   * More information on the algorithms and functions are in :ref:`python`.
 
 
 Hello world example
