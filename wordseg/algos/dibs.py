@@ -1,4 +1,11 @@
-"""dibs word segmentation algorithm"""
+# coding: utf-8
+
+"""DiBS word segmentation algorithm
+
+See "Daland, R., & Pierrehumbert, J. B. (2011). Learning Diphone‐Based
+Segmentation. Cognitive science, 35(1), 119-155".
+
+"""
 
 import codecs
 import os
@@ -288,8 +295,11 @@ def main():
         train_text = test_text[:ntrain]
 
     segmented = segment(
-        test_text, prob_word_boundary=args.prob_word_boundary,
-        train_text=train_text, diphones=args.diphones, log=log)
+        test_text,
+        prob_word_boundary=args.prob_word_boundary,
+        train_text=train_text,
+        diphones=args.diphones,
+        log=log)
 
     streamout.write('\n'.join(segmented) + '\n')
 
