@@ -5,7 +5,7 @@ import sys
 
 from wordseg.evaluate import evaluate
 from wordseg.prepare import prepare, gold
-from wordseg.algos import tp, puddle, dibs, baseline
+from wordseg.algos import tp, puddle, dpseg, baseline
 from wordseg.statistics import CorpusStatistics
 from wordseg.separator import Separator
 
@@ -34,18 +34,18 @@ gold = list(gold(text))
 segmented_baseline = baseline.segment(prepared, probability=0.2)
 segmented_tp = tp.segment(prepared, threshold='relative')
 segmented_puddle = puddle.segment(prepared, njobs=4, window=2)
-segmented_dibs = dibs.segment(prepared, prob_word_boundary=0.1)
+segmented_dpseg = dpseg.segment(prepared, nfolds=1)
 
 # evaluate them against the gold file
 eval_baseline = evaluate(segmented_baseline, gold)
 eval_tp = evaluate(segmented_tp, gold)
 eval_puddle = evaluate(segmented_puddle, gold)
-eval_dibs = evaluate(segmented_dibs, gold)
+eval_dpseg = evaluate(segmented_dpseg, gold)
 
 # concatenate the evaluations in a table and display them
 sys.stdout.write(
     '\n* Evaluation\n\n' +
-    ' '.join(('score', 'baseline', 'tp', 'puddle', 'dibs')) + '\n' +
+    ' '.join(('score', 'baseline', 'tp', 'puddle', 'dpseg')) + '\n' +
     ' '.join(('-'*18, '-'*8, '-'*8, '-'*8, '-'*8)) + '\n')
 for score in eval_tp.keys():
     line = '\t'.join((
@@ -53,5 +53,5 @@ for score in eval_tp.keys():
         '%.4g' % eval_baseline[score],
         '%.4g' % eval_tp[score],
         '%.4g' % eval_puddle[score],
-        '%.4g' % eval_dibs[score]))
+        '%.4g' % eval_dpseg[score]))
     sys.stdout.write(line + '\n')

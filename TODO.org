@@ -1,4 +1,4 @@
-* for wordseg-0.6 [4/8]
+* for wordseg-0.6 [5/8]
 - [X] debug the type/token evaluation
 - [X] implement wordseg-syll [5/5]
   - [X] adaptation of new-syllabify-corpus.pl
@@ -12,9 +12,8 @@
   - [X] implement a CorpusStatisics class
   - [X] add tests for describe_tokens
   - [X] add stats in tutorial
-- [ ] debug wordseg-dibs
-  must output the same results as the original one from R. Daland and
-  from CDSwordseg
+- [X] wordseg-dibs
+  must output the same results as the original one from R. Daland / CDSWordSeg
 - [ ] debug wordseg-ag
   Must replicate results from CDSWordSeg
 - [ ] implement wordseg-cha

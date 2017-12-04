@@ -2,14 +2,15 @@
 
 import pytest
 from wordseg.separator import Separator
-from wordseg.algos import tp as tp
+from wordseg.algos import tp
 
 from . import prep
 
 
 @pytest.mark.parametrize(
     'threshold, probability',
-    [(t, p) for t in ('relative', 'absolute') for p in ('forward', 'backward')])
+    [(t, p) for t in ('relative', 'absolute')
+     for p in ('forward', 'backward')])
 def test_tp(prep, threshold, probability):
     """Check input and output are the same, once the separators are removed"""
     out = list(tp.segment(prep, threshold=threshold, probability=probability))
@@ -23,14 +24,18 @@ def test_tp(prep, threshold, probability):
 def test_hello_world():
     text = ['hh ax l ow w er l d']
 
-    assert list(tp.segment(text, threshold='absolute', probability='forward')) \
+    assert list(tp.segment(
+        text, threshold='absolute', probability='forward')) \
         == ['hhaxl owwerl d']
 
-    assert list(tp.segment(text, threshold='relative', probability='forward')) \
+    assert list(tp.segment(
+        text, threshold='relative', probability='forward')) \
         == ['hhaxl owwerld']
 
-    assert list(tp.segment(text, threshold='absolute', probability='backward')) \
+    assert list(tp.segment(
+        text, threshold='absolute', probability='backward')) \
         == ['hhax lowwer ld']
 
-    assert list(tp.segment(text, threshold='relative', probability='backward')) \
+    assert list(
+        tp.segment(text, threshold='relative', probability='backward')) \
         == ['hhax lowwer ld']

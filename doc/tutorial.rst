@@ -70,7 +70,7 @@ input text file (in phonological form) as argument:
    :language: bash
 
 From the tutorial directory, we can execute the script and display the
-result in a table with ``../doc/tutorial.sh phonologic.txt``.
+result in a table with ``../doc/tutorial.sh phonologic.txt | column -t``.
 
 
 Python tutorial
@@ -82,7 +82,7 @@ implements exactly the same process as the bash one:
 .. literalinclude:: tutorial.py
    :language: python
 
-We can execute it using ``../doc/tutorial.py phonologic.txt``.
+We can execute it using ``../doc/tutorial.py phonologic.txt | column -t``.
 
 Expected output
 ---------------
@@ -92,42 +92,42 @@ The bash and python give the same result, it should be something like::
   * Statistics
 
   {
-  "corpus": {
-          "nutts": 1000,
-          "nutts_single_word": 22,
-          "nword_tokens": 3916,
-          "nword_types": 765,
-          "nword_hapax": 457,
-          "mattr": 0.7125704045058399,
-          "entropy": 0.061493838936541596
-      },
-  "words": {
-          "tokens": 3916,
-          "tokens/utt": 3.916,
-          "types": 765,
-          "token/types": 5.118954248366013,
-          "uniques": 457
-      },
-  "phones": {
-          "tokens": 11010,
-          "tokens/utt": 11.01,
-          "tokens/word": 2.8115423901940755,
-          "types": 58,
-          "token/types": 189.82758620689654,
-          "uniques": 2
-      }
+  "corpus":             {
+    "nutts":              1000,
+    "nutts_single_word":  118,
+    "nword_tokens":       6824,
+    "nword_types":        1392,
+    "nword_hapax":        857,
+    "mattr":              0.9354710889345312,
+    "entropy":            0.015144673474006031
+  },
+  "words":              {
+    "tokens":             6824,
+    "tokens/utt":         6.824,
+    "types":              1392,
+    "token/types":        4.902298850574713,
+    "uniques":            857
+  },
+  "phones":             {
+    "tokens":             22157,
+    "tokens/utt":         22.157,
+    "tokens/word":        3.2469226260257913,
+    "types":              60,
+    "token/types":        369.28333333333336,
+    "uniques":            0
+  }
   }
 
   * Evaluation
 
-  score                 baseline  tp        puddle    dibs
+  score                 baseline  tp        puddle    dpseg
   ------------------ -------- -------- -------- --------
-  type_fscore	        0.1194 	  0.2094    0.03662   0.01944
-  type_precision	0.09207	  0.1692    0.05497   0.1379
-  type_recall	        0.1699	  0.2745    0.02745   0.01046
-  token_fscore	        0.1152	  0.2123    0.02763   0.02921
-  token_precision	0.1325	  0.201	    0.06401   0.0198
-  token_recall	        0.1019	  0.225	    0.01762   0.05567
-  boundary_fscore	0.2517	  0.4584    0.05077   0.4512
-  boundary_precision	0.3083	  0.4267    0.9744    0.2913
-  boundary_recall	0.2126	  0.4952    0.02606   1
+  type_fscore           0.1005    0.1866    0.1188    0.369
+  type_precision        0.07154   0.1505    0.1245    0.4503
+  type_recall           0.1688    0.2457    0.1135    0.3125
+  token_fscore          0.07549   0.3246    0.2626    0.6244
+  token_precision       0.087     0.2974    0.4848    0.5743
+  token_recall          0.06668   0.3571    0.1801    0.6842
+  boundary_fscore       0.2405    0.592     0.3941    0.8141
+  boundary_precision    0.2858    0.5357    0.9446    0.7396
+  boundary_recall       0.2076    0.6616    0.249     0.9054

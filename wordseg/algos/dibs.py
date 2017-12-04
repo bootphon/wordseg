@@ -2,22 +2,46 @@
 
 """Diphone based segmentation algorithm
 
-This algorithm uses diphone probabilities to decide whether a specific
-sequence is likely to span a word boundary (typically because the
-diphone is rare) or not.
+A DiBS model assigns, for each phrase-medial diphone, a value between
+0 and 1 inclusive (representing the probability the model assigns that
+there is a word-boundary there). In practice, these probabilities are
+mapped to hard decisions, with the optimal threshold being 0.5.
+
+Without any training at all, a phrasal-DiBS model can assign sensible
+defaults (namely, 0, or the context-independent probability of a
+medial word boundary, which will always be less than 0.5, and so
+effectively equivalent to 0 in a hard-decisions context). The outcome
+in this case would be total undersegmentation (for default 0; total
+oversegmentation for default 1).
+
+It takes relatively little training to get a DiBS model up to
+near-ceiling (*i.e.* the model's intrinsic ceiling: "as good as
+that model will get even if you train it forever", rather than
+"perfect for that dataset"). Moreover, in principle you can have the
+model do its segmentation for the nth sentence based on the stats it
+has accumulated for every preceding sentence (and with a little
+effort, even on the nth sentence as well). In practice, since I was
+never testing on the training set for publication work, but I was
+testing on *huge* test sets, I optimized the code for mixed
+iterative/batch training, meaning it could read in a training set,
+update parameteres, test, and then repeat ad infinitum.
 
 For details, see Daland, R., Pierrehumbert, J.B., "Learning
 diphone-based segmentation". Cognitive science 35(1), 119–155 (2011).
 
 """
 
+# this DiBS was written by Robert Daland <r.daland@gmail.com>
+
 import codecs
+import operator
 import os
 
+from wordseg.separator import Separator
 from wordseg import utils
 
 
-class _Counter(dict):
+class Counter(dict):
     def increment(self, key, value=1):
         self[key] = self.get(key, 0) + value
 
@@ -25,247 +49,222 @@ class _Counter(dict):
         return self.get(key, 0)
 
 
-class _Summary(object):
-    def __init__(self, multigraphemic=False, wordsep='##'):
-        self.wordsep = wordsep
-        self.multigraphemic = multigraphemic
-        self.summary = _Counter()
+class Summary(object):
+    def __init__(self, text, separator=Separator(), log=utils.null_logger()):
+        self.separator = separator
+        self.summary = Counter()
+        self.lexicon = Counter()
+        self.phrase_initial = Counter()
+        self.phrase_final = Counter()
+        self.internal_diphones = Counter()
+        self.spanning_diphones = Counter()
+        self._diphones = None
 
-        self.phraseinitial = _Counter()
-        self.phrasefinal = _Counter()
-        self.lexicon = _Counter()
+        for utt in text:
+            self._read_utterance(utt)
 
-        self.internaldiphones = _Counter()
-        self.spanningdiphones = _Counter()
+        log.info('train data summary: %s', self.summary)
 
-    def readstream(self, instream):
-        for line in instream:
-            if self.multigraphemic:
-                wordseq = [
-                    tuple(word.split()) for word in line.split(self.wordsep)
-                    if word.split()]
-            else:
-                wordseq = line.split()
+    def _read_utterance(self, utterance):
+        wordseq = [
+            tuple(word.split())
+            for word in utterance.split(self.separator.word)
+            if word.split()]
 
-            if not wordseq:
-                continue
+        if not wordseq:
+            return
 
-            self.summary.increment('nLines')
-            self.summary.increment('nTokens', len(wordseq))
-            self.summary.increment(
-                'nPhones', sum([len(word) for word in wordseq]))
+        self.summary.increment('nlines')
+        self.summary.increment('ntokens', len(wordseq))
+        self.summary.increment('nphones', sum([len(w) for w in wordseq]))
 
-            if self.multigraphemic:
-                self.phraseinitial.increment((wordseq[0][0],))
-                self.phrasefinal.increment((wordseq[-1][-1],))
-            else:
-                self.phraseinitial.increment(wordseq[0][0])
-                self.phrasefinal.increment(wordseq[-1][-1])
+        self.phrase_initial.increment((wordseq[0][0],))
+        self.phrase_final.increment((wordseq[-1][-1],))
 
-            for i_word in range(len(wordseq)):
-                word = wordseq[i_word]
-                self.lexicon.increment(word)
+        for i, word in enumerate(wordseq):
+            self.lexicon.increment(word)
 
-                for i_pos in range(len(word)-1):
-                    self.internaldiphones.increment(word[i_pos:i_pos+2])
+            for j in range(len(word)-1):
+                self.internal_diphones.increment(word[j:j+2])
 
-                if i_word < len(wordseq)-1:
-                    if self.multigraphemic:
-                        self.spanningdiphones.increment(
-                            tuple([word[-1], wordseq[i_word+1][0]]))
-                    else:
-                        self.spanningdiphones.increment(
-                            word[-1]+wordseq[i_word+1][0])
+            if i < len(wordseq) - 1:
+                self.spanning_diphones.increment(
+                    tuple([word[-1], wordseq[i+1][0]]))
 
     def diphones(self):
-        alldiphones = _Counter(self.internaldiphones)
-        for diphone in self.spanningdiphones:
-            alldiphones.increment(diphone, self.spanningdiphones[diphone])
-        return(alldiphones)
-
-    def save(self, outstream):
-        if self.multigraphemic:
-            def outdic(d):
-                lambda d: '\t'.join(
-                    ['-'.join(item[0])+' '+str(item[1]) for item in d.items()])
-        else:
-            def outtdic(d):
-                '\t'.join(
-                    [str(item[0])+' '+str(item[1]) for item in d.items()])
-
-        outstream.write(
-            'multigraphemic\t' + str(self.multigraphemic) +
-            '\twordsep\t' + self.wordsep)
-
-        for data in ['summary', 'phraseinitial', 'phrasefinal',
-                     'internaldiphones', 'spanningdiphones', 'lexicon']:
-            outstream.write(data + '\t' + outdic(self.__dict__[data]))
+        if not self._diphones:
+            # compute the final list of all the diphones
+            self._diphones = Counter(self.internal_diphones)
+            for d in self.spanning_diphones:
+                self._diphones.increment(d, self.spanning_diphones[d])
+        return self._diphones
 
 
-class _Dibs(_Counter):
-    def __init__(self, multigraphemic=False, threshold=0.5, wordsep=' '):
-        super(_Dibs, self).__init__()
-        self.multigraphemic = multigraphemic
-        self.threshold = threshold
-        self.wordsep = wordsep
+class _AbstractSegmenter(Counter):
+    def __init__(self, model, pwb=None, threshold=0.5,
+                 log=utils.null_logger()):
+        self.model = model
+        self.wordsep = model.separator.word
+        self.log = log
 
-    def test(self, text):
-        wordsep = (self.wordsep * self.multigraphemic
-                   + ' ' * (not self.multigraphemic))
+        self.pwb = pwb
+        if self.pwb and (self.pwb < 0 or self.pwb > 1):
+            raise ValueError(
+                'pwb must be a float in [0, 1], it is: {}'
+                .format(str(self.pwb)))
 
-        for line in text:
-            if self.multigraphemic:
-                phoneseq = tuple(line.replace(self.wordsep, ' ').split())
+        self.thresh = threshold
+        if self.thresh < 0 or self.thresh > 1:
+            raise ValueError(
+                'threshold must be a float in [0, 1], it is: {}'
+                .format(self.thresh))
+
+        self._init_diphones()
+
+    def _init_diphones(self):
+        raise NotImplementedError
+
+    @staticmethod
+    def _norm2pdf(d):
+        s = sum(d.values())
+        return Counter([(item[0], float(item[1])/s) for item in d.items()])
+
+    def _pwb(self):
+        _s = self.model.summary
+        return float(
+            _s['ntokens'] - _s['nlines']) / (_s['nphones'] - _s['nlines'])
+
+    def segment(self, utterance):
+        phoneseq = tuple(utterance.replace(self.wordsep, ' ').split())
+
+        out = [phoneseq[0]]
+        for iPos in range(len(phoneseq) - 1):
+            if self.get(phoneseq[iPos:iPos+2], 1.0) > self.thresh:
+                out.append(self.wordsep)
+            out.append(phoneseq[iPos+1])
+
+        return ' '.join(out).replace(' ', '').replace(self.wordsep, ' ')
+
+
+class BaselineSegmenter(_AbstractSegmenter):
+    def _init_diphones(self):
+        self.log.warning(
+            'pwb specified at %s but unused in baseline segmenter', self.pwb)
+        within = self.model.internal_diphones
+        across = self.model.spanning_diphones
+        for d in self.model.diphones():
+            self[d] = float(across[d]) / (within[d] + across[d])
+
+
+class PhrasalSegmenter(_AbstractSegmenter):
+    def _init_diphones(self):
+        px2_ = self._norm2pdf(self.model.phrase_final)
+        p_2y = self._norm2pdf(self.model.phrase_initial)
+        pxy = self._norm2pdf(self.model.diphones())
+        pwb = self.pwb or self._pwb()
+        self.log.info('phrasal pwb = ' + str(pwb))
+
+        for d in self.model.diphones():
+            x = (d[0],)
+            y = (d[1],)
+            num = px2_[x] * pwb * p_2y[y]
+            denom = pxy[d]
+            if num >= denom:
+                self[d] = 1
             else:
-                phoneseq = ''.join(line.split())
-
-            if not phoneseq:
-                continue
-
-            out = [phoneseq[0]]
-            for i_pos in range(1, len(phoneseq)):
-                if self.get(phoneseq[i_pos-1:i_pos+1], 1.0) > self.threshold:
-                    out.append(wordsep)
-                out.append(phoneseq[i_pos])
-
-            yield utils.strip((' ' * self.multigraphemic).join(out))
-
-    def save(self, outstream):
-        if self.multigraphemic:
-            rows = sorted(dict([((key[0],), 1) for key in self]).keys())
-            cols = sorted(dict([((key[1],), 1) for key in self]).keys())
-        else:
-            rows = '#$123456789@DEHIJNPQRSTUVZ_bdfghijklmnprstuvwxz{~'
-            cols = '#$123456789@DEHIJNPQRSTUVZ_bdfghijklmnprstuvwxz{~'
-
-        outstream.write('\t'+'\t'.join([str(y) for y in cols]))
-
-        for x in rows:
-            try:
-                outstream.write(
-                    str(x) + '\t' + '\t'.join([str(self[x+y]) for y in cols]))
-            except KeyError:
-                outstream.write(
-                    str(x) + '\t' + '\t'.join(
-                        [str(self.get(x + y, None)) for y in cols]))
+                self[d] = num / denom
 
 
-def _norm2pdf(fdf):
-    return _Counter([(item[0], float(item[1]) / sum(fdf.values()))
-                    for item in fdf.items()])
+class LexicalSegmenter(_AbstractSegmenter):
+    def _init_diphones(self):
+        word_initial = Counter()
+        word_final = Counter()
+        for word in self.model.lexicon:
+            word_initial.increment((word[0],))
+            word_final.increment((word[-1],))
+
+        px2_ = self._norm2pdf(word_final)
+        p_2y = self._norm2pdf(word_initial)
+        pxy = self._norm2pdf(self.model.diphones())
+
+        pwb = self.pwb or self._pwb()
+        self.log.info('lexical pwb = ' + str(pwb))
+
+        for d in self.model.diphones():
+            x = (d[0],)
+            y = (d[1],)
+            num = px2_[x] * pwb * p_2y[y]
+            denom = pxy[d]
+            if denom == 0 or num > denom:
+                self[d] = 1
+            else:
+                self[d] = num / denom
 
 
-def _baseline(speech, pwb=None):
-    dib = _Dibs(multigraphemic=speech.multigraphemic, wordsep=speech.wordsep)
-    within, across = speech.internaldiphones, speech.spanningdiphones
+def segment(text, model, type='phrasal', threshold=0.5, pwb=None,
+            log=utils.null_logger()):
+    # retrieve the segmenter from the 'type' argument
+    try:
+        Segmenter = {
+            'phrasal': PhrasalSegmenter,
+            'lexical': LexicalSegmenter,
+            'baseline': BaselineSegmenter}[type]
+    except KeyError:
+        raise ValueError(
+            'unknown segmenter {}, must be phrasal, lexical or baseline'
+            .format(type))
 
-    for diphone in speech.diphones():
-        dib[diphone] = float(across[diphone]) / (
-            within[diphone] + across[diphone])
-
-    return dib
-
-
-def _phrasal(speech, pwb=None, log=utils.null_logger()):
-    px2_ = _norm2pdf(speech.phrasefinal)
-    p_2y = _norm2pdf(speech.phraseinitial)
-    pxy = _norm2pdf(speech.diphones())
-    pwb = pwb or (
-        float(speech.summary['nTokens'] - speech.summary['nLines']) /
-        (speech.summary['nPhones'] - speech.summary['nLines']))
-
-    log.info('phrasal: pwb = %s', pwb)
-
-    dib = _Dibs(multigraphemic=speech.multigraphemic, wordsep=speech.wordsep)
-    for diphone in speech.diphones():
-        x = (diphone[0],) if speech.multigraphemic else diphone[0]
-        y = (diphone[1],) if speech.multigraphemic else diphone[1]
-
-        num = px2_[x] * pwb * p_2y[y]
-        denom = pxy[diphone]
-        dib[diphone] = max(1.0, num / denom)
-
-    return dib
-
-
-def _lexical(speech, lexicon=None, pwb=None, log=utils.null_logger()):
-    wordinitial = _Counter()
-    wordfinal = _Counter()
-    lexicon = lexicon or speech.lexicon
-
-    for word in lexicon:
-        if speech.multigraphemic:
-            wordinitial.increment((word[0],))
-            wordfinal.increment((word[-1],))
-        else:
-            wordinitial.increment(word[0])
-            wordfinal.increment(word[-1])
-
-    px2_ = _norm2pdf(wordfinal)
-    p_2y = _norm2pdf(wordinitial)
-    pxy = _norm2pdf(speech.diphones())
-    pwb = pwb or (
-        float(speech.summary['nTokens'] - speech.summary['nLines']) /
-        (speech.summary['nPhones'] - speech.summary['nLines']))
-
-    log.info('lexical: pwb = %s', pwb)
-
-    dib = _Dibs(multigraphemic=speech.multigraphemic, wordsep=speech.wordsep)
-    for diphone in speech.diphones():
-        x = (diphone[0],) if speech.multigraphemic else diphone[0]
-        y = (diphone[1],) if speech.multigraphemic else diphone[1]
-
-        num = px2_[x] * pwb * p_2y[y]
-        denom = pxy[diphone]
-        dib[diphone] = max(1.0, num / denom)
-
-    return dib
-
-
-# TODO fix this confusion between test/train texts, see if can
-# completly avoid train text... For now the train is used to
-# initialize diphones
-def segment(text, prob_word_boundary=None, train_text=None,
-            diphones=None, log=utils.null_logger()):
-    """Word segmentation using the dibs algorithm"""
-
-    text = list(text)
-
-    if not train_text:
-        log.warning('using the input text for training')
-        train_text = text
-
-    training = _Summary(multigraphemic=True, wordsep=' ')
-    training.readstream(train_text)
-
-    phrasal_dibs = _phrasal(training, pwb=prob_word_boundary, log=log)
-    segmented = phrasal_dibs.test(text)
-
-    if diphones:
-        phrasal_dibs.save(codecs.open(diphones, 'w', encoding='utf8'))
-
-    return segmented
+    # init the segmenter with the trained model
+    segmenter = Segmenter(model, pwb=pwb, threshold=threshold, log=log)
+    for utt in text:
+        yield segmenter.segment(utt)
 
 
 def _add_arguments(parser):
     """Add Dibs command specific options to the `parser`"""
-    group = parser.add_argument_group('algorithm parameters')
-    group1 = group.add_mutually_exclusive_group()
-    group1.add_argument(
-        '-p', '--prob-word-boundary', metavar='<float>', type=float,
-        help='''Word boundary probability, must be in [0, 1]''')
+    parser.add_argument(
+        '-d', '--diphones', metavar='<output-file>',
+        help='''optional file to write diphones,
+        ignore diphones output if not specified''')
 
-    group1.add_argument(
-        '-t', '--train', metavar='<int or file>', type=str, default='200',
-        help='''Dibs requires a little train corpus to compute some statistics.
-        If the argument is a file, read this file as a train corpus. If
-        the argument is a positive integer N, take the N first lines of the
-        <input-file> (train) file for testing, default is %(default)s''')
+    group = parser.add_argument_group('training parameters')
+    separator = Separator()
 
     group.add_argument(
-        '-d', '--diphones', metavar='<output-file>',
-        help='''optional filename to write diphones,
-        ignore diphones output if this argument is not specified''')
+        'train_file', metavar='<train-file>', type=str,
+        help='Dibs requires a little train corpus to compute some statistics')
+
+    group.add_argument(
+        '-p', '--phone-separator', metavar='<str>',
+        default=separator.phone,
+        help='phone separator in training, default is "%(default)s"')
+
+    group.add_argument(
+        '-s', '--syllable-separator', metavar='<str>',
+        default=separator.syllable,
+        help='syllable separator in training, default is "%(default)s"')
+
+    group.add_argument(
+        '-w', '--word-separator', metavar='<str>',
+        default=separator.word,
+        help='word separator in training, default is "%(default)s"')
+
+    group = parser.add_argument_group('testing parameters')
+    group.add_argument(
+        '-t', '--type',  default='phrasal',
+        choices=['baseline', 'phrasal', 'lexical'],
+        help='type of DiBS segmenter')
+
+    group.add_argument(
+        '-T', '--threshold', type=float, default=0.5, metavar='<float>',
+        help='threshold on word boudary probabilities, must be in [0, 1]')
+
+    group.add_argument(
+        '-b', '--pboundary', type=float, metavar='<float>',
+        help='''probability of word boundary, if not specified it is
+        estimated from the train text as (nwords - nlines)/(nphones - nlines).
+        This option is not used in 'baseline' segmentation type,
+        must be in [0, 1]''')
 
 
 @utils.CatchExceptions
@@ -276,36 +275,48 @@ def main():
         description=__doc__,
         add_arguments=_add_arguments)
 
-    # load the test input as a list
-    test_text = [line for line in streamin]
+    # setup the separator from parsed arguments TODO for now only
+    # word, implement custom phone sep as well
+    separator = Separator(
+        phone=args.phone_separator,
+        syllable=args.syllable_separator,
+        word=args.word_separator)
 
-    # prepare the train input according to --train: try to open the
-    # file first, if file not found cast to int
-    if os.path.isfile(args.train):
-        train_text = codecs.open(
-            args.train, 'r', encoding='utf8').readlines()
-    else:
-        try:
-            ntrain = int(args.train)
-        except ValueError:
-            raise ValueError(
-                '--train option must be an int or an existing file, '
-                'it is: {}'.format(args.train))
+    # ensure the train file exists
+    if not os.path.isfile(args.train_file):
+        raise ValueError(
+                'train file does not exist: {}'.format(args.train_file))
 
-        if ntrain <= 0:
-            raise ValueError(
-                '--train option must be positive, it is: {}'.format(ntrain))
+    # load train and test texts, ignore empty lines
+    train_text = codecs.open(args.train_file, 'r', encoding='utf8')
+    train_text = (line for line in train_text if line)
+    test_text = (line for line in streamin if line)
 
-        train_text = test_text[:ntrain]
+    # train the model (learn diphone statistics)
+    dibs_model = Summary(train_text, separator=separator, log=log)
 
-    segmented = segment(
+    # segment the test text on the trained model
+    output = segment(
         test_text,
-        prob_word_boundary=args.prob_word_boundary,
-        train_text=train_text,
-        diphones=args.diphones,
+        dibs_model,
+        type=args.type,
+        threshold=args.threshold,
+        pwb=args.pboundary,
         log=log)
 
-    streamout.write('\n'.join(segmented) + '\n')
+    streamout.write('\n'.join(output) + '\n')
+
+    if args.diphones:
+        log.info(
+            'saving %s diphones to %s',
+            len(dibs_model.diphones()), args.diphones)
+
+        output = ('{} {} {}'.format(v, k[0], k[1]) for k, v in sorted(
+            dibs_model.diphones().items(),
+            key=operator.itemgetter(1), reverse=True))
+
+        codecs.open(args.diphones, 'w', encoding='utf8').write(
+            '\n'.join(output) + '\n')
 
 
 if __name__ == '__main__':
