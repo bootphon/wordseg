@@ -23,6 +23,8 @@ on master branch (not yet released)
 
 * Bugfixes
 
+    * **wordseg-dibs** has been debugged (#16).
+
     * The following characters are now forbidden in separators, they
       interfer with regular expression matching::
 

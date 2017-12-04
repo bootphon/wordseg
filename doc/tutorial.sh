@@ -11,10 +11,10 @@ cat $1 | wordseg-stats --json > stats.json
 cat prepared.txt | wordseg-baseline -p 0.2 > segmented.baseline.txt
 cat prepared.txt | wordseg-tp -t relative > segmented.tp.txt
 cat prepared.txt | wordseg-puddle -j 4 -w 2 > segmented.puddle.txt
-cat prepared.txt | wordseg-dibs -p 0.1 > segmented.dibs.txt
+cat prepared.txt | wordseg-dpseg -f 1 > segmented.dpseg.txt
 
 # evaluate them against the gold file
-for algo in baseline tp puddle dibs
+for algo in baseline tp puddle dpseg
 do
     cat segmented.$algo.txt | wordseg-eval gold.txt > eval.$algo.txt
 done
@@ -28,12 +28,12 @@ cat stats.json
 echo
 echo "* Evaluation"
 echo
-echo "score baseline tp puddle dibs"
+echo "score baseline tp puddle dpseg"
 echo "------------------ -------- -------- -------- --------"
 for i in $(seq 1 9)
 do
     awk -v i=$i 'NR==i {printf $0}; END {printf " "}' eval.baseline.txt
     awk -v i=$i 'NR==i {printf $2}; END {printf " "}' eval.tp.txt
     awk -v i=$i 'NR==i {printf $2} END {printf " "}' eval.puddle.txt
-    awk -v i=$i 'NR==i {print $2}' eval.dibs.txt
+    awk -v i=$i 'NR==i {print $2}' eval.dpseg.txt
 done
