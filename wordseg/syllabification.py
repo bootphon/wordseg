@@ -170,8 +170,10 @@ def syllabify(text, onsets, vowels, separator=Separator(),
     Raises
     ------
     ValueError
-        if `separator.syllable` is found in the text, or if `onsets`
-        or `vowels` are empty.
+        If an utterance has not been correctly syllabified because the
+        `onsets` and/or `vowels` are not adapted to that corpus. If
+        `separator.syllable` is found in the text, or if `onsets` or
+        `vowels` are empty.
 
     """
     # ensure onsets and vowels are not empty
@@ -183,6 +185,8 @@ def syllabify(text, onsets, vowels, separator=Separator(),
     # we are syllabifying utterance per utterance
     syllabified_text = []
     for n, utt in enumerate(text):
+        utt = utt.strip()
+
         # first ensure the utterance is compatible with the given
         # syllable separator
         if separator.syllable in utt:
@@ -196,6 +200,14 @@ def syllabify(text, onsets, vowels, separator=Separator(),
         # estimate the syllable boundaries on the utterance
         syllables = _syllabify_utterance(
             utt, onsets, vowels, separator, strip, log)
+
+        # check we preserve content
+        if separator.remove(utt) != separator.remove(syllables):
+            raise ValueError(
+                'line {}: syllabified utterance differs from the input one, '
+                'the onsets and/or vowels may be invalid: "{}" != "{}"'.format(
+                    n+1, separator.remove(syllables), separator.remove(utt)))
+
 
         # restore the phones separators as they were before
         syllables = _restore_phone_separators(syllables, index, separator, strip)
