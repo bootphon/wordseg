@@ -51,15 +51,16 @@ class CorpusStatistics(object):
         if len(self.corpus) == 0:
             raise ValueError('no text to load')
 
-        # tokenize the text at each defined level ('word', 'syllable'
-        # and/or 'phone') TODO can be optimized we are tokenizing the
-        # entire text up to 3 times (implement nested tokenization).
+        # tokenize the entire text at each defined level ('word',
+        # 'syllable' and/or 'phone') TODO can be optimized we are
+        # tokenizing the entire text up to 3 times (implement nested
+        # tokenization).
         self.tokens = {}
         for level in self.separator.levels()[::-1]:
             self.log.debug('tokenizing %s', level)
-            self.tokens[level] = [list(
-                self.separator.tokenize(utt, level, keep_boundaries=False))
-                                  for utt in self.corpus]
+            self.tokens[level] = [
+                self.separator.tokenize(utt, level, keep_boundaries=False)
+                for utt in self.corpus]
 
             ntokens = sum(len(t) for t in self.tokens[level])
             self.log.info('parsed %s %ss', ntokens, level)

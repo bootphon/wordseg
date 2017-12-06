@@ -79,8 +79,8 @@ class Separator(object):
         """Raises ValueError if `level` is not defined in the separator"""
         if level not in self.levels():
             raise ValueError(
-                "level must be 'phone', 'syllable' or 'word', "
-                "it is {}".format(level))
+                'level "{}" undefined, choose in: {}'.format(
+                    level, ', '.join(self.levels())))
 
     def strip(self, utterance, level=None):
         """Removes leading and ending separators of an `utterance`
@@ -118,8 +118,8 @@ class Separator(object):
 
         return utterance.strip()
 
-    def tokenize(self, utterance, level, keep_boundaries=True):
-        """Yields the tokens in `utterance` at the given `level`
+    def tokenize(self, utterance, level=None, keep_boundaries=True):
+        """Return the tokens in `utterance` at the given `level`
 
         Iterates on phones, syllable or words within a given
         utterance, other levels being ignored.
@@ -128,20 +128,22 @@ class Separator(object):
         ----------
         utterance : str
             The utterance to be tokenized.
-        level : str
+        level : str, optional
             The level to tokenize the utterance at, must be 'phone',
-            'syllable' or 'word'.
+            'syllable' or 'word'. If not specified, tokenize at all
+            the defined levels and return a nested list.
         keep_boundaries : bool, optional
             When True (default) preserve the sublevel token boundaries
             in the output. When False all token boundaries are
             removed.
 
-        Yields
-        ------
-        token : str
+        Returns
+        -------
+        token : list of (list of (list of)) str
             The successive phones, syllables or words tokenized from
-            the utterance. Empty tokens are ignored, tokens are
-            striped.
+            the utterance. From outer to inner levels in the returned
+            nested list are words, syllables and phones. Empty tokens
+            are ignored, tokens are striped.
 
         Raises
         ------
@@ -151,25 +153,45 @@ class Separator(object):
         Examples
         --------
         >>> from wordseg.separator import Separator
-        >>> s = Separator(phone=' ', word=';eword')
+        >>> s = Separator(phone=' ', syllable=None, word=';eword')
         >>> t = 'j uː ;eword n oʊ ;eword dʒ ʌ s t ;eword'
-        >>> list(s.tokenize(t, 'word'))
+        >>> list(s.tokenize(t, level='word'))
         ['j uː', 'n oʊ', 'dʒ ʌ s t']
-        >>> list(s.tokenize(t, 'word', keep_boundaries=False))
+        >>> list(s.tokenize(t, level='word', keep_boundaries=False))
         ['juː', 'noʊ', 'dʒʌst']
-        >>> list(s.tokenize(t, 'phone'))
+        >>> list(s.tokenize(t, level='phone'))
         ['j', 'uː', 'n', 'oʊ', 'dʒ', 'ʌ', 's', 't']
+        >>> list(s.tokenize(t))
+        [['j', 'uː'], ['n', 'oʊ'], ['dʒ', 'ʌ', 's', 't']]
 
         """
-        self.check_level(level)
+        if level:
+            self.check_level(level)
 
         # auxiliary function tokenizing at a given level
         def _tokenize(utterance, level):
             if not self._regexp[level]:
                 return [utterance]
 
-            return (token for token in re.split(self._regexp[level], utterance)
-                    if len(token))
+            return [self.strip(token) for token in re.split(
+                self._regexp[level], utterance) if token]
+
+        if level is None:
+            # fully tokenize the utterance as a nested list. Whatever the
+            # separator we have here a 3-levels list
+            tokens = [[_tokenize(s, 'phone')
+                       for s in _tokenize(w, 'syllable')]
+                      for w in _tokenize(utterance, 'word')]
+
+            # remove the undefined levels from the list
+            if not self.phone:
+                tokens = [[tt[0] for tt in t] for t in tokens]
+            if not self.syllable:
+                tokens = [t[0] for t in tokens]
+            if not self.word:
+                tokens = tokens[0]
+
+            return tokens
 
         # word tokens
         if self.word:
@@ -196,7 +218,7 @@ class Separator(object):
         if not keep_boundaries:
             tokens = (self.remove(t) for t in tokens)
 
-        return (t for t in tokens if len(t))
+        return [t for t in tokens if t]
 
     def split(self, utterance, level, keep_boundaries=False):
         """Split the `utterance` at a given token `level`

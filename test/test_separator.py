@@ -203,6 +203,36 @@ def test_tokenize_noboundaries():
         == ['j', 'uː', 'n', 'oʊ', 'dʒ', 'ʌ', 's', 't']
 
 
+def test_tokenize_full_nosyll():
+    t = 'j_uː_ n_oʊ_ dʒ_ʌ_s_t_ '
+
+    s = Separator(phone='_', syllable=None, word=' ')
+    assert list(s.tokenize(t)) \
+        == [['j', 'uː'], ['n', 'oʊ'], ['dʒ', 'ʌ', 's', 't']]
+
+    s = Separator(phone='_', syllable=';', word=' ')
+    assert list(s.tokenize(t)) \
+        == [[['j', 'uː']], [['n', 'oʊ']], [['dʒ', 'ʌ', 's', 't']]]
+
+    # tokenize phones only
+    t = t.replace(' ', '')
+    s = Separator(phone='_', syllable=None, word=None)
+    assert list(s.tokenize(t)) == \
+        ['j', 'uː', 'n', 'oʊ', 'dʒ', 'ʌ', 's', 't']
+
+
+def test_tokenize_full_syll():
+    t = 'j_uː_ n_oʊ_ dʒ_ʌ_s_;t_ '
+
+    s = Separator(phone='_', syllable=None, word=' ')
+    assert list(s.tokenize(t)) \
+        == [['j', 'uː'], ['n', 'oʊ'], ['dʒ', 'ʌ', 's', ';t']]
+
+    s = Separator(phone='_', syllable=';', word=' ')
+    assert list(s.tokenize(t)) \
+        == [[['j', 'uː']], [['n', 'oʊ']], [['dʒ', 'ʌ', 's'], ['t']]]
+
+
 def test_upper_levels():
     s = Separator(phone='p', syllable='s', word='w')
     assert s.upper_levels('phone') == ['syllable', 'word']

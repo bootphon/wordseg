@@ -21,7 +21,7 @@ from . import tags, prep, datadir
         for p in (None, 0.2)])
 def test_basic(prep, tags, type, threshold, pwb):
     sep = Separator()
-    model = dibs.Summary(tags, separator=sep)
+    model = dibs.CorpusSummary(tags, separator=sep)
 
     out = list(dibs.segment(
         prep, model, type=type, threshold=threshold, pwb=pwb))
@@ -30,6 +30,14 @@ def test_basic(prep, tags, type, threshold, pwb):
     assert len(out) == len(prep)
     for n, (a, b) in enumerate(zip(out, prep)):
         assert s(a) == s(b), 'line {}: "{}" != "{}"'.format(n+1, s(a), s(b))
+
+
+def test_phone_sep():
+    text = ['hh_ih_r_;eword ',
+            'dh_eh_r_;eword w_iy_;eword g_ow_;eword ']
+    sep = Separator(phone='_', syllable=None, word=';eword ')
+    model = dibs.CorpusSummary(text, separator=sep)
+    assert model.summary == {'nlines': 2, 'nwords': 4, 'nphones': 10}
 
 
 def test_replicate_cdswordseg(datadir):
@@ -42,7 +50,7 @@ def test_replicate_cdswordseg(datadir):
     _gold = gold(_tags, separator=sep)
     _train = _tags[:200]
 
-    model = dibs.Summary(_train)
+    model = dibs.CorpusSummary(_train)
     segmented = dibs.segment(_prepared, model)
     score = evaluate(segmented, _gold)
 
