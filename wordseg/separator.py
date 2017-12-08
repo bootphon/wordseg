@@ -168,8 +168,8 @@ class Separator(object):
             if not self._regexp[level]:
                 return [utterance]
 
-            return (token for token in re.split(self._regexp[level], utterance)
-                    if len(token))
+            return (token for token in re.split(
+                self._regexp[level], utterance) if token)
 
         # word tokens
         if self.word:
