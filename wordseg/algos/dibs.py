@@ -33,15 +33,38 @@ diphone-based segmentation". Cognitive science 35(1), 119–155 (2011).
 
 # this DiBS was written by Robert Daland <r.daland@gmail.com>
 
+import abc
 import codecs
 import operator
 import os
+import six
 
 from wordseg.separator import Separator
 from wordseg import utils
 
 
 class Counter(dict):
+    """A Counter is a (key -> count) dictionnary for counting elements
+
+    Update the counter with the `increment(key, count)` method. If an
+    element is absent from the dictionary, its count defaults to 0.
+
+    Examples
+    --------
+    >>> c = Counter()
+    >>> c['a']
+    0
+    >>> c['a'] = 10
+    >>> c['a']
+    10
+    >>> c.increment('a')
+    >>> c['a']
+    11
+    >>> c.increment('a', 9)
+    >>> c['a']
+    20
+
+    """
     def increment(self, key, value=1):
         self[key] = self.get(key, 0) + value
 
@@ -49,7 +72,40 @@ class Counter(dict):
         return self.get(key, 0)
 
 
-class Summary(object):
+class CorpusSummary(object):
+    """Compute statistics on a phonemized corpus
+
+    This is the "training" step of DiBS. It computes some statistics
+    on phones (and diphones) on a tokenized training text.
+
+    Parameters
+    ----------
+    text : sequence of str
+        The input text must be tokenized at phone and word levels
+        (syllables boundaries are ignored if any)
+    separator : Separator, optional
+        Token separation in the input text
+    log : logging.Logger, optional
+        Where to send log messages
+
+    Attributes
+    ----------
+    summary : Counter
+        Basic stats on the entire text: 'nlines', 'nwords' and 'nphones'
+    lexicon : Counter
+        Word count on the entire text
+    phrase_initial : Counter
+        The phones at first position in an utterance
+    phrase_final : Counter
+        The phones at last position in an utterance
+    internal_diphones : Counter
+        The count of within word diphones
+    spanning_diphones : Counter
+        The count of across words diphones
+    diphones : Counter
+        The count of all diphones, sum of internal and spanning diphones.
+
+    """
     def __init__(self, text, separator=Separator(), log=utils.null_logger()):
         self.separator = separator
         self.summary = Counter()
@@ -58,54 +114,84 @@ class Summary(object):
         self.phrase_final = Counter()
         self.internal_diphones = Counter()
         self.spanning_diphones = Counter()
-        self._diphones = None
 
         for utt in text:
             self._read_utterance(utt)
 
+        self.diphones = Counter(self.internal_diphones)
+        for k, v in self.spanning_diphones.items():
+            self.diphones.increment(k, v)
+
         log.info('train data summary: %s', self.summary)
 
     def _read_utterance(self, utterance):
-        wordseq = [
-            tuple(word.split())
-            for word in utterance.split(self.separator.word)
-            if word.split()]
-
-        if not wordseq:
+        # no stats on empty text
+        if not utterance:
             return
 
+        # list of words in the utterance
+        words = self.separator.tokenize(utterance, 'word')
+
+        # nested list of phones (per word)
+        phones = [self.separator.tokenize(word, 'phone') for word in words]
+
         self.summary.increment('nlines')
-        self.summary.increment('ntokens', len(wordseq))
-        self.summary.increment('nphones', sum([len(w) for w in wordseq]))
+        self.summary.increment('nwords', len(words))
+        self.summary.increment('nphones', sum(len(p) for p in phones))
 
-        self.phrase_initial.increment((wordseq[0][0],))
-        self.phrase_final.increment((wordseq[-1][-1],))
+        # first and last phones of the utterance
+        self.phrase_initial.increment((phones[0][0],))
+        self.phrase_final.increment((phones[-1][-1],))
 
-        for i, word in enumerate(wordseq):
+        for i, word in enumerate(words):
             self.lexicon.increment(word)
 
-            for j in range(len(word)-1):
-                self.internal_diphones.increment(word[j:j+2])
+            # intra words diphones
+            for j in range(len(phones[i]) - 1):
+                self.internal_diphones.increment(
+                    (phones[i][j], phones[i][j+1]))
 
-            if i < len(wordseq) - 1:
+            # inter words diphones
+            if i < len(words) - 1:
                 self.spanning_diphones.increment(
-                    tuple([word[-1], wordseq[i+1][0]]))
-
-    def diphones(self):
-        if not self._diphones:
-            # compute the final list of all the diphones
-            self._diphones = Counter(self.internal_diphones)
-            for d in self.spanning_diphones:
-                self._diphones.increment(d, self.spanning_diphones[d])
-        return self._diphones
+                    (phones[i][-1], phones[i+1][0]))
 
 
-class _AbstractSegmenter(Counter):
-    def __init__(self, model, pwb=None, threshold=0.5,
+@six.add_metaclass(abc.ABCMeta)
+class AbstractSegmenter(object):
+    """An interface for DiBS segmentation
+
+    Subclasses must implement the ``_init_diphones()`` method.
+
+    Parameters
+    ----------
+    summary : CorpusSummary
+        Some diphones stats computed on a train text
+    pwb : float, optional
+        Probability of word boundary, if not specified it is estimated
+        from the train text as (nwords - nlines)/(nphones - nlines).
+        When defined must in [0, 1].
+    threshold : float, optional
+        Threshold on word boundary probabilities. If a diphone has a
+        word boundray probability greater than this threshold, a word
+        boudary is added. Must be in [0, 1]. The optimal threshold is
+        0.5 (default).
+    log : logging.Logger, optional
+        The log instance where to send messages.
+
+    Raises
+    ------
+    ValueError:
+        If `threshold` and `pwb` are not floats in [0, 1].
+
+
+    """
+    def __init__(self, summary, pwb=None, threshold=0.5,
                  log=utils.null_logger()):
-        self.model = model
-        self.wordsep = model.separator.word
+        self.summary = summary
+        self.wordsep = summary.separator.word
         self.log = log
+        self.diphones = Counter()
 
         self.pwb = pwb
         if self.pwb and (self.pwb < 0 or self.pwb > 1):
@@ -119,9 +205,11 @@ class _AbstractSegmenter(Counter):
                 'threshold must be a float in [0, 1], it is: {}'
                 .format(self.thresh))
 
-        self._init_diphones()
+        self.init_diphones()
 
-    def _init_diphones(self):
+    @abc.abstractmethod
+    def init_diphones(self):
+        """Initializes diphone probabilities from the ``summary``"""
         raise NotImplementedError
 
     @staticmethod
@@ -130,79 +218,138 @@ class _AbstractSegmenter(Counter):
         return Counter([(item[0], float(item[1])/s) for item in d.items()])
 
     def _pwb(self):
-        _s = self.model.summary
+        _s = self.summary.summary
         return float(
-            _s['ntokens'] - _s['nlines']) / (_s['nphones'] - _s['nlines'])
+            _s['nwords'] - _s['nlines']) / (_s['nphones'] - _s['nlines'])
 
     def segment(self, utterance):
+        """Estimates word boundaries based on diphone probabilities
+
+        Parameters
+        ----------
+        utterance : str
+            The utterance to segment must be a suite of phones
+            separated by spaces.
+
+        Returns
+        -------
+        The segmented utterance, with phone separation removed and
+        spaces at estimated word boundaries.
+
+        """
         phoneseq = tuple(utterance.replace(self.wordsep, ' ').split())
 
         out = [phoneseq[0]]
         for iPos in range(len(phoneseq) - 1):
-            if self.get(phoneseq[iPos:iPos+2], 1.0) > self.thresh:
+            if self.diphones.get(phoneseq[iPos:iPos+2], 1.0) > self.thresh:
                 out.append(self.wordsep)
             out.append(phoneseq[iPos+1])
 
         return ' '.join(out).replace(' ', '').replace(self.wordsep, ' ')
 
 
-class BaselineSegmenter(_AbstractSegmenter):
-    def _init_diphones(self):
-        self.log.warning(
-            'pwb specified at %s but unused in baseline segmenter', self.pwb)
-        within = self.model.internal_diphones
-        across = self.model.spanning_diphones
-        for d in self.model.diphones():
-            self[d] = float(across[d]) / (within[d] + across[d])
+class BaselineSegmenter(AbstractSegmenter):
+    def init_diphones(self):
+        if self.pwb:
+            self.log.warning(
+                'pwb specified at %s but unused in baseline segmenter',
+                self.pwb)
+
+        within = self.summary.internal_diphones
+        across = self.summary.spanning_diphones
+        for d in self.summary.diphones:
+            self.diphones[d] = float(across[d]) / (within[d] + across[d])
 
 
-class PhrasalSegmenter(_AbstractSegmenter):
-    def _init_diphones(self):
-        px2_ = self._norm2pdf(self.model.phrase_final)
-        p_2y = self._norm2pdf(self.model.phrase_initial)
-        pxy = self._norm2pdf(self.model.diphones())
+class PhrasalSegmenter(AbstractSegmenter):
+    def init_diphones(self):
+        px2_ = self._norm2pdf(self.summary.phrase_final)
+        p_2y = self._norm2pdf(self.summary.phrase_initial)
+        pxy = self._norm2pdf(self.summary.diphones)
+
         pwb = self.pwb or self._pwb()
         self.log.info('phrasal pwb = ' + str(pwb))
 
-        for d in self.model.diphones():
+        for d in self.summary.diphones:
             x = (d[0],)
             y = (d[1],)
             num = px2_[x] * pwb * p_2y[y]
             denom = pxy[d]
             if num >= denom:
-                self[d] = 1
+                self.diphones[d] = 1
             else:
-                self[d] = num / denom
+                self.diphones[d] = num / denom
 
 
-class LexicalSegmenter(_AbstractSegmenter):
-    def _init_diphones(self):
+class LexicalSegmenter(AbstractSegmenter):
+    def init_diphones(self):
         word_initial = Counter()
         word_final = Counter()
-        for word in self.model.lexicon:
+        for word in self.summary.lexicon:
             word_initial.increment((word[0],))
             word_final.increment((word[-1],))
 
         px2_ = self._norm2pdf(word_final)
         p_2y = self._norm2pdf(word_initial)
-        pxy = self._norm2pdf(self.model.diphones())
+        pxy = self._norm2pdf(self.summary.diphones)
 
         pwb = self.pwb or self._pwb()
         self.log.info('lexical pwb = ' + str(pwb))
 
-        for d in self.model.diphones():
+        for d in self.summary.diphones:
             x = (d[0],)
             y = (d[1],)
             num = px2_[x] * pwb * p_2y[y]
             denom = pxy[d]
             if denom == 0 or num > denom:
-                self[d] = 1
+                self.diphones[d] = 1
             else:
-                self[d] = num / denom
+                self.diphones[d] = num / denom
 
 
-def segment(text, model, type='phrasal', threshold=0.5, pwb=None,
+def segment(text, summary, type='phrasal', threshold=0.5, pwb=None,
             log=utils.null_logger()):
+    """Segment a corpus from a trained DiBS model
+
+    This method is a simple wrapper on the Segmenter classes, namely
+    BaselineSegmenter, PhrasalSegmenter and LexicalSegmenter.
+
+    Parameters
+    ----------
+    text : sequence of str
+        The input text to segment is a sequence (list or generator) of
+        utterances. Each utterance is composed of space seprated
+        tokens (can be phones or syllables).
+    summary : CorpusSummary
+        The trained DiBS model used for segmentation of `text`.
+    type : str, optional
+        The type of DiBS segmenter to use, must be 'baseline',
+        'phrasal' or 'lexical'. Default is 'phrasal'.
+    threshold: float, optional
+        Threshold on word boundary probabilities. If a diphone has a
+        word boundray probability greater than this threshold, a word
+        boudary is added. Must be in [0, 1]. The optimal threshold is
+        0.5 (default).
+    pwb : float, optional
+        Probability of word boundary, if not specified it is estimated
+        from the train text as (nwords - nlines)/(nphones - nlines).
+        This option is not used in 'baseline' segmentation type. When
+        defined must in [0, 1].
+    log : logging.Logger, optional
+        The log instance where to send messages.
+
+    Yields
+    ------
+    utterance : str
+        The current utterance segmented (with estimated word boundaries)
+
+    Raises
+    ------
+    ValueError:
+        If `type` is not 'baseline', 'phrasal' or 'lexical'. If
+        `threshold` and `pwb` are not floats in [0, 1].
+
+    """
     # retrieve the segmenter from the 'type' argument
     try:
         Segmenter = {
@@ -215,7 +362,7 @@ def segment(text, model, type='phrasal', threshold=0.5, pwb=None,
             .format(type))
 
     # init the segmenter with the trained model
-    segmenter = Segmenter(model, pwb=pwb, threshold=threshold, log=log)
+    segmenter = Segmenter(summary, pwb=pwb, threshold=threshold, log=log)
     for utt in text:
         yield segmenter.segment(utt)
 
@@ -275,8 +422,7 @@ def main():
         description=__doc__,
         add_arguments=_add_arguments)
 
-    # setup the separator from parsed arguments TODO for now only
-    # word, implement custom phone sep as well
+    # setup the separator from parsed arguments
     separator = Separator(
         phone=args.phone_separator,
         syllable=args.syllable_separator,
@@ -293,26 +439,28 @@ def main():
     test_text = (line for line in streamin if line)
 
     # train the model (learn diphone statistics)
-    dibs_model = Summary(train_text, separator=separator, log=log)
+    dibs_summary = CorpusSummary(train_text, separator=separator, log=log)
 
     # segment the test text on the trained model
     output = segment(
         test_text,
-        dibs_model,
+        dibs_summary,
         type=args.type,
         threshold=args.threshold,
         pwb=args.pboundary,
         log=log)
 
+    # output the segmented text
     streamout.write('\n'.join(output) + '\n')
 
+    # save the computed diphones if required
     if args.diphones:
         log.info(
             'saving %s diphones to %s',
-            len(dibs_model.diphones()), args.diphones)
+            len(dibs_summary.diphones), args.diphones)
 
         output = ('{} {} {}'.format(v, k[0], k[1]) for k, v in sorted(
-            dibs_model.diphones().items(),
+            dibs_summary.diphones.items(),
             key=operator.itemgetter(1), reverse=True))
 
         codecs.open(args.diphones, 'w', encoding='utf8').write(

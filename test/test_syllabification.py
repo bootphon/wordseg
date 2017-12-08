@@ -90,6 +90,28 @@ def test_cspanish(datadir):
     assert sylls == expected
 
 
+def test_cspanish_bad(datadir):
+    vowels = open_datafile(os.path.join(datadir, 'cspanish_vowels.txt'))
+    onsets = open_datafile(os.path.join(datadir, 'cspanish_onsets.txt'))
+    separator = Separator(phone=';', syllable='_', word=' ')
+
+    text = [
+        # here kk and hh are out of onsets
+        'nkko sehh kae',
+        'si aj aj al aj',
+        'esta aj la tata e9u',
+        'mira esta xugan9o']
+
+    expected = [
+        'no_ se_ ka_e_ ',
+        'si_ aj_ aj_ al_ aj_ ',
+        'es_ta_ aj_ la_ ta_ta_ e_9u_ ',
+        'mi_ra_ es_ta_ xu_gan_9o_ ']
+
+    with pytest.raises(ValueError):
+        sylls = syllabify(text, onsets, vowels, separator=separator, strip=False)
+
+
 def test_cspanish_strip(datadir):
     vowels = open_datafile(os.path.join(datadir, 'cspanish_vowels.txt'))
     onsets = open_datafile(os.path.join(datadir, 'cspanish_onsets.txt'))

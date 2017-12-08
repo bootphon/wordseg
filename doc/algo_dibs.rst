@@ -1,7 +1,7 @@
 .. _algo_dibs:
 
-Diphone Based Segmentater
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Diphone Based Segmenter
+~~~~~~~~~~~~~~~~~~~~~~~
 
 .. note::
 

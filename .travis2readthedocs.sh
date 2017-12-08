@@ -4,10 +4,9 @@
 #
 # This script is executed by Travis after tests success.
 #
-# Configure the project to make the configuration buildable on
-# readthedocs. Push the configured project to the readthedocs-pages
-# branch. The push then trigger the documentation build on
-# readthedocs.org
+# - Configure the project to make it buildable on readthedocs,
+# - Push the configured project to the readthedocs-pages branch,
+# - The push then trigger the documentation build on readthedocs.org.
 #
 # Required installed packages: cmake sphinx
 #
@@ -51,13 +50,13 @@ cp -a $SOURCE/CHANGELOG.rst $TARGET
 cp -a $SOURCE/build/setup.py $TARGET
 cp -a $SOURCE/build/html/conf.py $TARGET/doc
 
-# remove *.in, __pycache__ and *.pyc files
+# remove *.in, *.pyc files and c++ source
 rm -f $TARGET/doc/conf.py.in
+rm -rf $TARGET/wordseg/algos/ag
+rm -rf $TARGET/wordseg/algos/dpseg
 find $TARGET -type f -name *.pyc -delete
-# find $TARGET -type d -name __pycache__ -exec rm -rf {} \;
 
 echo "Uploading the project to github readthedocs-pages branch"
-# add all the configured files
 cd $TARGET
 git add --all
 git status
