@@ -1,4 +1,4 @@
-* for wordseg-0.6 [5/8]
+* for wordseg-0.6 [6/8]
 - [X] debug the type/token evaluation
 - [X] implement wordseg-syll [5/5]
   - [X] adaptation of new-syllabify-corpus.pl
@@ -14,6 +14,18 @@
   - [X] add stats in tutorial
 - [X] wordseg-dibs
   must output the same results as the original one from R. Daland / CDSWordSeg
+- [X] implement wordseg-oracle
+  An alternative baseline explored by Lignos (2012) is a random oracle
+  segmenter (RandOracle). The random oracle segments a corpus by
+  treating each possible boundary location as a Bernoulli trial. The
+  segmenter is an “oracle” in that it knows the true probability of a
+  boundary in the corpus. The random oracle inserts boundaries with
+  this same probability. This acts as a baseline for comparison,
+  representing the performance that could be achieved by randomly
+  guessing at the true boundary rate. Any model which does not surpass
+  the RandOracle model should have low enough performance that it
+  could be ruled out as a possible model of early infant
+  segmentation.
 - [ ] debug wordseg-ag
   Must replicate results from CDSWordSeg
 - [ ] implement wordseg-cha
@@ -26,18 +38,6 @@
   wouldn't want for this knowledge to disappear forever because I
   think many in the community are re-inventing this wheel, and
   sometimes not perfectly... (I know we had loads of bugs there...)
-- [ ] implement wordseg-oracle
-  An alternative baseline explored by Lignos (2012) is a random oracle
-  segmenter (RandOracle). The random oracle segments a corpus by
-  treating each possible boundary location as a Bernoulli trial. The
-  segmenter is an “oracle” in that it knows the true probability of a
-  boundary in the corpus. The random oracle inserts boundaries with
-  this same probability. This acts as a baseline for comparison,
-  representing the performance that could be achieved by randomly
-  guessing at the true boundary rate. Any model which does not surpass
-  the RandOracle model should have low enough performance that it
-  could be ruled out as a possible model of early infant
-  segmentation.
 * for a next release [2/9]
 - [X] write a ChangeLog.md
 - [X] refactor the html documentation
