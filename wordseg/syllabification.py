@@ -50,13 +50,15 @@ def _restore_phone_separators(utt, index, separator, strip=False):
     # restore the utterance word per word (index[i]) and within words,
     # phone per phone (index[i][j]).
     restored = ''
-    for i, word in enumerate(separator.split(utt, 'word', keep_boundaries=True)):
+    for i, word in enumerate(
+            separator.split(utt, 'word', keep_boundaries=True)):
         if len(word) == 0:
             # coherent behavior for non striped texts
             restored += separator.word
         else:
             j = 0  # iterate on syllables
-            for syllable in separator.split(word, 'syllable', keep_boundaries=True):
+            for syllable in separator.split(
+                    word, 'syllable', keep_boundaries=True):
                 # for each phone in the syllable, append a phone
                 # separator
                 k = 0
@@ -106,7 +108,8 @@ def _build_onset(word, syllable, onsets, vowels):
 
 def _syllabify_utterance(utt, onsets, vowels, separator, strip, log):
     # split the utterances into words, read them from end to start
-    words = list(separator.split(utt.strip(), 'word', keep_boundaries=True))[::-1]
+    words = list(
+        separator.split(utt.strip(), 'word', keep_boundaries=True))[::-1]
 
     # estimate syllables boudaries word per word
     output = ''
@@ -210,7 +213,8 @@ def syllabify(text, onsets, vowels, separator=Separator(),
 
 
         # restore the phones separators as they were before
-        syllables = _restore_phone_separators(syllables, index, separator, strip)
+        syllables = _restore_phone_separators(
+            syllables, index, separator, strip)
 
         syllabified_text.append(syllables)
 

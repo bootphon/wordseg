@@ -86,9 +86,7 @@ wordseg 0       0       1       0       0       100     1       0       1       
 *** TODO issue does not come from postprocessing
 *** TODO replicate results from CDSWordSeg
 * for a next release
-- [X] write a ChangeLog.md
-- [X] refactor the html documentation
-  less pages for general, more pages for API, Python docstrings in website
+** Python side
 - [ ] optimize wordseg-tp (slower than before according to Georgia)
 - [ ] refactor segment() in ag and dpseg
   We want an easy access to arguments from Python and from config file

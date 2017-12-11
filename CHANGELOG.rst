@@ -9,7 +9,9 @@ on master branch (not yet released)
     * New forward/backward option in **wordseg-tp**.
 
     * New command **wordseg-baseline** that produces a random
-      segmentation given the probability of a word boundary.
+      segmentation given the probability of a word boundary. If an
+      oracle text is provided, the probability of word boundary is
+      estimated from that text.
 
     * New command **wordseg-syll** estimates syllable boundaries on a
       text using the maximal onset principle. Exemples of onsets and
