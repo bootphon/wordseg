@@ -1,5 +1,5 @@
-on master branch (not yet released)
------------------------------------
+wordseg-0.6
+-----------
 
 * Features
 
