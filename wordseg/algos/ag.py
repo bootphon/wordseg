@@ -146,6 +146,7 @@ import collections
 import joblib
 import logging
 import os
+import random
 import re
 import shlex
 import shutil
@@ -327,6 +328,35 @@ def get_grammar_files():
     return utils.get_config_files('ag', '.lt')
 
 
+def build_colloc0_grammar(phones):
+    """Builds a Colloc0 grammar from a list of phones
+
+    Parameters
+    ----------
+    phones : list of str
+        The list of existing phones in the grammar
+
+    Returns
+    -------
+    grammar : str
+        The generated grammar as a string, just have a open(file,
+        'w').write(grammar) to save it to disk.
+
+    """
+    g = '\n'.join([
+        "1 1 Sentence --> Colloc0s",
+        "1 1 Colloc0s --> Colloc0",
+        "1 1 Colloc0s --> Colloc0 Colloc0s",
+        "Colloc0 --> Phonemes",
+        "1 1 Phonemes --> Phoneme",
+        "1 1 Phonemes --> Phoneme Phonemes"]) + '\n'
+
+    for p in sorted(phones):
+        g += '1 1 Phoneme -->' + p + '\n'
+
+    return g
+
+
 def _is_parent_in_grammar(grammar_file, parent):
     """Returns True if the `parent` is in the grammar
 
@@ -396,12 +426,31 @@ def _run_ag_single(text, grammar_file, args, test_text=None,
             args=args,
             test=test_tmpfile))
 
+        log.info('running %s', command)
+
         # run the command as a subprocess
         process = subprocess.Popen(
             shlex.split(command),
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE)
+            stderr=subprocess.PIPE)  # ,
+        # bufsize=1)
+
+        # # send input text
+        # process.stdin.write(train_text.encode('utf8'))
+        # process.stdin.close()
+        # parses = ''
+        # while True:
+        #     line_out = process.stdout.read(1024).decode('utf8')
+        #     line_err = process.stderr.read(1024).decode('utf8')
+        #     if line_out == "" and line_err == "":
+        #         break
+        #     if line_err != "":
+        #         log.debug(re.sub('^# ', '', line_err).strip())
+        #     if line_out != "":
+        #         parses += line_out
+        #     # log.error(len(parses))
+        # process.wait()
 
         parses, messages = process.communicate(train_text.encode('utf8'))
 
@@ -416,6 +465,8 @@ def _run_ag_single(text, grammar_file, args, test_text=None,
                 'fails with error code {}'.format(process.returncode))
 
         return parses.decode('utf8').strip().split('\n')
+    # except:
+    #     process.kill()
     finally:
         shutil.rmtree(temp_dir)
 
@@ -624,7 +675,7 @@ def segment(text, grammar_file, segment_category,
     # make sure the segment category is valid
     if not _is_parent_in_grammar(grammar_file, segment_category):
         raise RuntimeError(
-            'category "{}" not found in the grammar, segmentation will fail'
+            'category "{}" not found in the grammar'
             .format(segment_category))
 
     # force the train text from sequence to list
@@ -639,6 +690,24 @@ def segment(text, grammar_file, segment_category,
         log.info('no test text provided, segmentation on train data')
     log.info('parameters are: "%s"', args)
 
+    # ensure we have a different seed for all runs. If the seed is
+    # specified in command line (-r SEED) then feed SEED+i for i the
+    # ith run. Else put a random seed to each run.
+    args_new = [args] * nruns
+    if '-r' in args:
+        prefix, suffix = tuple(args.split('-r '))
+        suffix = suffix.split(' ')
+        seed = int(suffix[0])
+        suffix = ' '.join(suffix[1:])
+        for n in range(nruns):
+            args_new[n] = prefix + '-r {} '.format(seed + n) + suffix
+    else:
+        for n in range(nruns):
+            args_new[n] = args + ' -r {}'.format(random.randint(0, 2**16))
+    args = args_new
+    log.debug('random seeds are: %s', ', '.join(
+        [arg.split('-r ')[1].split(' ')[0] for arg in args]))
+
     # parallel runs of the AG algorithm, raw_parses is a list of
     # `nruns_inner` raw parse trees we need to postprocess to obtain
     # words.
@@ -646,27 +715,29 @@ def segment(text, grammar_file, segment_category,
     raw_trees = joblib.Parallel(
         n_jobs=njobs, backend="threading", verbose=0)(
             joblib.delayed(_run_ag_single)(
-                text, grammar_file, args, test_text=test_text,
+                text, grammar_file, args[n], test_text=test_text,
                 log_level=log.getEffectiveLevel(),
                 log_name='wordseg-ag - run {}'.format(n + 1))
             for n in range(nruns))
 
-    log.info('collapsing the results%s', '' if ignore_first_parses == 0 else
-             ', ignore the {} first parses of each run'.format(
-                 ignore_first_parses))
-    trees = (tree for trees in raw_trees for tree
-             in _yield_trees(trees, ignore_firsts=ignore_first_parses))
+    log.info(
+        'collapsing the parse trees%s', '' if ignore_first_parses == 0 else
+        ', ignore the {} first parses of each run'.format(ignore_first_parses))
+    trees = [tree for trees in raw_trees for tree
+             in _yield_trees(trees, ignore_firsts=ignore_first_parses)]
+    log.info('collapsed %s trees', len(trees))
 
+    # TODO extract the most common tree before doing the tree2words ->
+    # make the trees hashable. That step can be parallelized too.
     log.info('extracting boundaries for category "{}"'
              .format(segment_category))
     segmented = (
-        '\n'.join(_tree2words(
-            tree,
-            score_category_re=segment_category))
+        '\n'.join(_tree2words(tree, score_category_re=segment_category))
         for tree in trees)
 
     # get the most frequent parse found in the sequence of parses
-    most_frequent = collections.Counter(segmented).most_common(1)[0][0]
+    most_frequent, count = collections.Counter(segmented).most_common(1)[0]
+    log.info('extracted most frequent tree (count=%s)', count)
 
     # return it as a list of utterances
     return most_frequent.split('\n')

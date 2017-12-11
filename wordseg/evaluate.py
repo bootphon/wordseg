@@ -217,6 +217,11 @@ def evaluate(text, gold, separator=_DEFAULT_SEPARATOR):
         'boundary_recall': boundary_eval.recall()}
 
 
+def _load_text(text):
+    """Returns a list of non-empty stiped lines from ``text``"""
+    return [l for l in (l.strip() for l in text) if l]
+
+
 @utils.CatchExceptions
 def main():
     """Entry point of the 'wordseg-eval' command"""
@@ -228,11 +233,11 @@ def main():
             'gold', metavar='<gold-file>',
             help='gold file to evaluate the input data on'))
 
-    # load the gold text as a list of utterances
-    gold = [l.strip() for l in codecs.open(args.gold, 'r', encoding='utf8')]
+    # load the gold text as a list of utterances, remove empty lines
+    gold = _load_text(codecs.open(args.gold, 'r', encoding='utf8'))
 
-    # load the text as a list of utterances
-    text = [l.strip() for l in streamin]
+    # load the text as a list of utterances, remove empty lines
+    text = _load_text(streamin)
 
     # evaluation returns a dict of 'score name' -> float
     results = evaluate(text, gold)
