@@ -30,6 +30,8 @@ on master branch (not yet released)
 
     * **wordseg-dibs** has been debugged (#16).
 
+    * **wordseg-ag** has been debugged.
+
     * The following characters are now forbidden in separators, they
       interfer with regular expression matching::
 

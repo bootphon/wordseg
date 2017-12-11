@@ -357,7 +357,7 @@ def build_colloc0_grammar(phones):
     return g
 
 
-def _is_parent_in_grammar(grammar_file, parent):
+def is_parent_in_grammar(grammar_file, parent):
     """Returns True if the `parent` is in the grammar
 
     Parents are the first word of each line in the grammar file.
@@ -433,25 +433,7 @@ def _run_ag_single(text, grammar_file, args, test_text=None,
             shlex.split(command),
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE)  # ,
-        # bufsize=1)
-
-        # # send input text
-        # process.stdin.write(train_text.encode('utf8'))
-        # process.stdin.close()
-        # parses = ''
-        # while True:
-        #     line_out = process.stdout.read(1024).decode('utf8')
-        #     line_err = process.stderr.read(1024).decode('utf8')
-        #     if line_out == "" and line_err == "":
-        #         break
-        #     if line_err != "":
-        #         log.debug(re.sub('^# ', '', line_err).strip())
-        #     if line_out != "":
-        #         parses += line_out
-        #     # log.error(len(parses))
-        # process.wait()
-
+            stderr=subprocess.PIPE)
         parses, messages = process.communicate(train_text.encode('utf8'))
 
         # log.debug the AG messages AFTER EXECUTION
@@ -465,8 +447,6 @@ def _run_ag_single(text, grammar_file, args, test_text=None,
                 'fails with error code {}'.format(process.returncode))
 
         return parses.decode('utf8').strip().split('\n')
-    # except:
-    #     process.kill()
     finally:
         shutil.rmtree(temp_dir)
 
@@ -488,7 +468,7 @@ def _yield_trees(trees, ignore_firsts=0):
             tree.append(line)
 
     # yield the last tree
-    if len(tree) > 0 and ntrees > ignore_firsts:
+    if len(tree) > 0 and ntrees >= ignore_firsts:
         yield tree
 
 
@@ -625,12 +605,36 @@ def _tree2words(tree, nepochs=0, skip=0, rate=1,
     return words
 
 
+def _most_common_parses(trees):
+    """For each utterance in the text find its more common parse in trees"""
+    nutts = len(trees[0])
+    for utt_idx in range(nutts):
+        utterances = (tree[utt_idx] for tree in trees)
+        yield collections.Counter(utterances).most_common(1)[0][0]
+
+
+def _setup_seed(args, nruns):
+    """Setup a unique seed for each run in `args`"""
+    new = [args] * nruns
+    for n in range(nruns):
+        if '-r' in args:
+            # extract the seed from the arguments string
+            seed = int(re.sub(r'^.*\-r *([0-9]+).*$', '\g<1>', args))
+
+            # setup new seed for each run
+            new[n] = re.sub('\-r *([0-9]+)', '-r {}'.format(seed + n), args)
+        else:
+            new[n] = args + ' -r {}'.format(random.randint(0, 2**16))
+    return new
+
+
 def segment(text, grammar_file, segment_category,
             args=DEFAULT_ARGS, test_text=None, ignore_first_parses=0,
             nruns=8, njobs=1, log=utils.null_logger()):
     """Segment a text using the Adaptor Grammar algorithm
 
-    The algorithm is ran 8 times in parallel and the results are collapsed
+    The algorithm is ran 8 times in parallel and the results are
+    collapsed. We ensure the random seed to be different for each run.
 
     Parameters
     ----------
@@ -673,7 +677,7 @@ def segment(text, grammar_file, segment_category,
 
     """
     # make sure the segment category is valid
-    if not _is_parent_in_grammar(grammar_file, segment_category):
+    if not is_parent_in_grammar(grammar_file, segment_category):
         raise RuntimeError(
             'category "{}" not found in the grammar'
             .format(segment_category))
@@ -693,18 +697,7 @@ def segment(text, grammar_file, segment_category,
     # ensure we have a different seed for all runs. If the seed is
     # specified in command line (-r SEED) then feed SEED+i for i the
     # ith run. Else put a random seed to each run.
-    args_new = [args] * nruns
-    if '-r' in args:
-        prefix, suffix = tuple(args.split('-r '))
-        suffix = suffix.split(' ')
-        seed = int(suffix[0])
-        suffix = ' '.join(suffix[1:])
-        for n in range(nruns):
-            args_new[n] = prefix + '-r {} '.format(seed + n) + suffix
-    else:
-        for n in range(nruns):
-            args_new[n] = args + ' -r {}'.format(random.randint(0, 2**16))
-    args = args_new
+    args = _setup_seed(args, nruns)
     log.debug('random seeds are: %s', ', '.join(
         [arg.split('-r ')[1].split(' ')[0] for arg in args]))
 
@@ -712,6 +705,7 @@ def segment(text, grammar_file, segment_category,
     # `nruns_inner` raw parse trees we need to postprocess to obtain
     # words.
     log.info('running (%d times)...', nruns)
+
     raw_trees = joblib.Parallel(
         n_jobs=njobs, backend="threading", verbose=0)(
             joblib.delayed(_run_ag_single)(
@@ -723,24 +717,24 @@ def segment(text, grammar_file, segment_category,
     log.info(
         'collapsing the parse trees%s', '' if ignore_first_parses == 0 else
         ', ignore the {} first parses of each run'.format(ignore_first_parses))
-    trees = [tree for trees in raw_trees for tree
-             in _yield_trees(trees, ignore_firsts=ignore_first_parses)]
-    log.info('collapsed %s trees', len(trees))
 
-    # TODO extract the most common tree before doing the tree2words ->
-    # make the trees hashable. That step can be parallelized too.
-    log.info('extracting boundaries for category "{}"'
-             .format(segment_category))
-    segmented = (
-        '\n'.join(_tree2words(tree, score_category_re=segment_category))
-        for tree in trees)
+    trees = [
+        tree for trees in raw_trees for tree
+        in _yield_trees(trees, ignore_firsts=ignore_first_parses)]
 
-    # get the most frequent parse found in the sequence of parses
-    most_frequent, count = collections.Counter(segmented).most_common(1)[0]
-    log.info('extracted most frequent tree (count=%s)', count)
+    log.info(
+        'collapsed %s trees, extracting boundaries for category "%s"',
+        len(trees), segment_category)
 
-    # return it as a list of utterances
-    return most_frequent.split('\n')
+    segmented_trees = [
+        _tree2words(tree, score_category_re=segment_category)
+        for tree in trees]
+
+    # for each utterance, get the most frequent parse found in the
+    # sequence of parses
+    log.info('extracting most common parse of each utterance')
+    segmented = _most_common_parses(segmented_trees)
+    return list(segmented)
 
 
 def _add_arguments(parser):

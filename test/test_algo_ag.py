@@ -31,6 +31,36 @@ def test_ag_single_run(prep):
         assert len(tree) == len(prep)
 
 
+def test_most_common_parse():
+    # 5 utterances in 3 trees
+    matrix = [
+        [1, 1, 1, 1, 1],
+        [1, 1, 2, 1, 1],
+        [2, 2, 2, 2, 2]]
+    expected = [1, 1, 2, 1, 1]
+
+    assert list(ag._most_common_parses(matrix)) == expected
+
+
+def test_yield_trees():
+    def aux(trees, n):
+        return list(ag._yield_trees(trees, ignore_firsts=n))
+
+    assert aux(['a', '', 'b', '', 'c'], 0) == [['a'], ['b'], ['c']]
+    assert aux(['a', '', 'b', '', 'c'], 1) == [['b'], ['c']]
+    assert aux(['a', '', 'b', '', 'c'], 2) == [['c']]
+    assert aux(['a', '', 'b', '', 'c'], 3) == []
+    assert aux([], 3) == []
+
+
+def test_setup_seed():
+    s = ag._setup_seed
+    assert len(s('', 2)) == 2
+    assert s('-b -r 1 -a 2', 1) == ['-b -r 1 -a 2']
+    assert s('-b -r 1 -a 2', 1) == ['-b -r 1 -a 2']
+    assert s('-b -r 5 -a 2', 2) == ['-b -r 5 -a 2', '-b -r 6 -a 2']
+
+
 @pytest.mark.parametrize('grammar, level', grammars)
 def test_grammars(prep, grammar, level):
     grammar = os.path.join(grammar_dir, grammar)

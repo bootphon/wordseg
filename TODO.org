@@ -1,4 +1,14 @@
-* for wordseg-0.6 [7/8]
+* for a next release
+** Python side
+- [ ] optimize wordseg-tp (slower than before according to Georgia)
+- [ ] refactor segment() in ag and dpseg
+  We want an easy access to arguments from Python and from config file
+** C++ side
+- [ ] debug wordseg-ag so that it can compile painlessly on MacOS
+- [ ] optimize dpseg and ag
+- [ ] refactor C++ code in ag (C++11, stdlib, etc.)
+- [ ] make a wordseg.so for dpseg/ag common code
+* for wordseg-0.6 [8/8]
 ** DONE debug the type/token evaluation
 ** DONE debug wordseg-dibs
    must output the same results as the original one from R. Daland / CDSWordSeg
@@ -38,7 +48,8 @@
   the RandOracle model should have low enough performance that it
   could be ruled out as a possible model of early infant
   segmentation.
-** TODO debug wordseg-ag [3/5]
+** DONE debug wordseg-ag [5/5]
+   CLOSED: [2017-12-11 lun. 16:51]
 *** Different scores when running same text/same parameters
    score               CDS     wordseg
    -----------------------------------
@@ -83,15 +94,20 @@ wordseg 0       0       1       0       0       100     1       0       1       
   boundary_fscore     0.6854  0.4093
   boundary_precision  0.5679  0.3693
   boundary_recall     0.8644  0.459
-*** TODO issue does not come from postprocessing
-*** TODO replicate results from CDSWordSeg
-* for a next release
-** Python side
-- [ ] optimize wordseg-tp (slower than before according to Georgia)
-- [ ] refactor segment() in ag and dpseg
-  We want an easy access to arguments from Python and from config file
-** C++ side
-- [ ] debug wordseg-ag so that it can compile painlessly on MacOS
-- [ ] optimize dpseg and ag
-- [ ] refactor C++ code in ag (C++11, stdlib, etc.)
-- [ ] make a wordseg.so for dpseg/ag common code
+*** DONE issue does not come from postprocessing
+- found a bug in CDSwordseg: NRED argument in AG recipe is in fact
+  NRED+1 (ie ask for 0 and get 1)
+- found a bug in most common counting
+*** DONE replicate results from CDSWordSeg
+    CLOSED: [2017-12-11 lun. 16:50]
+score               CDS     wordseg
+-----------------------------------
+type_fscore         0.2903  0.2931
+type_precision      0.2712  0.2812
+type_recall         0.3123  0.306
+token_fscore        0.4115  0.4215
+token_precision     0.3471  0.3628
+token_recall        0.5054  0.5027
+boundary_fscore     0.6638  0.6602
+boundary_precision  0.549   0.5583
+boundary_recall     0.8391  0.8076
