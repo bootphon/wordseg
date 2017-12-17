@@ -1,14 +1,20 @@
 # Building script for the ag program (Pitman-Yor Context Free Grammar,
 # a.k.a Adaptor Grammar)
 
+# to avoid a warning (cmake complains for a mix of relative and
+# absolute paths for linked libraries)
+if(COMMAND cmake_policy)
+  cmake_policy(SET CMP0003 NEW)
+endif(COMMAND cmake_policy)
+
 # looking for -pthread
 find_package(Threads)
 
 # looking for boost libraries
-find_package(Boost REQUIRED COMPONENTS iostreams)
-
+find_package(Boost REQUIRED COMPONENTS iostreams program_options)
 
 # compiling a C++11 program
+set(CMAKE_CXX_COMPILER "g++")
 set(CMAKE_CXX_FLAGS "-std=c++11 -Wall")
 
 option(AG_QUADRUPLE "compile ag with quadruple precision floating point numbers" OFF)
@@ -37,7 +43,7 @@ message(STATUS "Option AG_PARALLEL is ${AG_PARALLEL}")
 file(GLOB SOURCES src/*.cc include/*)
 
 # ag binary linked on dependencies
-include_directories(include)
+include_directories(include ${Boost_INCLUDE_DIRS})
 add_executable(ag ${SOURCES})
 target_link_libraries(ag ${CMAKE_THREAD_LIBS_INIT} ${Boost_LIBRARIES})
 if(AG_PARALLEL)

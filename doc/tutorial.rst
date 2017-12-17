@@ -70,20 +70,7 @@ input text file (in phonological form) as argument:
    :language: bash
 
 From the tutorial directory, we can execute the script and display the
-result in a table with ``../doc/tutorial.sh phonologic.txt | column
--t``. This should output someting like that::
-
-  score            tp       puddle   dibs
-  ---------------  -------  -------  -------
-  type_f-score     0.3261   0.319    0.03954
-  type_precision   0.3027   0.5297   0.02597
-  type_recall      0.3536   0.2282   0.08281
-  token_f-score    0.3261   0.319    0.03954
-  token_precision  0.3027   0.5297   0.02597
-  token_recall     0.3536   0.2282   0.08281
-  bound_f-score    0.5824   0.462    0.4375
-  bound_precision  0.5343   0.9278   0.28
-  bound_recall     0.6399   0.3075   1
+result in a table with ``../doc/tutorial.sh phonologic.txt | column -t``.
 
 
 Python tutorial
@@ -95,17 +82,52 @@ implements exactly the same process as the bash one:
 .. literalinclude:: tutorial.py
    :language: python
 
-We can execute it using ``../doc/tutorial.py phonologic.txt | column
--t``. As previously, this should output something like::
+We can execute it using ``../doc/tutorial.py phonologic.txt | column -t``.
 
-  score             tp       puddle   dibs
-  ----------------  -------  -------  -------
-  type_f-score      0.3261   0.3836   0.03954
-  type_precision    0.3027   0.569    0.02597
-  type_recall       0.3536   0.2893   0.08281
-  token_f-score     0.3261   0.3836   0.03954
-  token_precision   0.3027   0.569    0.02597
-  token_recall      0.3536   0.2893   0.08281
-  bound_f-score     0.5824   0.5519   0.4375
-  bound_precision   0.5343   0.9289   0.28
-  bound_recall      0.6399   0.3926   1
+Expected output
+---------------
+
+The bash and python give the same result, it should be something like::
+
+  * Statistics
+
+  {
+  "corpus":             {
+    "nutts":              1000,
+    "nutts_single_word":  118,
+    "nword_tokens":       6824,
+    "nword_types":        1392,
+    "nword_hapax":        857,
+    "mattr":              0.9354710889345312,
+    "entropy":            0.015144673474006031
+  },
+  "words":              {
+    "tokens":             6824,
+    "tokens/utt":         6.824,
+    "types":              1392,
+    "token/types":        4.902298850574713,
+    "uniques":            857
+  },
+  "phones":             {
+    "tokens":             22157,
+    "tokens/utt":         22.157,
+    "tokens/word":        3.2469226260257913,
+    "types":              60,
+    "token/types":        369.28333333333336,
+    "uniques":            0
+  }
+  }
+
+  * Evaluation
+
+  score                 baseline  tp        puddle    dpseg
+  ------------------ -------- -------- -------- --------
+  type_fscore           0.1005    0.1866    0.1188    0.369
+  type_precision        0.07154   0.1505    0.1245    0.4503
+  type_recall           0.1688    0.2457    0.1135    0.3125
+  token_fscore          0.07549   0.3246    0.2626    0.6244
+  token_precision       0.087     0.2974    0.4848    0.5743
+  token_recall          0.06668   0.3571    0.1801    0.6842
+  boundary_fscore       0.2405    0.592     0.3941    0.8141
+  boundary_precision    0.2858    0.5357    0.9446    0.7396
+  boundary_recall       0.2076    0.6616    0.249     0.9054

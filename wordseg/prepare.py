@@ -1,10 +1,16 @@
 """Prepare an input text for word segmentation
 
-The input text must be in a phonologized form (TODO define that). The
-input text is checked for errors in formatting (presence of
-punctuation, missing separators, etc...). The program fails on the
-first encountered error, or ignore them if the "--tolerant" option is
-used.
+* The input text must be in a phonologized form (a suite of phones,
+  syllables or words tokens as specified by the token separator).
+
+* The input text is checked for errors in formatting (presence of
+  punctuation, missing separators, etc...).
+
+* The output text contains space separated phones (or syllables
+  according to the *unit* option).
+
+* The program fails on the first encountered error, or ignore them if
+  the *tolerant* option is used.
 
 """
 
@@ -33,7 +39,7 @@ def _pairwise(l):
         yield a, b
 
 
-def check_utterance(utterance, separator=Separator()):
+def check_utterance(utterance, separator=Separator(), check_punctuation=True):
     """Ensures an utterance is in a valid phonological form
 
     Parameters
@@ -41,7 +47,11 @@ def check_utterance(utterance, separator=Separator()):
     utterance : str
         The utterance to be checked
     separator : Separator, optional
-        The phonological levels separation in the `utterance`
+        The token separators used in the `utterance`
+    check_punctuation : bool, optional
+        When True (default), forbid any punctuation character in the
+        utterance and raise ValueError if any punctuation is
+        found. When False, do not check punctiation.
 
     Returns
     -------
@@ -52,13 +62,15 @@ def check_utterance(utterance, separator=Separator()):
     ------
     ValueError
         If one of the following errors is detected:
+
         * `utterance` is empty or is not a string
         * `utterance` contains any punctuation character (once the
-           separators are removed)
+          separators are removed), only if `check_punctuation` is
+          True
         * `utterance` begins with a separator
         * `utterance` does not end with a word separator
         * `utterance` contains syllable tokens but a word does not end
-           with a syllable separator
+          with a syllable separator
 
     """
     # utterance is empty or not a string (or unicode for python2)
@@ -72,9 +84,10 @@ def check_utterance(utterance, separator=Separator()):
 
     # search any punctuation in utterance (take care to remove token
     # separators first)
-    cleaned_utterance = separator.remove(utterance)
-    if punctuation_re.sub('', cleaned_utterance) != cleaned_utterance:
-        raise ValueError('punctuation found in utterance')
+    if check_punctuation is True:
+        cleaned_utterance = separator.remove(utterance)
+        if punctuation_re.sub('', cleaned_utterance) != cleaned_utterance:
+            raise ValueError('punctuation found in utterance')
 
     # utterance begins with a separator
     for sep in separator.iterate():
@@ -100,7 +113,8 @@ def check_utterance(utterance, separator=Separator()):
     return True
 
 
-def prepare(text, separator=Separator(), unit='phone', tolerant=False,
+def prepare(text, separator=Separator(), unit='phone',
+            check_punctuation=True, tolerant=False,
             log=utils.null_logger()):
     """Prepares a text in phonological form for word segmentation
 
@@ -125,6 +139,10 @@ def prepare(text, separator=Separator(), unit='phone', tolerant=False,
     unit : str, optional
         The unit representation level to prepare the `text` at, must
         be 'syllable' or 'phone'.
+    check_punctuation : bool, optional
+        When True (default), forbid any punctuation character in the
+        utterance and raise ValueError if any punctuation is
+        found. When False, do not check punctiation.
     tolerant : bool, optional
         If False, raise ValueError on the first format error detected
         in the `text`. If True, the badly formated utterances are
@@ -134,7 +152,7 @@ def prepare(text, separator=Separator(), unit='phone', tolerant=False,
 
     Returns
     -------
-    generator
+    prepared_text : generator
         Utterances from the `text` with separators removed, prepared
         for segmentation at a syllable or phoneme representation level
         (separated by space).
@@ -173,23 +191,24 @@ def prepare(text, separator=Separator(), unit='phone', tolerant=False,
             continue
 
         try:
-            check_utterance(line, separator)
+            check_utterance(
+                line, separator, check_punctuation=check_punctuation)
             yield utils.strip(func(line))
         except ValueError as err:
-            if tolerant:
-                log.info('removing line %d: "%s"', n, line)
+            if tolerant is True:
+                log.info('removing line %d: "%s"', n + 1, line)
                 nremoved += 1
             else:
-                raise err
+                raise ValueError('line {}: {}'.format(n + 1, err))
 
-    if nremoved:
+    if nremoved > 0:
         log.warning('removed %d badly formatted utterances', nremoved)
 
 
 def gold(text, separator=Separator()):
     """Returns a gold text from a phonologized one
 
-    The returned gold text is the ground-truth segmentationg. It has
+    The returned gold text is the ground-truth segmentation. It has
     phone and syllable separators removed and word separators replaced
     by a single space ' '. It is used to evaluate the output of
     segmentation algorithms.
@@ -205,8 +224,8 @@ def gold(text, separator=Separator()):
 
     Returns
     -------
-    generator
-        Gold text with separators removed and words separated by
+    gold_text : generator
+        Gold utterances with separators removed and words separated by
         spaces. The returned text is the gold version, against which
         the algorithms are evaluated.
 
@@ -238,8 +257,14 @@ def main():
             encountered error)''')
 
         parser.add_argument(
+            '-P', '--punctuation', action='store_true',
+            help='punctuation characters are not considered illegal')
+
+        group = [g for g in parser._action_groups
+                 if g.title == 'input/output arguments'][0]
+        group.add_argument(
             '-g', '--gold', type=str, metavar='<gold-file>',
-            help='''Generates the gold text to the specified file,
+            help='''generates the gold text to the specified file,
             do not generate gold if no file specified''')
 
     # command initialization
@@ -255,7 +280,8 @@ def main():
 
     # check all the utterances are correctly formatted.
     prep = utils.CountingIterator(prepare(
-        streamin, separator, unit=args.unit, tolerant=args.tolerant))
+        streamin, separator, unit=args.unit, log=log,
+        check_punctuation=not args.punctuation, tolerant=args.tolerant))
 
     # write prepared text, one utterance a line, ending with a newline
     streamout.write('\n'.join(prep) + '\n')

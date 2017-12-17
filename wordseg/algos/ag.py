@@ -1,4 +1,4 @@
-"""Adaptor Grammar
+"""Learn parse trees from a grammar (Adaptor Grammar)
 
 The grammar consists of a sequence of rules, one per line, in the
 following format::
@@ -139,15 +139,17 @@ nonterminal is not adapted.
 # gold file we do not want to expose here. An alternative (still to
 # code) is to have something like "for i in 1..5 do wordseg-ag |
 # wordseg-eval done > extract_median_result""
-#
 
+
+import codecs
 import collections
 import joblib
 import logging
 import os
-import pkg_resources
+import random
 import re
 import shlex
+import shutil
 import subprocess
 import tempfile
 
@@ -311,8 +313,8 @@ DEFAULT_ARGS = ('-E -d 0 -a 0.0001 -b 10000 -e 1 -f 1 '
 def get_grammar_files():
     """Returns a list of example grammar files bundled with wordseg
 
-    Grammar files have the *.lt extension and are stored in the
-    directory `wordseg/config/ag`.
+    Grammar files have the \*.lt extension and are stored in the
+    directory `wordseg/data/ag`.
 
     Raises
     ------
@@ -323,31 +325,45 @@ def get_grammar_files():
         If 'wordseg' is not correctly installed
 
     """
-    # retrieve the configuration directory, may raise
-    # DistributionNotFound
-    grammar_dir = pkg_resources.resource_filename(
-        pkg_resources.Requirement.parse('wordseg'),
-        'config/ag')
-
-    if not os.path.isdir(grammar_dir):
-        raise RuntimeError(
-            'grammar directory not found: {}'.format(grammar_dir))
-
-    # retrieve all the grammar files in that directory
-    grammar_files = [f for f in os.listdir(grammar_dir) if f.endswith('.lt')]
-    if len(grammar_files) == 0:
-        raise RuntimeError('no *.lt files in {}'.format(grammar_dir))
-
-    return [os.path.join(grammar_dir, f) for f in grammar_files]
+    return utils.get_config_files('ag', '.lt')
 
 
-def _is_parent_in_grammar(grammar_file, parent):
+def build_colloc0_grammar(phones):
+    """Builds a Colloc0 grammar from a list of phones
+
+    Parameters
+    ----------
+    phones : list of str
+        The list of existing phones in the grammar
+
+    Returns
+    -------
+    grammar : str
+        The generated grammar as a string, just have a open(file,
+        'w').write(grammar) to save it to disk.
+
+    """
+    g = '\n'.join([
+        "1 1 Sentence --> Colloc0s",
+        "1 1 Colloc0s --> Colloc0",
+        "1 1 Colloc0s --> Colloc0 Colloc0s",
+        "Colloc0 --> Phonemes",
+        "1 1 Phonemes --> Phoneme",
+        "1 1 Phonemes --> Phoneme Phonemes"]) + '\n'
+
+    for p in sorted(phones):
+        g += '1 1 Phoneme -->' + p + '\n'
+
+    return g
+
+
+def is_parent_in_grammar(grammar_file, parent):
     """Returns True if the `parent` is in the grammar
 
     Parents are the first word of each line in the grammar file.
 
     """
-    for line in open(grammar_file, 'r'):
+    for line in codecs.open(grammar_file, 'r', encoding='utf8'):
         if line.split(' ')[0] == parent:
             return True
     return False
@@ -396,11 +412,12 @@ def _run_ag_single(text, grammar_file, args, test_text=None,
     # we need to write the test text as a tempfile, so we create a
     # tempdir. The directory and its content is automatically erased
     # when done
-    with tempfile.TemporaryDirectory() as temp_dir:
+    temp_dir = tempfile.mkdtemp()
+    try:
         # write the test text as a temporary file. ylt extension is
         # the one used in the original AG implementation
         test_tmpfile = os.path.join(temp_dir, 'test.ylt')
-        open(test_tmpfile, 'w', encoding='utf8').write(test_text)
+        codecs.open(test_tmpfile, 'w', encoding='utf8').write(test_text)
 
         # generate the command to run as a subprocess
         command = ('{binary} {grammar} {args} -u {test} -U cat'.format(
@@ -409,13 +426,14 @@ def _run_ag_single(text, grammar_file, args, test_text=None,
             args=args,
             test=test_tmpfile))
 
+        log.info('running %s', command)
+
         # run the command as a subprocess
         process = subprocess.Popen(
             shlex.split(command),
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE)
-
         parses, messages = process.communicate(train_text.encode('utf8'))
 
         # log.debug the AG messages AFTER EXECUTION
@@ -428,7 +446,9 @@ def _run_ag_single(text, grammar_file, args, test_text=None,
             raise RuntimeError(
                 'fails with error code {}'.format(process.returncode))
 
-    return parses.decode('utf8').strip().split('\n')
+        return parses.decode('utf8').strip().split('\n')
+    finally:
+        shutil.rmtree(temp_dir)
 
 
 def _yield_trees(trees, ignore_firsts=0):
@@ -448,7 +468,7 @@ def _yield_trees(trees, ignore_firsts=0):
             tree.append(line)
 
     # yield the last tree
-    if len(tree) > 0 and ntrees > ignore_firsts:
+    if len(tree) > 0 and ntrees >= ignore_firsts:
         yield tree
 
 
@@ -585,12 +605,36 @@ def _tree2words(tree, nepochs=0, skip=0, rate=1,
     return words
 
 
+def _most_common_parses(trees):
+    """For each utterance in the text find its more common parse in trees"""
+    nutts = len(trees[0])
+    for utt_idx in range(nutts):
+        utterances = (tree[utt_idx] for tree in trees)
+        yield collections.Counter(utterances).most_common(1)[0][0]
+
+
+def _setup_seed(args, nruns):
+    """Setup a unique seed for each run in `args`"""
+    new = [args] * nruns
+    for n in range(nruns):
+        if '-r' in args:
+            # extract the seed from the arguments string
+            seed = int(re.sub(r'^.*\-r *([0-9]+).*$', '\g<1>', args))
+
+            # setup new seed for each run
+            new[n] = re.sub('\-r *([0-9]+)', '-r {}'.format(seed + n), args)
+        else:
+            new[n] = args + ' -r {}'.format(random.randint(0, 2**16))
+    return new
+
+
 def segment(text, grammar_file, segment_category,
             args=DEFAULT_ARGS, test_text=None, ignore_first_parses=0,
             nruns=8, njobs=1, log=utils.null_logger()):
     """Segment a text using the Adaptor Grammar algorithm
 
-    The algorithm is ran 8 times in parallel and the results are collapsed
+    The algorithm is ran 8 times in parallel and the results are
+    collapsed. We ensure the random seed to be different for each run.
 
     Parameters
     ----------
@@ -633,9 +677,9 @@ def segment(text, grammar_file, segment_category,
 
     """
     # make sure the segment category is valid
-    if not _is_parent_in_grammar(grammar_file, segment_category):
+    if not is_parent_in_grammar(grammar_file, segment_category):
         raise RuntimeError(
-            'category "{}" not found in the grammar, segmentation will fail'
+            'category "{}" not found in the grammar'
             .format(segment_category))
 
     # force the train text from sequence to list
@@ -650,37 +694,47 @@ def segment(text, grammar_file, segment_category,
         log.info('no test text provided, segmentation on train data')
     log.info('parameters are: "%s"', args)
 
+    # ensure we have a different seed for all runs. If the seed is
+    # specified in command line (-r SEED) then feed SEED+i for i the
+    # ith run. Else put a random seed to each run.
+    args = _setup_seed(args, nruns)
+    log.debug('random seeds are: %s', ', '.join(
+        [arg.split('-r ')[1].split(' ')[0] for arg in args]))
+
     # parallel runs of the AG algorithm, raw_parses is a list of
     # `nruns_inner` raw parse trees we need to postprocess to obtain
     # words.
     log.info('running (%d times)...', nruns)
+
     raw_trees = joblib.Parallel(
         n_jobs=njobs, backend="threading", verbose=0)(
             joblib.delayed(_run_ag_single)(
-                text, grammar_file, args, test_text=test_text,
+                text, grammar_file, args[n], test_text=test_text,
                 log_level=log.getEffectiveLevel(),
                 log_name='wordseg-ag - run {}'.format(n + 1))
             for n in range(nruns))
 
-    log.info('collapsing the results%s', '' if ignore_first_parses == 0 else
-             ', ignore the {} first parses of each run'.format(
-                 ignore_first_parses))
-    trees = (tree for trees in raw_trees for tree
-             in _yield_trees(trees, ignore_firsts=ignore_first_parses))
+    log.info(
+        'collapsing the parse trees%s', '' if ignore_first_parses == 0 else
+        ', ignore the {} first parses of each run'.format(ignore_first_parses))
 
-    log.info('extracting boundaries for category "{}"'
-             .format(segment_category))
-    segmented = (
-        '\n'.join(_tree2words(
-            tree,
-            score_category_re=segment_category))
-        for tree in trees)
+    trees = [
+        tree for trees in raw_trees for tree
+        in _yield_trees(trees, ignore_firsts=ignore_first_parses)]
 
-    # get the most frequent parse found in the sequence of parses
-    most_frequent = collections.Counter(segmented).most_common(1)[0][0]
+    log.info(
+        'collapsed %s trees, extracting boundaries for category "%s"',
+        len(trees), segment_category)
 
-    # return it as a list of utterances
-    return most_frequent.split('\n')
+    segmented_trees = [
+        _tree2words(tree, score_category_re=segment_category)
+        for tree in trees]
+
+    # for each utterance, get the most frequent parse found in the
+    # sequence of parses
+    log.info('extracting most common parse of each utterance')
+    segmented = _most_common_parses(segmented_trees)
+    return list(segmented)
 
 
 def _add_arguments(parser):
@@ -796,7 +850,7 @@ def main():
         if not os.path.isfile(args.test_file):
             raise RuntimeError(
                 'test file not found: {}'.format(args.test_file))
-        test_text = open(args.test_file, 'r', encoding='utf8')
+        test_text = codecs.open(args.test_file, 'r', encoding='utf8')
 
     # call the AG algorithm
     segmented = segment(

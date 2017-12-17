@@ -2,6 +2,8 @@
 
 [![Documentation Status](https://readthedocs.org/projects/wordseg/badge/?version=latest)](http://wordseg.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.org/bootphon/wordseg.svg?branch=master)](https://travis-ci.org/bootphon/wordseg)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1101049.svg)](https://doi.org/10.5281/zenodo.1101049)
+
 
 
 ### Please see the online documentation at https://wordseg.readthedocs.io ###

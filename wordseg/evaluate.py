@@ -1,6 +1,6 @@
-"""Word segmentation evaluation.
+"""Word segmentation evaluation
 
-Evaluates a segmented text against it's gold version. Display the
+Evaluates a segmented text against it's gold version: outputs the
 precision, recall and f-score at type, token and boundary levels.
 
 """
@@ -11,11 +11,12 @@ from wordseg import utils
 from wordseg.separator import Separator
 
 
-DEFAULT_SEPARATOR = Separator(None, None, ' ')
-"""Separation for words only, separated by ' '"""
+_DEFAULT_SEPARATOR = Separator(None, None, ' ')
+"""Separation for space separated words only"""
 
 
-class Evaluation:
+class _Evaluation:
+    """Auxiliary class to estimates precision, recall and fscore"""
     def __init__(self):
         self.test = 0
         self.gold = 0
@@ -41,8 +42,11 @@ class Evaluation:
         if test_set == gold_set:
             self.n_exactmatch += 1
 
-        self.test += len(test_set)
-        self.gold += len(gold_set)
+        # omit empty items for type scoring (should not affect token
+        # scoring). Type lists are prepared with '_' where there is no
+        # match, to keep list lengths the same
+        self.test += len([x for x in test_set if x != '_'])
+        self.gold += len([x for x in gold_set if x != '_'])
         self.correct += len(test_set & gold_set)
 
     def update_lists(self, test_sets, gold_sets):
@@ -55,7 +59,7 @@ class Evaluation:
             self.update(t, g)
 
 
-class StringPos(object):
+class _StringPos(object):
     """Compute start and stop index of words in an utterance"""
     def __init__(self):
         self.idx = 0
@@ -67,62 +71,139 @@ class StringPos(object):
         return start, self.idx
 
 
-def read_data(text, separator=DEFAULT_SEPARATOR):
+def read_data(text, separator=_DEFAULT_SEPARATOR):
     """Load text data for evaluation
 
-    :param list(str) text: a list of utterances
+    Parameters
+    ----------
+    text : list of str
+        The list of utterances to read for the evaluation.
+    separator : Separator, optional
+        Separators to tokenize the text with, default to space
+        separated words.
 
-    :param Separator separator: token separation to split the
-        utterances into words
-
-    :return: two lists (words, positions) where `words` are the input
-        utterences with word separators removed, and `positions`
-        stores the start/stop index of each word for each utterance.
+    Returns
+    -------
+    (words, positions, lexicon) : three lists
+        where `words` are the input utterences with word separators
+        removed, `positions` stores the start/stop index of each word
+        for each utterance, and `lexicon` is the list of words.
 
     """
-    words, positions = [], []
-    for line in text:
-        line = list(separator.split(line.strip(), level='word'))
-        words.append(''.join(line))
+    words = []
+    positions = []
+    lexicon = {}
 
-        idx = StringPos()
-        positions.append({idx(len(word)) for word in line})
-    return words, positions
+    for utt in text:
+        # the utterance with word separators removed
+        words.append(separator.remove(utt, 'word'))
+
+        # utt = list(separator.split(utt.strip(), level='word'))
+        utt = list(separator.tokenize(utt, 'word'))
+
+        # loop over words in line and add to dictionary
+        for word in utt:
+            lexicon[word] = 1
+
+        idx = _StringPos()
+        positions.append({idx(len(word)) for word in utt})
+
+    # return the words lexicon as a sorted list
+    lexicon = sorted([k for k in lexicon.keys()])
+    return words, positions, lexicon
 
 
 def _stringpos_boundarypos(stringpos):
     return [{left for left, _ in line if left > 0} for line in stringpos]
 
 
-def _stringpos_typepos(stringpos):
-    return [{pos for pos in line} for line in stringpos]
+def _lexicon_check(textlex, goldlex):
+    """Compare hypothesis and gold lexicons"""
+    textlist = []
+    goldlist = []
+    for w in textlex:
+        if w in goldlex:
+            # set up matching lists for the true positives
+            textlist.append(w)
+            goldlist.append(w)
+        else:
+            # false positives
+            textlist.append(w)
+            # ensure matching null element in text list
+            goldlist.append('_')
+
+    for w in goldlex:
+        if w not in goldlist:
+            # now for the false negatives
+            goldlist.append(w)
+            # ensure matching null element in text list
+            textlist.append('_')
+
+    textset = [{w} for w in textlist]
+    goldset = [{w} for w in goldlist]
+    return textset, goldset
 
 
-def evaluate(text, gold, separator=DEFAULT_SEPARATOR):
-    text_words, text_stringpos = read_data(text, separator)
-    gold_words, gold_stringpos = read_data(gold, separator)
+def evaluate(text, gold, separator=_DEFAULT_SEPARATOR):
+    """Scores a segmented text against its gold version
+
+    Parameters
+    ----------
+    text : sequence of str
+        A suite of word utterances.
+    gold : sequence of str
+        A suite of word utterances.
+    separator : Separator, optional
+        The token separation in `text` and `gold`, only word level is
+        considered, default to space separated words.
+
+    Returns
+    -------
+    scores : dict
+        A dictionnary with the following entries:
+
+        * 'type_fscore'
+        * 'type_precision'
+        * 'type_recall'
+        * 'token_fscore'
+        * 'token_precision'
+        * 'token_recall'
+        * 'boundary_fscore'
+        * 'boundary_precision'
+        * 'boundary_recall'
+
+    Raises
+    ------
+    ValueError
+        If `gold` and `text` have different size or differ in tokens
+
+    """
+    text_words, text_stringpos, text_lex = read_data(text, separator)
+    gold_words, gold_stringpos, gold_lex = read_data(gold, separator)
 
     if len(gold_words) != len(text_words):
-        raise RuntimeError(
+        raise ValueError(
             'gold and train have different size: len(gold)={}, len(train)={}'
             .format(len(gold_words), len(text_words)))
 
     for i, (g, t) in enumerate(zip(gold_words, text_words)):
         if g != t:
-            raise RuntimeError(
+            raise ValueError(
                 'gold and train differ at line {}: gold="{}", train="{}"'
-                .format(i+1), g, t)
+                .format(i+1, g, t))
 
-    type_eval = Evaluation()
-    type_eval.update_lists(_stringpos_typepos(text_stringpos),
-                           _stringpos_typepos(gold_stringpos))
+    # get text and gold sets from lexicons
+    type_eval = _Evaluation()
+    tl, gl = _lexicon_check(text_lex, gold_lex)
+    type_eval.update_lists(tl, gl)
 
-    token_eval = Evaluation()
+    token_eval = _Evaluation()
     token_eval.update_lists(text_stringpos, gold_stringpos)
 
-    boundary_eval = Evaluation()
-    boundary_eval.update_lists(_stringpos_boundarypos(text_stringpos),
-                               _stringpos_boundarypos(gold_stringpos))
+    boundary_eval = _Evaluation()
+    boundary_eval.update_lists(
+        _stringpos_boundarypos(text_stringpos),
+        _stringpos_boundarypos(gold_stringpos))
 
     return {
         'type_fscore': type_eval.fscore(),
@@ -136,22 +217,27 @@ def evaluate(text, gold, separator=DEFAULT_SEPARATOR):
         'boundary_recall': boundary_eval.recall()}
 
 
+def _load_text(text):
+    """Returns a list of non-empty stiped lines from ``text``"""
+    return [l for l in (l.strip() for l in text) if l]
+
+
 @utils.CatchExceptions
 def main():
     """Entry point of the 'wordseg-eval' command"""
     streamin, streamout, separator, log, args = utils.prepare_main(
         name='wordseg-eval',
         description=__doc__,
-        separator=DEFAULT_SEPARATOR,
+        separator=_DEFAULT_SEPARATOR,
         add_arguments=lambda parser: parser.add_argument(
             'gold', metavar='<gold-file>',
             help='gold file to evaluate the input data on'))
 
-    # load the gold text as a list of utterances
-    gold = [l.strip() for l in codecs.open(args.gold, 'r', encoding='utf8')]
+    # load the gold text as a list of utterances, remove empty lines
+    gold = _load_text(codecs.open(args.gold, 'r', encoding='utf8'))
 
-    # load the text as a list of utterances
-    text = [l.strip() for l in streamin]
+    # load the text as a list of utterances, remove empty lines
+    text = _load_text(streamin)
 
     # evaluation returns a dict of 'score name' -> float
     results = evaluate(text, gold)

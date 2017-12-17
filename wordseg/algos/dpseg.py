@@ -43,6 +43,7 @@ import threading
 
 from wordseg import utils, folding
 
+
 # # a list of dpseg options we don't want to expose in wordseg-dpseg
 # ['--help', '--data-file', '--data-start-index', '--data-num-sents',
 #  '--eval-start-index', '--eval-num-sents', '--output-file']
@@ -239,6 +240,7 @@ class UnicodeGenerator(object):
         self.index = start
 
     def __call__(self):
+        """Returns the next unicode character"""
         char = six.unichr(self.index)
         while re.match('\s', char):
             self.index += 1
@@ -335,7 +337,7 @@ def segment(text, nfolds=5, njobs=1,
     return (utt for utt in segmented_text if utt)
 
 
-def add_arguments(parser):
+def _add_arguments(parser):
     """Add algorithm specific options to the parser"""
     parser.add_argument(
         '-f', '--nfolds', type=int, metavar='<int>', default=5,
@@ -367,7 +369,7 @@ def main():
     streamin, streamout, _, log, args = utils.prepare_main(
         name='wordseg-dpseg',
         description=__doc__,
-        add_arguments=add_arguments)
+        add_arguments=_add_arguments)
 
     assert args.nfolds > 0
 

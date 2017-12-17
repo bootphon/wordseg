@@ -39,8 +39,8 @@ std::wstring str2wstr(std::string str)
 
 
 Model* get_sampler(CorpusData* data,
-                   const uint ngram, const std::string& mode, const std::string& estimator,
-                   const float forget_rate, const float decay_rate, const uint samples_per_utt)
+                   const unsigned int ngram, const std::string& mode, const std::string& estimator,
+                   const float forget_rate, const float decay_rate, const unsigned int samples_per_utt)
 {
     Model* sampler = NULL;
 
@@ -454,11 +454,11 @@ int main(int argc, char** argv)
     }
     // os.imbue(utf8_locale);
 
-    for(uint subject = 0; subject < vm["nsubjects"].as<uint>(); subject++)
+    for(unsigned int subject = 0; subject < vm["nsubjects"].as<unsigned int>(); subject++)
     {
         Model* sampler = get_sampler(
             &data,
-            vm["ngram"].as<uint>(),
+            vm["ngram"].as<unsigned int>(),
             vm["mode"].as<std::string>(),
             vm["estimator"].as<std::string>(),
             vm["forget-rate"].as<F>(),

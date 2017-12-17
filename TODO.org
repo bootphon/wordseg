@@ -1,0 +1,113 @@
+* for a next release
+** Python side
+- [ ] optimize wordseg-tp (slower than before according to Georgia)
+- [ ] refactor segment() in ag and dpseg
+  We want an easy access to arguments from Python and from config file
+** C++ side
+- [ ] debug wordseg-ag so that it can compile painlessly on MacOS
+- [ ] optimize dpseg and ag
+- [ ] refactor C++ code in ag (C++11, stdlib, etc.)
+- [ ] make a wordseg.so for dpseg/ag common code
+* for wordseg-0.6 [8/8]
+** DONE debug the type/token evaluation
+** DONE debug wordseg-dibs
+   must output the same results as the original one from R. Daland / CDSWordSeg
+** DONE implement wordseg-syll [5/5]
+- [X] adaptation of new-syllabify-corpus.pl
+- [X] add unit tests
+- [X] onset building as a separate function
+- [X] support input in ortho/phono form
+- [X] write a little doc
+** DONE implement wordseg-baseline
+** DONE implenent "corpus description" and entropy in wordseg-stats [4/4]
+- [X] implemement and entropy
+- [X] implement a CorpusStatisics class
+- [X] add tests for describe_tokens
+- [X] add stats in tutorial
+** DONE implement wordseg-cha
+   CLOSED: [2017-12-11 lun. 09:25]
+  From the cha2sel and sel2clean scripts. I realize the "selection and
+  cleaning" stage is gone -- i.e., if someone starts with .cha files
+  they'll have to re-implement the selection and cleaning that we have
+  in the CDSwordseg. I agree that this is conceptually separate and
+  would be different for every input style, so perhaps we should have
+  a mini-package that JUST does the cleaning for the CHA files. I
+  wouldn't want for this knowledge to disappear forever because I
+  think many in the community are re-inventing this wheel, and
+  sometimes not perfectly... (I know we had loads of bugs there...)
+** DONE implement wordseg-oracle
+   CLOSED: [2017-12-11 lun. 09:25]
+  An alternative baseline explored by Lignos (2012) is a random oracle
+  segmenter (RandOracle). The random oracle segments a corpus by
+  treating each possible boundary location as a Bernoulli trial. The
+  segmenter is an “oracle” in that it knows the true probability of a
+  boundary in the corpus. The random oracle inserts boundaries with
+  this same probability. This acts as a baseline for comparison,
+  representing the performance that could be achieved by randomly
+  guessing at the true boundary rate. Any model which does not surpass
+  the RandOracle model should have low enough performance that it
+  could be ruled out as a possible model of early infant
+  segmentation.
+** DONE debug wordseg-ag [5/5]
+   CLOSED: [2017-12-11 lun. 16:51]
+*** Different scores when running same text/same parameters
+   score               CDS     wordseg
+   -----------------------------------
+   type_fscore         0.2924  0.132
+   type_precision      0.2725  0.1233
+   type_recall         0.3155  0.142
+   token_fscore        0.4136  0.1455
+   token_precision     0.3507  0.1849
+   token_recall        0.5041  0.1199
+   boundary_fscore     0.6658  0.3089
+   boundary_precision  0.5539  0.4149
+   boundary_recall     0.8344  0.2461
+*** DONE issue does not come from C++
+    CLOSED: [2017-12-07 jeu. 23:02]
+     interverting binaries from CDS to wordseg do not change the results
+*** DONE issue does not come from parameters parsing
+    CLOSED: [2017-12-08 ven. 14:19]
+param   D       E       I       P       R       n       N       P       w       a       b       e       f       g       h       r       s       S       x       m       Z       z       T       t
+CDS     0       1       1       1       -1      100     1       1       1       0.0001  10000   1       1       100     0.01    14411   1       0       10      100     1       0       1       1
+wordseg 0       0       1       0       0       100     1       0       1       0.1     1000    0       0       0       0       15126   1       0       1       100     1       0       1       1
+                X               X       X                       X               X       X       X       X       X       X                               X
+        0       1       1       1       -1      100     1       1       1       0.0001  10000   1       1       0       0.01    15126   1       0       10      100     1       0       1       1
+
+*** DONE issue does not come from random seed
+- before debug
+  CDS seeds: 14887 5187 21683 20754 5358 30851 26059 18604
+  wordseg seeds: 1512684359 1512684359 1512684359 1512684359 1512684362 1512684362 1512684362 1512684362
+- after debug
+  CDS seeds: 3973 5378 10793 20945 12543 9498 30819 26250
+  wordseg seeds: 32201 1795 54905 43082 63812 15126 49144 39437
+- controlled seed
+  CDS seeds: 1 2 3 4 5 6 7 8
+  wordseg seeds: 4 2 3 1 5 6 8 7
+  score               CDS     wordseg
+  -----------------------------------
+  type_fscore         0.3191  0.1452
+  type_precision      0.3     0.1203
+  type_recall         0.3407  0.183
+  token_fscore        0.4436  0.1702
+  token_precision     0.3746  0.1554
+  token_recall        0.5436  0.188
+  boundary_fscore     0.6854  0.4093
+  boundary_precision  0.5679  0.3693
+  boundary_recall     0.8644  0.459
+*** DONE issue does not come from postprocessing
+- found a bug in CDSwordseg: NRED argument in AG recipe is in fact
+  NRED+1 (ie ask for 0 and get 1)
+- found a bug in most common counting
+*** DONE replicate results from CDSWordSeg
+    CLOSED: [2017-12-11 lun. 16:50]
+score               CDS     wordseg
+-----------------------------------
+type_fscore         0.2903  0.2931
+type_precision      0.2712  0.2812
+type_recall         0.3123  0.306
+token_fscore        0.4115  0.4215
+token_precision     0.3471  0.3628
+token_recall        0.5054  0.5027
+boundary_fscore     0.6638  0.6602
+boundary_precision  0.549   0.5583
+boundary_recall     0.8391  0.8076

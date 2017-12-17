@@ -17,8 +17,8 @@ work of several contributors.
   * Robert Daland (dibs)
   * Sharon Goldwater (dpseg)
   * Mark Jonhson (ag, dpseg, evaluation)
-  * Lisa Pearl (dpseg)
-  * Lawrence Phillips (dpseg)
+  * Lisa Pearl (dpseg, syllabification)
+  * Lawrence Phillips (dpseg, syllabification)
   * Amanda Saksida (tp)
 
 
