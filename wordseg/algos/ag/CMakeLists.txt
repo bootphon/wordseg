@@ -11,12 +11,11 @@ endif(COMMAND cmake_policy)
 find_package(Threads)
 
 # looking for boost libraries
-find_package(Boost REQUIRED COMPONENTS program_options)
+find_package(Boost REQUIRED COMPONENTS iostreams program_options)
 
 # compiling a C++11 program
 set(CMAKE_CXX_COMPILER "g++")
 set(CMAKE_CXX_FLAGS "-std=c++11 -Wall")
-
 
 option(AG_QUADRUPLE "compile ag with quadruple precision floating point numbers" OFF)
 if(AG_QUADRUPLE)

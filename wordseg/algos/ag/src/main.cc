@@ -48,13 +48,13 @@ const char usage[] =
 " -m anneal-its   -- anneal for this many iterations\n"
 " -Z ztemp        -- temperature used just before stopping\n"
 " -z zits         -- perform zits iterations at temperature ztemp at end of run\n"
-" -X eval-cmd     -- pipe each run's parses into this command (empty line separates runs)\n"
-" -Y eval-cmd     -- pipe each run's grammar-rules into this command (empty line separates runs)\n"
+// " -X eval-cmd     -- pipe each run's parses into this command (empty line separates runs)\n"
+// " -Y eval-cmd     -- pipe each run's grammar-rules into this command (empty line separates runs)\n"
 " -x eval-every   -- pipe trees into the eval-cmd every eval-every iterations\n"
 " -u test1.yld    -- test strings to be parsed (but not trained on) every eval-every iterations\n"
-" -U eval-cmd     -- parses of test1.yld are piped into this command\n"
-" -v test2.yld    -- test strings to be parsed (but not trained on) every eval-every iterations\n"
-" -V eval-cmd     -- parses of test2.yld are piped into this command\n"
+// " -U eval-cmd     -- parses of test1.yld are piped into this command\n"
+// " -v test2.yld    -- test strings to be parsed (but not trained on) every eval-every iterations\n"
+// " -V eval-cmd     -- parses of test2.yld are piped into this command\n"
 "\n"
 "The grammar consists of a sequence of rules, one per line, in the\n"
 "following format:\n"
@@ -126,7 +126,7 @@ const char usage[] =
 #include <unistd.h>
 #include <vector>
 
-#include "pstream.h"
+// #include "pstream.h"
 #include "py-cky.h"
 #include "sym.h"
 #include "xtree.h"
@@ -134,8 +134,26 @@ const char usage[] =
 typedef unsigned int U;
 typedef std::vector<Ss> Sss;
 
-typedef pstream::ostream* Postreamp;
-typedef std::vector<Postreamp> Postreamps;
+// namespace pstream {
+//     class ostream : public redi::opstream
+//     {
+//     public:
+//         ostream(const char* cmd)
+//             : redi::opstream(cmd) {}
+
+//         ostream(const std::string& cmd)
+//             : redi::opstream(cmd) {}
+
+//         ~ostream()
+//             {
+//                 this->close();
+//             }
+//     };
+// }
+// namespace pstream { using ostream = redi::opstream; }
+
+// typedef pstream::ostream* Postreamp;
+// typedef std::vector<Postreamp> Postreamps;
 
 int debug = 0;
 
@@ -159,7 +177,8 @@ struct RandomNumberGenerator : public std::unary_function<U,U> {
 
 F gibbs_estimate(pycfg_type& g, const Sss& trains,
 		 F train_frac, bool train_frac_randomise,
-		 Postreamps& evalcmds, U eval_every,
+		 // Postreamps& evalcmds,
+                 U eval_every,
 		 U niterations,
 		 F anneal_start, F anneal_stop, U anneal_its,
 		 F z_temp, U z_its,
@@ -170,9 +189,10 @@ F gibbs_estimate(pycfg_type& g, const Sss& trains,
 		 std::ostream* finalparses_stream_ptr,
 		 std::ostream* grammar_stream_ptr,
 		 std::ostream* trace_stream_ptr,
-		 const Sss& test1s, Postreamps& test1cmds,
-		 const Sss& test2s, Postreamps& test2cmds,
-		 Postreamps& grammarcmds) {
+		 const Sss& test1s, // Postreamps& test1cmds,
+		 const Sss& test2s // Postreamps& test2cmds,
+		 // Postreamps& grammarcmds
+    ) {
 
   typedef pycky::tree tree;
   typedef std::vector<tree*> tps_type;
@@ -331,64 +351,67 @@ F gibbs_estimate(pycfg_type& g, const Sss& trains,
     if (iteration % eval_every == 0) {  // do we print a trace at this iteration?
       for (U i = 0; i < n; ++i) {
 	if (train_flag[i])
-	  foreach (Postreamps, ecit, evalcmds) { // print this parse
-	    pstream::ostream& ec = **ecit;
-	    ec << tps[i] << std::endl;
-	  }
+            ;
+	  // foreach (Postreamps, ecit, evalcmds) { // print this parse
+	  //   pstream::ostream& ec = **ecit;
+	  //   ec << tps[i] << std::endl;
+	  // }
 	else {  // not trained on; sample a parse and print it
 	  p.inside(trains[i]);
 	  tree* tp = p.random_tree();
 	  g.incrtree(tp, 1);
-	  foreach (Postreamps, ecit, evalcmds) {
-	    pstream::ostream& ec = **ecit;
-	    ec << tp << std::endl;
-	  }
+	  // foreach (Postreamps, ecit, evalcmds) {
+	  //   pstream::ostream& ec = **ecit;
+	  //   ec << tp << std::endl;
+	  // }
 	  g.decrtree(tp, 1);
 	  tp->selective_delete();
 	}
       }
-      foreach (Postreamps, ecit, evalcmds) {  // print end of line
-	pstream::ostream& ec = **ecit;
-	ec << std::endl;
-      }
+      // foreach (Postreamps, ecit, evalcmds) {  // print end of line
+      //   pstream::ostream& ec = **ecit;
+      //   ec << std::endl;
+      // }
 
-      foreach (Postreamps, gcit, grammarcmds) { // trace the grammar counts at current stateq
-	pstream::ostream& gc = **gcit;
-	gc << g;
-	gc << std::endl;
-      }
+      // foreach (Postreamps, gcit, grammarcmds) { // trace the grammar counts at current stateq
+      //     pstream::ostream& gc = **gcit;
+      //   gc << g;
+      //   gc << std::endl;
+      // }
 
       cforeach (Sss, it, test1s) {  // parse test1s
 	p.inside(*it);
 	tree* tp = p.random_tree();
 	g.incrtree(tp, 1);
-	foreach (Postreamps, tcit, test1cmds) {
-	  pstream::ostream& tc = **tcit;
-	  tc << tp << std::endl;
-	}
+        std::cout << tp << std::endl;
+	// foreach (Postreamps, tcit, test1cmds) {
+	//   pstream::ostream& tc = **tcit;
+	//   tc << tp << std::endl;
+	// }
 	g.decrtree(tp, 1);
 	tp->selective_delete();
       }
-      foreach (Postreamps, tcit, test1cmds) {
-	pstream::ostream& tc = **tcit;
-	tc << std::endl;
-      }
+      std::cout << std::endl;
+      // foreach (Postreamps, tcit, test1cmds) {
+      //   pstream::ostream& tc = **tcit;
+      //   tc << std::endl;
+      // }
 
       cforeach (Sss, it, test2s) {  // parse test2s
 	p.inside(*it);
 	tree* tp = p.random_tree();
 	g.incrtree(tp, 1);
-	foreach (Postreamps, tcit, test2cmds) {
-	  pstream::ostream& tc = **tcit;
-	  tc << tp << std::endl;
-	}
+	// foreach (Postreamps, tcit, test2cmds) {
+	//   pstream::ostream& tc = **tcit;
+	//   tc << tp << std::endl;
+	// }
 	g.decrtree(tp, 1);
 	tp->selective_delete();
       }
-      foreach (Postreamps, tcit, test2cmds) {
-	pstream::ostream& tc = **tcit;
-	tc << std::endl;
-      }
+      // foreach (Postreamps, tcit, test2cmds) {
+      //   pstream::ostream& tc = **tcit;
+      //   tc << std::endl;
+      // }
     }  // end of trace
 
     if (debug >= 500)
@@ -553,58 +576,61 @@ F gibbs_estimate(pycfg_type& g, const Sss& trains,
 
   for (U i = 0; i < n; ++i) {
     if (train_flag[i])
-      foreach (Postreamps, ecit, evalcmds) {
-	pstream::ostream& ec = **ecit;
-	ec << tps[i] << std::endl;
-      }
+        ;
+      // foreach (Postreamps, ecit, evalcmds) {
+      //   pstream::ostream& ec = **ecit;
+      //   ec << tps[i] << std::endl;
+      // }
     else {
       p.inside(trains[i]);
       tree* tp = p.random_tree();
       g.incrtree(tp, 1);
-      foreach (Postreamps, ecit, evalcmds) {
-	pstream::ostream& ec = **ecit;
-	ec << tp << std::endl;
-      }
+      // foreach (Postreamps, ecit, evalcmds) {
+      //   pstream::ostream& ec = **ecit;
+      //   ec << tp << std::endl;
+      // }
       g.decrtree(tp, 1);
       tp->selective_delete();
     }
   }
-  foreach (Postreamps, ecit, evalcmds) {
-    pstream::ostream& ec = **ecit;
-    ec << std::endl;
-  }
+  // foreach (Postreamps, ecit, evalcmds) {
+  //   pstream::ostream& ec = **ecit;
+  //   ec << std::endl;
+  // }
 
   cforeach (Sss, it, test1s) {  // final parse of test1s
     p.inside(*it);
     tree* tp = p.random_tree();
     g.incrtree(tp, 1);
-    foreach (Postreamps, tcit, test1cmds) {
-      pstream::ostream& tc = **tcit;
-      tc << tp << std::endl;
-    }
+    std::cout << tp << std::endl;
+    // foreach (Postreamps, tcit, test1cmds) {
+    //   pstream::ostream& tc = **tcit;
+    //   tc << tp << std::endl;
+    // }
     g.decrtree(tp, 1);
     tp->selective_delete();
   }
-  foreach (Postreamps, tcit, test1cmds) {
-    pstream::ostream& tc = **tcit;
-    tc << std::endl;
-  }
+  std::cout << std::endl;
+  // foreach (Postreamps, tcit, test1cmds) {
+  //   pstream::ostream& tc = **tcit;
+  //   tc << std::endl;
+  // }
 
-  cforeach (Sss, it, test2s) {  // final parse for test2s
-    p.inside(*it);
-    tree* tp = p.random_tree();
-    g.incrtree(tp, 1);
-    foreach (Postreamps, tcit, test2cmds) {
-      pstream::ostream& tc = **tcit;
-      tc << tp << std::endl;
-    }
-    g.decrtree(tp, 1);
-    tp->selective_delete();
-  }
-  foreach (Postreamps, tcit, test2cmds) {
-    pstream::ostream& tc = **tcit;
-    tc << std::endl;
-  }
+  // cforeach (Sss, it, test2s) {  // final parse for test2s
+  //   p.inside(*it);
+  //   tree* tp = p.random_tree();
+  //   g.incrtree(tp, 1);
+  //   // foreach (Postreamps, tcit, test2cmds) {
+  //   //   pstream::ostream& tc = **tcit;
+  //   //   tc << tp << std::endl;
+  //   // }
+  //   g.decrtree(tp, 1);
+  //   tp->selective_delete();
+  // }
+  // // foreach (Postreamps, tcit, test2cmds) {
+  // //   pstream::ostream& tc = **tcit;
+  // //   tc << std::endl;
+  // // }
 
   F logPcorpus = g.logPcorpus();
 
@@ -643,7 +669,7 @@ F gibbs_estimate(pycfg_type& g, const Sss& trains,
 int main(int argc, char** argv) {
 
   typedef std::string Str;
-  typedef std::vector<Str> Strs;
+  // typedef std::vector<Str> Strs;
 
   pycfg_type g;
   bool hastings_correction = true;
@@ -658,16 +684,21 @@ int main(int argc, char** argv) {
   F z_temp = 1;
   U z_its = 0;
   unsigned long rand_init = 0;
-  Str parses_filename = "", grammar_filename = "", trace_filename = "", test1_filename = "", test2_filename = "";
-  Strs evalcmdstrs, test1cmdstrs, test2cmdstrs, grammarcmdstrs;
-  Postreamps evalcmds, test1cmds, test2cmds, grammarcmds;
+  Str parses_filename = "";
+  Str grammar_filename = "";
+  Str trace_filename = "";
+  Str test1_filename = "";
+  // Str test2_filename = "";
+  // Strs evalcmdstrs, test1cmdstrs, test2cmdstrs, grammarcmdstrs;
+  // Postreamps evalcmds, test1cmds, test2cmds, grammarcmds;
   U eval_every = 1;
   U nparses_iterations = 1;
   F train_frac = 1.0;
   bool train_frac_randomise = false;
 
   int chr;
-  while ((chr = getopt(argc, argv, "A:CDEF:G:H:I:N:PR:ST:U:V:X:Y:Z:a:b:d:e:f:g:h:m:n:r:s:t:u:v:w:x:z:"))
+  // while ((chr = getopt(argc, argv, "A:CDEF:G:H:I:N:PR:ST:U:V:X:Y:Z:a:b:d:e:f:g:h:m:n:r:s:t:u:v:w:x:z:"))
+  while ((chr = getopt(argc, argv, "A:CDEF:G:H:I:N:PR:ST:U:Z:a:b:d:e:f:g:h:m:n:r:s:t:u:w:x:z:"))
 	 != -1)
     switch (chr) {
     case 'A':
@@ -709,21 +740,21 @@ int main(int argc, char** argv) {
     case 'T':
       anneal_start = 1.0/atof(optarg);
       break;
-    case 'U':
-      test1cmdstrs.push_back(std::string(optarg));
-      test1cmds.push_back(new pstream::ostream(optarg));
-      break;
-    case 'V':
-      test2cmdstrs.push_back(std::string(optarg));
-      test2cmds.push_back(new pstream::ostream(optarg));
-      break;
-    case 'X':
-      evalcmdstrs.push_back(std::string(optarg));
-      evalcmds.push_back(new pstream::ostream(optarg));
-      break;
-    case 'Y':
-      grammarcmdstrs.push_back(std::string(optarg));
-      grammarcmds.push_back(new pstream::ostream(optarg));
+    // case 'U':
+    //   test1cmdstrs.push_back(std::string(optarg));
+    //   // test1cmds.push_back(new pstream::ostream(optarg));
+    //   break;
+    // case 'V':
+    //   test2cmdstrs.push_back(std::string(optarg));
+    //   test2cmds.push_back(new pstream::ostream(optarg));
+    //   break;
+    // case 'X':
+    //   evalcmdstrs.push_back(std::string(optarg));
+    //   evalcmds.push_back(new pstream::ostream(optarg));
+    //   break;
+    // case 'Y':
+    //   grammarcmdstrs.push_back(std::string(optarg));
+    //   grammarcmds.push_back(new pstream::ostream(optarg));
     case 'Z':
       z_temp = atof(optarg);
       break;
@@ -766,9 +797,9 @@ int main(int argc, char** argv) {
     case 'u':
       test1_filename = optarg;
       break;
-    case 'v':
-      test2_filename = optarg;
-      break;
+    // case 'v':
+    //   test2_filename = optarg;
+    //   break;
     case 'w':
       g.default_weight = atof(optarg);
       break;
@@ -795,8 +826,8 @@ int main(int argc, char** argv) {
     std::cerr << usage << abort;
   }
 
-  if (debug >= 1000)
-    std::cerr << "# eval_cmds = " << evalcmdstrs << std::endl;
+  // if (debug >= 1000)
+  //   std::cerr << "# eval_cmds = " << evalcmdstrs << std::endl;
 
   Sss trains;
   {
@@ -838,20 +869,20 @@ int main(int argc, char** argv) {
   }
 
   Sss test2s;
-  if (!test2_filename.empty()) {
-    std::ifstream in2(test2_filename.c_str());
-    Ss terminals;
-    while (readline_symbols(in2, terminals))
-      if (terminals.empty())
-	std::cerr << "## Error in " << test2_filename << ": sentence "
-		  << test2s.size()+1 << " is empty"
-		  << std::endl;
-      else
-	test2s.push_back(terminals);
+  // if (!test2_filename.empty()) {
+  //   std::ifstream in2(test2_filename.c_str());
+  //   Ss terminals;
+  //   while (readline_symbols(in2, terminals))
+  //     if (terminals.empty())
+  //       std::cerr << "## Error in " << test2_filename << ": sentence "
+  //       	  << test2s.size()+1 << " is empty"
+  //       	  << std::endl;
+  //     else
+  //       test2s.push_back(terminals);
 
-    if (debug >= 1000)
-      std::cerr << "# test2s.size() = " << test2s.size() << std::endl;
-  }
+  //   if (debug >= 1000)
+  //     std::cerr << "# test2s.size() = " << test2s.size() << std::endl;
+  // }
 
   if (rand_init == 0)
     rand_init = time(NULL);
@@ -910,31 +941,59 @@ int main(int argc, char** argv) {
 
   pycky parser(g);
 
-  gibbs_estimate(g, trains, train_frac, train_frac_randomise, evalcmds, eval_every,
-		 niterations, anneal_start, anneal_stop, anneal_its, z_temp, z_its,
+  gibbs_estimate(g, trains, train_frac, train_frac_randomise, // evalcmds
+                 eval_every,
+		 niterations, anneal_start, anneal_stop, anneal_its,
+                 z_temp, z_its,
 		 hastings_correction, random_order, delayed_initialization,
-		 static_cast<U>(resample_pycache_nits), nparses_iterations,
-		 finalparses_stream_ptr, grammar_stream_ptr, trace_stream_ptr,
-		 test1s, test1cmds, test2s, test2cmds, grammarcmds);
+		 static_cast<U>(resample_pycache_nits),
+                 nparses_iterations,
+		 finalparses_stream_ptr,
+                 grammar_stream_ptr, trace_stream_ptr,
+		 test1s, // test1cmds,
+                 test2s // , test2cmds, grammarcmds
+      );
 
   if (finalparses_stream_ptr)
-    delete finalparses_stream_ptr;
+  {
+      delete finalparses_stream_ptr;
+  }
 
   if (grammar_stream_ptr)
-    delete grammar_stream_ptr;
+  {
+      delete grammar_stream_ptr;
+  }
 
-  foreach (Postreamps, it, grammarcmds)
-    delete *it;
+  // foreach (Postreamps, it, grammarcmds)
+  // {
+  //     pstream::ostream& gc = **it;
+  //     gc.close();
+  //     delete *it;
+  // }
 
-  foreach (Postreamps, it, evalcmds)
-    delete *it;
+  // foreach (Postreamps, it, evalcmds)
+  // {
+  //     pstream::ostream& gc = **it;
+  //     gc.close();
+  //     delete *it;
+  // }
 
-  foreach (Postreamps, it, test1cmds)
-    delete *it;
+  // foreach (Postreamps, it, test1cmds)
+  // {
+  //     pstream::ostream& gc = **it;
+  //     gc.close();
+  //     delete *it;
+  // }
 
-  foreach (Postreamps, it, test2cmds)
-    delete *it;
+  // foreach (Postreamps, it, test2cmds)
+  // {
+  //     pstream::ostream& gc = **it;
+  //     gc.close();
+  //     delete *it;
+  // }
 
   if (trace_stream_ptr)
-    delete trace_stream_ptr;
+  {
+      delete trace_stream_ptr;
+  }
 }
