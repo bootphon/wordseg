@@ -101,7 +101,7 @@ def test_mark_jonhson(tmpdir, datadir):
     ag._run_ag_single(text, grammar_file, args=arguments)
 
 
-def test_replicate_cdswordseg(datadir, tmpdir):
+def test_eval(datadir, tmpdir):
     sep = Separator()
 
     _tags = [utt for utt in codecs.open(
@@ -122,10 +122,8 @@ def test_replicate_cdswordseg(datadir, tmpdir):
                            nruns=1)
     score = evaluate(segmented, _gold)
 
-    # we obtained that score from the AG version in CDSWordSeg (using
-    # wordseg.prepare and wordseg.evaluate in both cases). Because we
-    # use so few data & iteration the resulsts are not stable, we
-    # limit the precision to 0.1.
+    # Because we use so few data & iteration the resulsts are 
+    # not stable, we limit the precision to 0.5
     assert score == pytest.approx({
         'type_fscore': 0.17,
         'type_precision': 0.14,
@@ -135,4 +133,4 @@ def test_replicate_cdswordseg(datadir, tmpdir):
         'token_recall': 0.28,
         'boundary_fscore': 0.46,
         'boundary_precision': 0.41,
-        'boundary_recall': 0.53}, abs=1e-1)
+        'boundary_recall': 0.53}, abs=1e-5)
