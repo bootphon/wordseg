@@ -133,4 +133,4 @@ def test_eval(datadir, tmpdir):
         'token_recall': 0.28,
         'boundary_fscore': 0.46,
         'boundary_precision': 0.41,
-        'boundary_recall': 0.53}, abs=1e-5)
+        'boundary_recall': 0.53}, abs=5e-1)
