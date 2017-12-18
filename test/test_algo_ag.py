@@ -116,7 +116,7 @@ def test_eval(datadir, tmpdir):
     grammar_file = tmpdir.join('grammar.lt')
     grammar_file.write_text(grammar, encoding='utf8')
 
-    segmented = ag.segment(_prepared, grammar_file, 'Colloc0',
+    segmented = ag.segment(_prepared, str(grammar_file), 'Colloc0',
                            # log=utils.get_logger(level=logging.DEBUG),
                            args=test_arguments.replace('-n 10', '-n 2'),
                            nruns=1)
