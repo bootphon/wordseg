@@ -10,9 +10,6 @@ endif(COMMAND cmake_policy)
 # looking for -pthread
 find_package(Threads)
 
-# looking for boost libraries
-find_package(Boost REQUIRED COMPONENTS iostreams program_options)
-
 # compiling a C++11 program
 set(CMAKE_CXX_COMPILER "g++")
 set(CMAKE_CXX_FLAGS "-std=c++11 -Wall")
@@ -43,9 +40,9 @@ message(STATUS "Option AG_PARALLEL is ${AG_PARALLEL}")
 file(GLOB SOURCES src/*.cc include/*)
 
 # ag binary linked on dependencies
-include_directories(include ${Boost_INCLUDE_DIRS})
+include_directories(include)
 add_executable(ag ${SOURCES})
-target_link_libraries(ag ${CMAKE_THREAD_LIBS_INIT} ${Boost_LIBRARIES})
+target_link_libraries(ag ${CMAKE_THREAD_LIBS_INIT})
 if(AG_PARALLEL)
   target_link_libraries(ag ${OpenMP_CXX_FLAGS})
 endif()
