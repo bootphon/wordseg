@@ -22,7 +22,7 @@ Welcome to the wordseg's documentation page
 
 .. note::
 
-   * The source code of **wordseg** is available on it's `github page
+   * The source code of **wordseg** is available on its `github page
      <https://github.com/bootphon/wordseg>`_,
 
    * The latest release is available for download `here
@@ -34,6 +34,7 @@ Welcome to the wordseg's documentation page
    :caption: Contents
 
    installation
+   overview
    tutorial
    bash_reference
    python_reference
