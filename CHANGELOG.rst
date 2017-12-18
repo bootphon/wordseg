@@ -1,3 +1,10 @@
+wordseg-0.6.1
+-------------
+
+* Bugfix when compiling adaptor grammar on MacOS (removed pstream.h
+  from AG). See #15.
+
+
 wordseg-0.6
 -----------
 

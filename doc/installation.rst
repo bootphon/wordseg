@@ -11,7 +11,7 @@ It is tested on `continuous integration
 <https://travis-ci.org/bootphon/wordseg>`_ to work on Python 2 and 3,
 both on Linux and Mac OS. On Windows, you can use the `Linux subsytem
 for Windows
-<https://msdn.microsoft.com/en-us/commandline/wsl/about>`_, see `here
+<https://msdn.microsoft.com/en-us/commandline/wsl/about>`_, see `the issue #6
 <https://github.com/bootphon/wordseg/issues/6>`_ for a discussion.
 
 .. note::
