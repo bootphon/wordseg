@@ -420,7 +420,7 @@ def _run_ag_single(text, grammar_file, args, test_text=None,
         codecs.open(test_tmpfile, 'w', encoding='utf8').write(test_text)
 
         # generate the command to run as a subprocess
-        command = ('{binary} {grammar} {args} -u {test} -U cat'.format(
+        command = ('{binary} {grammar} {args} -u {test} '.format(
             binary=utils.get_binary('ag'),
             grammar=grammar_file,
             args=args,
@@ -676,6 +676,10 @@ def segment(text, grammar_file, segment_category,
         If the `score_category` is not found in the grammar.
 
     """
+    # make sure the grammar file exists
+    if not os.path.isfile(grammar_file):
+        raise RuntimeError('grammar file not found: {}'.format(grammar_file))
+
     # make sure the segment category is valid
     if not is_parent_in_grammar(grammar_file, segment_category):
         raise RuntimeError(
