@@ -8,7 +8,7 @@
 //
 // A symbol contains a pointer to a string.  These strings are guaranteed to be
 // unique, i.e., if symbols s1 and s2 contain different string pointers then
-// the strings they point to are different.  This means that symbol copying, 
+// the strings they point to are different.  This means that symbol copying,
 // equality, ordering and hashing are very cheap (they involve only the
 // pointer and not the string's contents).
 //
@@ -19,10 +19,10 @@
 // Symbols possess write/read invariance, i.e., you can write a symbol
 // to a stream and read it from the same stream.  (Note that the relative
 // ordering of symbols is not preserved, since the underlying string objects
-// may be allocated in different locations).  
+// may be allocated in different locations).
 //
 //   A sequence of alphanumeric characters or escaped characters, where '\'
-//   is the escape character.  Note that '_', '.', '-' and '+' are considered 
+//   is the escape character.  Note that '_', '.', '-' and '+' are considered
 //   alphanumeric characters (thus ints and floats can be symbols).
 //
 //   A ' (quote) character, followed by a sequence of non-quote characters
@@ -32,8 +32,8 @@
 //   %UNDEFINED% denotes the undefined symbol.
 //
 // NOTE: You _must_ write a whitespace or non-alphanumeric character other
-// than '\', '_', '+', '-', and '.' immediately after each symbol.  
-// The symbol reader will stop reading at this character and then put it back on 
+// than '\', '_', '+', '-', and '.' immediately after each symbol.
+// The symbol reader will stop reading at this character and then put it back on
 // the input stream, so your code is responsible for consuming this character.
 //
 //
@@ -53,7 +53,7 @@
 //  std::hash(symbol)
 //
 //  The comparison operators ==, !=, <, <=, >, >=.
-//    Note: the comparison ordering is NOT alphabetic, but is based on 
+//    Note: the comparison ordering is NOT alphabetic, but is based on
 //    the location in memory of each symbol.  Thus the relative ordering
 //    of the same symbol strings may differ on different runs.
 //
@@ -61,7 +61,7 @@
 //
 //  symbol::size()       The number of symbols defined
 //  symbol::already_defined(const string&)
-//  
+//
 //  The input and output operators >> and <<
 
 #ifndef SYM_H
@@ -74,9 +74,7 @@
 #include <iostream>
 #include <string>
 #include <utility>
-#include <tr1/unordered_set>
-
-namespace tr1 = std::tr1;
+#include <unordered_set>
 
 class symbol {
 
@@ -84,11 +82,11 @@ class symbol {
   const std::string* sp;
   symbol(const std::string* sp_) : sp(sp_) { }
 
-  typedef tr1::unordered_set<std::string> Table;
+  typedef std::unordered_set<std::string> Table;
   static Table& table();
 
 public:
-  
+
   symbol() : sp(NULL) { }       // constructs an undefined symbol
   symbol(const std::string& s);
   symbol(const char* cp);
@@ -115,14 +113,14 @@ public:
 std::istream& operator>> (std::istream& is, symbol& s);
 std::ostream& operator<< (std::ostream& os, symbol s);
 
-namespace std { namespace tr1 {
-    template <> struct hash<symbol> 
+namespace std {
+    template <> struct hash<symbol>
       : public std::unary_function<symbol, std::size_t>  {
       size_t operator()(symbol s) const
       {
 	return size_t(s.string_pointer());
       }
     };
-  } }
+}
 
 #endif  // sym.h
