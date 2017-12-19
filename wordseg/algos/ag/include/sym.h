@@ -67,10 +67,7 @@
 #ifndef SYM_H
 #define SYM_H
 
-#include "custom-allocator.h"  // must be first
-
 #include <cassert>
-// #include <ext/hash_set>
 #include <iostream>
 #include <string>
 #include <utility>

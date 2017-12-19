@@ -115,8 +115,6 @@ const char usage[] =
 "is not adapted.\n"
 "\n";
 
-#include "custom-allocator.h"
-
 #include <cmath>
 #include <sstream>
 #include <fstream>

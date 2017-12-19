@@ -38,7 +38,7 @@
 #define ATTRIBUTE_UNUSED __attribute__ ((__unused__))
 #endif /* ATTRIBUTE_UNUSED */
 
-#include "custom-allocator.h"  // must be first
+// #include "custom-allocator.h"  // must be first
 
 #include <algorithm>
 // #include <boost/smart_ptr.hpp>    // Comment out this line if boost is not used
@@ -48,7 +48,7 @@
 #include <cstdio>
 // #include <ext/hash_map>           // These are the old hash functions
 // #include <ext/hash_set>
-#include <ext/slist>
+// #include <ext/slist>
 #include <iostream>
 #include <iterator>
 #include <list>

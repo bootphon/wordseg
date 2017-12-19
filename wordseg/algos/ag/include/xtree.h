@@ -6,8 +6,6 @@
 #ifndef XTREE_H
 #define XTREE_H
 
-#include "custom-allocator.h"  // must be first
-
 #include <algorithm>
 #include <iostream>
 #include <set>
@@ -18,7 +16,7 @@
 //! xtree_type{} is a generic tree node type.  It consists of a generic label
 //! together with a sequence of children pointers.
 //
-template <typename special_type> 
+template <typename special_type>
 struct xtree_type {
   typedef xtree_type<special_type> general_type;
 
@@ -37,7 +35,7 @@ struct xtree_type {
       (*it)->specialize().delete_tree();
     delete this;
   }  // xtree_type::delete_tree()
-  
+
   //! category() returns the category of this node
   //
   symbol category() const { return cat; }
@@ -65,19 +63,19 @@ struct xtree_type {
   void terminals(terminals_type& terms) const {
     if (children.empty())
       terms.push_back(specialize().category());
-    else 
+    else
       for (typename ptrs_type::const_iterator it = children.begin(); it != children.end(); ++it)
 	(*it)->terminals(terms);
   } // xtree_type::terminals()
 
   std::ostream& write_tree(std::ostream& os) const {
-    if (children.empty()) 
+    if (children.empty())
       return specialize().write_label(os);
     else {
       os << '(';
       specialize().write_label(os);
       for (typename ptrs_type::const_iterator it = children.begin();
-	   it != children.end(); ++it) 
+	   it != children.end(); ++it)
 	(*it)->specialize().write_tree(os << ' ');
       return os << ')';
     }
@@ -124,19 +122,19 @@ struct cattree_type : public xtree_type<cattree_type> {
 //! catcounttree_type{} labels contain a category label and an integer count
 //
 class catcounttree_type : public xtree_type<catcounttree_type> {
-  
+
 public:
 
   static bool compact_trees;
   typedef unsigned int count_type;
   count_type count;
 
-  catcounttree_type(symbol cat=symbol(), count_type count=0) 
+  catcounttree_type(symbol cat=symbol(), count_type count=0)
     : xtree_type<catcounttree_type>(cat), count(count) { }
 
   bool operator== (const catcounttree_type& t) const {
     return cat == t.cat && count == t.count && equal_children(t);
-  } 
+  }
 
   typedef std::set<ptr_type> sptr_type;
 
@@ -160,7 +158,7 @@ private:
 	(*it)->selective_delete_helper(todelete);
     }
   }  // catcounttree_type::selective_delete_helper()
-  
+
 public:
 
   //! swap() swaps the contents of two catcounttrees
@@ -170,11 +168,11 @@ public:
     this->generalize().swap(t.generalize());
   }
 
-  std::ostream& write_label(std::ostream& os) const { 
+  std::ostream& write_label(std::ostream& os) const {
     return (compact_trees || count == 0)  ? (os << cat) : (os << cat << '#' << count); }
 
   std::ostream& write_tree(std::ostream& os) const {
-    if (children.empty()) 
+    if (children.empty())
       return write_label(os);
     else if (compact_trees && count == 0) {
       for (ptrs_type::const_iterator it = children.begin();
@@ -189,7 +187,7 @@ public:
       os << '(';
       specialize().write_label(os);
       for (ptrs_type::const_iterator it = children.begin();
-	   it != children.end(); ++it) 
+	   it != children.end(); ++it)
 	(*it)->specialize().write_tree(os << ' ');
       return os << ')';
     }
