@@ -1,3 +1,4 @@
+wordseg/bin/
 .cache/*
 .eggs/*
 build/*
