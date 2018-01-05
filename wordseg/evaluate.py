@@ -94,7 +94,8 @@ def read_data(text, separator=_DEFAULT_SEPARATOR):
     positions = []
     lexicon = {}
 
-    for utt in text:
+    # ignore empty lines
+    for utt in (utt for utt in text if utt.strip()):
         # the utterance with word separators removed
         words.append(separator.remove(utt, 'word'))
 
