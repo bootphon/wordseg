@@ -1,9 +1,15 @@
-wordseg-0.6.1
+wordseg-0.6.1 (not yet released)
 -------------
+
+* Simplified output in `wordseg-stats`, removed redundancy, renamed
+  'uniques' to 'hapaxes'. See #18.
 
 * Bugfix when compiling adaptor grammar on MacOS (removed pstream.h
   from AG). See #15.
 
+* Improvements in adaptor grammar: replaced
+  std::tr1::unordered_{map,set} by std::unordered_{map,set}, removed
+  useless code (custom allocator).
 
 wordseg-0.6
 -----------

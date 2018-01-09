@@ -131,9 +131,6 @@ class CorpusStatistics(object):
 
             - 'nutts': number of utterances
             - 'nutts_single_word': number of utterances made of a single world
-            - 'nword_tokens': number of word tokens
-            - 'nword_types': number of types
-            - 'nword_hapax': number of word types with a frequency of 1 (hapax)
             - 'mattr': mean ratio of unique words per chunk of 10 words
 
         Notes
@@ -153,13 +150,6 @@ class CorpusStatistics(object):
             'nutts': len(self.corpus),
             # number of single word utterances
             'nutts_single_word': wlen.count(1),
-            # number of word tokens
-            'nword_tokens': sum(wlen),
-            # number of word types
-            'nword_types': len(self.unigram['word']),
-            # number of word types with a frequency of 1 (hapax)
-            'nword_hapax': list(
-                self.unigram['word'].values()).count(1 / float(sum(wlen))),
             # mean ratio of unique words per chunk of 10 words
             'mattr': self._mattr('word', size=10)
         }
@@ -182,11 +172,8 @@ class CorpusStatistics(object):
             being on the entire corpus):
 
             - 'tokens': number of tokens
-            - 'tokens/utt': mean number of tokens per utterance
-            - 'tokens/LEVEL': mean number of tokens per upper level token
             - 'types': number of types
-            - 'tokens/type': mean number of token per types
-            - 'uniques': number of types occuring only once in the corpus
+            - 'hapaxes': number of types occuring only once in the corpus
 
         """
         stats = {}
@@ -197,24 +184,14 @@ class CorpusStatistics(object):
         # number of tokens
         stats['tokens'] = sum(tokens_len)
 
-        # mean number of tokens per utterance, word and syllable
-        stats['tokens/utt'] = stats['tokens'] / float(len(self.corpus))
-
-        for l in self.separator.upper_levels(level):
-            nupper = float(sum(len(utt) for utt in self.tokens[l]))
-            stats['tokens/{}'.format(l)] = stats['tokens'] / nupper
-
         # types
         types_count = self.most_common_tokens(level)
 
         # number of types
         stats['types'] = len(types_count)
 
-        # mean number of token per types
-        stats['token/types'] = float(stats['tokens']) / stats['types']
-
         # number of types occuring only once in the corpus
-        stats['uniques'] = len([k for k, v in types_count if v == 1])
+        stats['hapaxes'] = len([k for k, v in types_count if v == 1])
 
         return stats
 

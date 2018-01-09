@@ -95,26 +95,18 @@ The bash and python give the same result, it should be something like::
   "corpus":             {
     "nutts":              1000,
     "nutts_single_word":  118,
-    "nword_tokens":       6824,
-    "nword_types":        1392,
-    "nword_hapax":        857,
     "mattr":              0.9354710889345312,
     "entropy":            0.015144673474006031
   },
   "words":              {
     "tokens":             6824,
-    "tokens/utt":         6.824,
     "types":              1392,
-    "token/types":        4.902298850574713,
-    "uniques":            857
+    "hapaxes":            857
   },
   "phones":             {
     "tokens":             22157,
-    "tokens/utt":         22.157,
-    "tokens/word":        3.2469226260257913,
     "types":              60,
-    "token/types":        369.28333333333336,
-    "uniques":            0
+    "hapaxes":            0
   }
   }
 
