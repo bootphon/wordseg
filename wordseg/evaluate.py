@@ -207,15 +207,16 @@ def evaluate(text, gold, separator=_DEFAULT_SEPARATOR):
         _stringpos_boundarypos(gold_stringpos))
 
     return {
-        'type_fscore': type_eval.fscore(),
-        'type_precision': type_eval.precision(),
-        'type_recall': type_eval.recall(),
-        'token_fscore': token_eval.fscore(),
         'token_precision': token_eval.precision(),
         'token_recall': token_eval.recall(),
-        'boundary_fscore': boundary_eval.fscore(),
+        'token_fscore': token_eval.fscore(),
+        'type_precision': type_eval.precision(),
+        'type_recall': type_eval.recall(),
+        'type_fscore': type_eval.fscore(),
         'boundary_precision': boundary_eval.precision(),
-        'boundary_recall': boundary_eval.recall()}
+        'boundary_recall': boundary_eval.recall(),
+        'boundary_fscore': boundary_eval.fscore()
+    }
 
 
 def _load_text(text):
