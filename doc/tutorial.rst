@@ -22,42 +22,21 @@ English corpus.
 Input text
 ----------
 
-In this section, we download some English text from the BUCKEYE
-corpus, pick up 1000 random utterances in it, and convert them from an
-orthographic form to a phonological one.
+You can find a sample text in test/data.
+The file ``orthographic.txt`` contains the text utterances:
 
-* Download about 50k english utterances (from the BUCKEYE corpus)::
+   | you could eat it with a spoon
+   | you have to cut that corn too
+   | and banana
+   | good cheese
 
-    wget https://raw.githubusercontent.com/alecristia/CDSwordSeg/master/recipes/buckeye/buckeye-ortholines.txt
-
-* Pick random 1000 utterances as segmentation input::
-
-    cat buckeye-ortholines.txt | sort -R | head -1000 > orthographic.txt
-
-* Convert the English text into a phonological from. We are using the
-  `phonemizer <https://github.com/bootphon/phonemizer>`_, a
-  third-party software we also authored. Please install it before
-  going forward::
-
-    cat orthographic.txt | phonemize --lang en-us -p " " -w ";eword " > phonologic.txt
-
-
-We have now a file ``orthographic.txt`` with the text utterances:
-
-   | us to play the solos
-   | no i i don't wanna
-   | terrible
-   | you'd learn a heck a lot
-   | people like that even get
-
-And a file ``phonologic.txt`` with the utterances represented as a
+And the file ``tagged.txt`` with the utterances represented as a
 list of phones with word boundaries tagged as *;eword*:
 
-   | ˌʌ s ;eword t ə ;eword p l eɪ ;eword ð ə ;eword s oʊ l oʊ z ;eword
-   | n oʊ ;eword aɪ  ;eword aɪ ;eword d oʊ n t ;eword w ɑː n ə ;eword
-   | t ɛ ɹ ə b əl ;eword
-   | j uː d ;eword l ɜː n ;eword ɐ ;eword h ɛ k ;eword ɐ ;eword l ɑː t ;eword
-   | p iː p əl ;eword l aɪ k ;eword ð æ t ;eword iː v ə n ;eword ɡ ɛ t ;eword
+   | y uw ;esyll ;eword k uh d ;esyll ;eword iy t ;esyll ;eword ih t ;esyll ;eword w ih dh ;esyll ;eword ax ;esyll ;eword s p uw n ;esyll ;eword
+   | y uw ;esyll ;eword hh ae v ;esyll ;eword t ax ;esyll ;eword k ah t ;esyll ;eword dh ae t ;esyll ;eword k ao r n ;esyll ;eword t uw ;esyll ;eword
+   | ae n d ;esyll ;eword b ax ;esyll n ae ;esyll n ax ;esyll ;eword
+   | g uh d ;esyll ;eword ch iy z ;esyll ;eword
 
 
 Bash tutorial
@@ -70,7 +49,7 @@ input text file (in phonological form) as argument:
    :language: bash
 
 From the tutorial directory, we can execute the script and display the
-result in a table with ``../doc/tutorial.sh phonologic.txt | column -t``.
+result in a table with ``../doc/tutorial.sh ../test/data/tagged.txt | column -t``.
 
 
 Python tutorial
@@ -82,7 +61,7 @@ implements exactly the same process as the bash one:
 .. literalinclude:: tutorial.py
    :language: python
 
-We can execute it using ``../doc/tutorial.py phonologic.txt | column -t``.
+We can execute it using ``../doc/tutorial.py ../test/data/tagged.txt | column -t``.
 
 Expected output
 ---------------
@@ -92,25 +71,30 @@ The bash and python give the same result, it should be something like::
   * Statistics
 
   {
+  "phones":             {
+    "tokens":             6199,
+    "hapaxes":            0,
+    "types":              39
+    },
   "corpus":             {
-    "nutts":              1000,
-    "nutts_single_word":  118,
-    "mattr":              0.9354710889345312,
-    "entropy":            0.015144673474006031
+    "nutts_single_word":  35,
+    "nutts":              301,
+    "entropy":            0.014991768574252533,
+    "mattr":              0.9218384697130766
+  },
+  "syllables":          {
+    "tokens":             2451,
+    "hapaxes":            264,
+    "types":              607
   },
   "words":              {
-    "tokens":             6824,
-    "types":              1392,
-    "hapaxes":            857
-  },
-  "phones":             {
-    "tokens":             22157,
-    "types":              60,
-    "hapaxes":            0
+    "tokens":             1892,
+    "hapaxes":            276,
+    "types":              548
   }
   }
 
-  * Evaluation
+  * Evaluation NEEDS TO BE UPDATED
 
   score                 baseline  tp        puddle    dpseg
   ------------------ -------- -------- -------- --------
