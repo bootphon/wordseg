@@ -8,7 +8,7 @@ cat $1 | wordseg-stats --json > stats.json
 
 # segment the prepared text with different algorithms (we show few
 # options for them, use --help to list all of them)
-cat prepared.txt | wordseg-baseline -p 0.2 > segmented.baseline.txt
+cat prepared.txt | wordseg-baseline -P 0.2 > segmented.baseline.txt
 cat prepared.txt | wordseg-tp -t relative > segmented.tp.txt
 cat prepared.txt | wordseg-puddle -j 4 -w 2 > segmented.puddle.txt
 cat prepared.txt | wordseg-dpseg -f 1 > segmented.dpseg.txt
