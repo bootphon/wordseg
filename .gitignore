@@ -10,3 +10,6 @@ wordseg/algos/*/build/*
 wordseg_tutorial/*
 test/.cache/*
 .cache/*
+gold.txt
+prepared.txt
+stats.json
