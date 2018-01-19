@@ -12,7 +12,7 @@ Python API Reference
 .. toctree::
    :maxdepth: 2
 
-   algorithms
+   algorithms_py
    prepare
    syllabification
    evaluate

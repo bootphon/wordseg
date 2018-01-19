@@ -1,30 +1,9 @@
 # coding: utf-8
 
 """Diphone based segmentation algorithm
-
 A DiBS model assigns, for each phrase-medial diphone, a value between
 0 and 1 inclusive (representing the probability the model assigns that
-there is a word-boundary there). In practice, these probabilities are
-mapped to hard decisions, with the optimal threshold being 0.5.
-
-Without any training at all, a phrasal-DiBS model can assign sensible
-defaults (namely, 0, or the context-independent probability of a
-medial word boundary, which will always be less than 0.5, and so
-effectively equivalent to 0 in a hard-decisions context). The outcome
-in this case would be total undersegmentation (for default 0; total
-oversegmentation for default 1).
-
-It takes relatively little training to get a DiBS model up to
-near-ceiling (*i.e.* the model's intrinsic ceiling: "as good as
-that model will get even if you train it forever", rather than
-"perfect for that dataset"). Moreover, in principle you can have the
-model do its segmentation for the nth sentence based on the stats it
-has accumulated for every preceding sentence (and with a little
-effort, even on the nth sentence as well). In practice, since I was
-never testing on the training set for publication work, but I was
-testing on *huge* test sets, I optimized the code for mixed
-iterative/batch training, meaning it could read in a training set,
-update parameteres, test, and then repeat ad infinitum.
+there is a word-boundary there).
 
 For details, see Daland, R., Pierrehumbert, J.B., "Learning
 diphone-based segmentation". Cognitive science 35(1), 119–155 (2011).
