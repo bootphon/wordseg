@@ -8,41 +8,37 @@ List of wordseg commands
 
 Once wordseg is installed on your plaform, the commands are
 available from the terminal as any other command line tool. The
-commands are:
+commands for which we provide documentation are:
 
-* **wordseg-prep** prepares a text in a phonological-like form for
-  segmentation, basically removing word separators and checking format.
+* **wordseg-prep** takes as input a text in phonological-like form with tags, and preps 
+  it for segmentation by checking format, removing all tags but word boundaries to generate 
+  a gold version, and all tags but the minimal unit boundaries to generate what we will call
+  prepared.txt, which is the input for segmentation.
 
-* **wordseg-syll** fully syllabifies a text using the maximal onset
-  principle.
+* **wordseg-<algorithm>** always takes as input a prepared.txt 
+  file, outputing the same text with word boundaries added. 
+  Please note that some algorithms require more input than just that.
+  For details, see the :ref:*overview* page. The calls for the algorithms
+  are:
 
-* **wordseg-gold** generates a gold text from a phonological one,
-  replacing word separators by spaces.
+  - **wordseg-baseline** for random baseline,
+  - **wordseg-dibs** for the diphone based segmentation,
+  - **wordseg-tp** for the transitional probabilities,
+  - **wordseg-dpseg** for the DPSeg or DMCMC,
+  - **wordseg-puddle** for PUDDLE,
+  - **wordseg-ag** for the adaptor grammar.
 
-* **wordseg-<algorithm>** computes word segmentation on a prepared
-  text, outputing the text with word boundaries added. The algorithms
-  available are(For details, see the :ref:*algorithms* page):
+* **wordseg-eval** takes as input a segmented text and a gold version,
+  to compute the precision, recall and f-score at type, token and
+  boundary levels. See more on the :ref:*overview* page.
 
-  - **wordseg-ag** is adaptor grammar,
-  - **wordseg-dibs** is diphone based segmentation,
-  - **wordseg-dpseg**,
-  - **wordseg-puddle**,
-  - **wordseg-tp** is transitional probabilities.
-
-  We also provide **wordseg-baseline** that produces a random
-  segmentation given the probability of a word boundary.
-
-* **wordseg-eval** evaluates a segmented text on a gold version,
-  computing the precision, recall and f-score at type, token and
-  boundary levels. See more on the :ref:*evaluation* page.
-
-* **wordseg-stats** computes basic statistics on a segmdented or gold
-  text.
+* **wordseg-stats** takes as input a segmented or gold text and
+  computes basic statistics.
 
 .. note::
 
    * To get all the details of a command arguments, have a ``wordseg-<command> --help``,
-   * More information on the algorithms and functions are in :ref:`python`.
+   * More information on the algorithms and functions are in :ref:`overview`.
 
 
 Hello world example
@@ -93,7 +89,7 @@ Input text format
    * ``";esyll"`` as **syllable boundary**
    * ``";eword"`` as **word boundary**
 
-   You can specify another separators using the ``-p``, ``-s`` and
+   You can specify other separators using the ``-p``, ``-s`` and
    ``-w`` options of the related wordseg commands.
 
 
