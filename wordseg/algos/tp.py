@@ -1,52 +1,56 @@
 """Transitional Probabilities word segmentation"""
 
+# Author: Amanda Saksida, Mathieu Bernard
+
 import collections
 import re
 
 from wordseg import utils
 
 
-def _threshold_relative(syls, tps):
+def _threshold_relative(units, tps):
     """Relative threshold segmentation method"""
-    prelast = syls[0]
-    last = syls[1]
-    syl = syls[2]
+    print(units)
+    prelast = units[0]
+    last = units[1]
+    unit = units[2]
 
     cword = [prelast, last]
     cwords = [cword]  # initialisation
-    for _next in syls[3:]:
+    for _next in units[3:]:
         # relative threshold condition
-        cond = (tps[prelast, last] > tps[last, syl]
-                and tps[last, syl] < tps[syl, _next])
+        cond = (tps[prelast, last] > tps[last, unit]
+                and tps[last, unit] < tps[unit, _next])
 
-        if cond or last == "UB" or syl == "UB":
+        if cond or last == 'UB' or unit == 'UB':
             cword = []
             cwords.append(cword)
 
-        cword.append(syl)
+        cword.append(unit)
+        print(_next, cwords)
         prelast = last
-        last = syl
-        syl = _next
+        last = unit
+        unit = _next
 
-    cwords[-1].append(syl)
+    cwords[-1].append(unit)
     return cwords
 
 
-def _absolute_threshold(syls, tps):
+def _threshold_absolute(units, tps):
     """Absolute threshold segmentation method"""
-    last = syls[0]
+    last = units[0]
     last_word = [last]
 
     tp_mean = sum(tps.values()) / len(tps) if len(tps) != 0 else 0
 
     cwords = [last_word]
-    for syl in syls[1:]:
-        if tps[last, syl] <= tp_mean or last == "UB" or syl == "UB":
+    for unit in units[1:]:
+        if tps[last, unit] <= tp_mean or last == 'UB' or unit == 'UB':
             last_word = []
             cwords.append(last_word)
 
-        last_word.append(syl)
-        last = syl
+        last_word.append(unit)
+        last = unit
 
     return cwords
 
@@ -113,12 +117,12 @@ def segment(text, threshold='relative', probability='forward',
 
     # segment the input given the transition probalities
     cwords = (_threshold_relative(units, tps) if threshold == 'relative'
-              else _absolute_threshold(units, tps))
+              else _threshold_absolute(units, tps))
 
     # format the segment text for output (' UB ' -> '\n', remove
     # multiple spaces)
     segtext = ' '.join(''.join(c) for c in cwords)
-    return re.sub(' +', ' ', segtext).split(' UB ')
+    return [utt.strip() for utt in re.sub(' +', ' ', segtext).split('UB')]
 
 
 def _add_arguments(parser):

@@ -39,3 +39,11 @@ def test_hello_world():
     assert list(
         tp.segment(text, threshold='relative', probability='backward')) \
         == ['hhax lowwer ld']
+
+
+# was a bug on tp relative when the last utterance of the text
+# contains a single phone
+def test_last_utt_relative():
+    text = ['waed yuw waant naw', 'buwp']
+    expected = ['waedyuwwaantnaw', 'buwp']
+    assert expected == list(tp.segment(text, threshold='relative'))
