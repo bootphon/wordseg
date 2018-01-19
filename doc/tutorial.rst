@@ -113,13 +113,13 @@ The bash and python give the same result, it should be something like::
   * Evaluation
 
   score                 baseline  tp        puddle    dpseg
-  ------------------ -------- -------- -------- --------
-  type_fscore           0.1005    0.1866    0.1188    0.369
-  type_precision        0.07154   0.1505    0.1245    0.4503
-  type_recall           0.1688    0.2457    0.1135    0.3125
-  token_fscore          0.07549   0.3246    0.2626    0.6244
+  --------------------  --------  --------  --------  --------
   token_precision       0.087     0.2974    0.4848    0.5743
   token_recall          0.06668   0.3571    0.1801    0.6842
-  boundary_fscore       0.2405    0.592     0.3941    0.8141
+  token_fscore          0.07549   0.3246    0.2626    0.6244
+  type_precision        0.07154   0.1505    0.1245    0.4503
+  type_recall           0.1688    0.2457    0.1135    0.3125
+  type_fscore           0.1005    0.1866    0.1188    0.369
   boundary_precision    0.2858    0.5357    0.9446    0.7396
   boundary_recall       0.2076    0.6616    0.249     0.9054
+  boundary_fscore       0.2405    0.592     0.3941    0.8141
