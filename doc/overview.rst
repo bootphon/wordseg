@@ -1,7 +1,8 @@
 .. _overview:
 
+============
 Overview
-========
+============
 
 This section provides an overview of the whole process as we have
 conceived it.  Individual users may actually only need a subset of the
@@ -10,6 +11,7 @@ other steps.
 
 The following are the key steps in any wordseg analysis.
 
+--------------------------------------------------------
 1. Input corpus selection, cleaning, and phonologization
 --------------------------------------------------------
 
@@ -23,6 +25,7 @@ Users will then need to phonologize the text by using a
 dictionary look-up or other system.
 
 
+--------------------
 2. Input preparation
 --------------------
 
@@ -32,48 +35,91 @@ By default, the word boundary coding is ";eword". If this is not the
 case, the user can signal this by indicating the code for word boundaries
 using the parameter -w at all processing stages.
 The same can be said for phones (default is space, parameter is -p);
-and syllables (default is ";esyll", parameter is -s).
+and syllables (default is ";esyll", parameter is -s). So imagine the phrase
+"hello world" in FESTIVAL phonological format would look like::
+
+hh ax ;esyll l ow ;esyll ;eword w er l d ;esyll ;eword
 
 To feed the input to subsequent analyses, the user must generate a prepared text,
 and a gold text. In the prepared text, the only boundaries correspond to tokenized
 basic units. For instance, if one wants the basic unit to be syllables, then one
 will tokenize by syllables, such that the prepared text looks like this::
 
-tiny baby --> ti ny ba by
+hhax low werld
 
 The same input tokenized into phones looks like this::
 
-tiny baby --> t i n y b a b y
+hh ax l ow w er l d
 
 In the gold text, the only boundaries correspond to words. For instance::
 
-tiny baby --> tiny baby
+hhaxlow werld
 
 .. note::
 
-Every user should run this step to make sure their input text is
+Every user should run the prepare step to make sure their input text is
 formatted correctly.
 
+So to sum up:
 
+* For all the commands, the input must be a multi-line text, one
+  utterance per line, with **no punctuation** (excepted for token
+  separators, see below).
+
+* Each utterance is made of a sequence of phonological units separated
+  by token boundaries (at word, phone or syllable levels).
+
+* The **phonological units** can be any unicode characters, or even
+  strings. In the example above (``""hh ax l ow _ w er l d _""``) the
+  phonetic units for the first word are ``"hh"``, ``"ax"``, ``"l"``
+  and ``"ow"``.
+
+* Phonological units are separated by **phone, syllable and word
+  boundaries**. In the hello world example, phones are separated by
+  ``" "`` and words by ``"_"``.
+
+* Syllable boundaries are optional. When provided, you can tell
+  **wordseg-prep** to prepare your input at the syllable level with
+  the option ``wordseg-prep --unit syllable``.
+
+.. note::
+
+   The default separators used in wordseg are:
+
+   * ``" "`` as **phone boundary**
+   * ``";esyll"`` as **syllable boundary**
+   * ``";eword"`` as **word boundary**
+
+   You can specify other separators using the ``-p``, ``-s`` and
+   ``-w`` options of the related wordseg commands.
+
+
+
+
+---------------
 3. Segmentation
 ---------------
 
 The next step involves modeling the segmentation process with some
 segmentation algorithm. Six families of algorithms are provided, with
 many parameters each, such that numerous combinations can be
-achieved.
+achieved. For more information on the algorithms, see :ref:`algorithms`:. 
+For examples of use, see :ref:`tutorial`:.
+
 
 Individual users may need additional algorithms. We strongly encourage
 users to develop algorithms that can be reincorporated into this package!
 
 
+---------------
 4. Evaluation
--------------
+---------------
 
 Finally, the segmented output is compared agains the gold input to
 check the algorithms' performance.
 
 
+-----------------
 Descriptive tools
 -----------------
 

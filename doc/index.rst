@@ -35,6 +35,7 @@ Welcome to the wordseg's documentation page
 
    installation
    overview
+   algorithms
    tutorial
    bash_reference
    python_reference

@@ -1,19 +1,7 @@
 """Baseline algorithm for word segmentation
 
 This algorithm randomly adds word boundaries after the input tokens
-with a given probability. It can be used to obtain 4 baselines:
-
-- the random baseline randomly labels each syllable boundary as a
-  word boundary with a probability p = 0.5 (by default),
-
-- the utterance baseline treats every utterance as a single word, with
-  p = 0,
-
-- the phone baseline labels every phone (or syllable) boundary as a
-  word boundary, with p = 1,
-
-- the oracle baseline randomly labels each syllable boundary as a word
-  boundary with the true probability of a boundary in this data set,
+with a given probability. 
 
 """
 
