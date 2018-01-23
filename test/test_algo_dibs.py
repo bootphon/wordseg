@@ -44,7 +44,7 @@ def test_replicate_cdswordseg(datadir):
     sep = Separator()
 
     _tags = [utt for utt in codecs.open(
-        os.path.join(datadir, 'phonologic.txt'), 'r', encoding='utf8')
+        os.path.join(datadir, 'tagged.txt'), 'r', encoding='utf8')
             if utt]
     _prepared = prepare(_tags, separator=sep)
     _gold = gold(_tags, separator=sep)
@@ -56,13 +56,15 @@ def test_replicate_cdswordseg(datadir):
 
     # we obtained that score from the dibs version in CDSWordSeg
     # (using wordseg.prepare and wordseg.evaluate in both cases)
-    assert score == pytest.approx({
-        'type_fscore': 0.1983,
-        'type_precision': 0.1577,
-        'type_recall': 0.2672,
-        'token_fscore': 0.2728,
-        'token_precision': 0.3135,
-        'token_recall': 0.2415,
-        'boundary_fscore': 0.5478,
-        'boundary_precision': 0.6486,
-        'boundary_recall': 0.4741}, rel=1e-3)
+    expected = {
+        'type_fscore': 0.2359,
+        'type_precision': 0.2084,
+        'type_recall': 0.2719,
+        'token_fscore': 0.239,
+        'token_precision': 0.3243,
+        'token_recall': 0.1892,
+        'boundary_fscore': 0.4804,
+        'boundary_precision': 0.7161,
+        'boundary_recall': 0.3614}
+
+    assert score == pytest.approx(expected, rel=1e-3)
