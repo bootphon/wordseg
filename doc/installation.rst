@@ -1,5 +1,6 @@
 .. _installation:
 
+============
 Installation
 ============
 
@@ -17,12 +18,13 @@ for Windows
 .. note::
 
    Before going further, please clone the repository from
-   github and go in it's root directory::
+   github and go in its root directory::
 
      git clone https://github.com/bootphon/wordseg.git ./wordseg
      cd ./wordseg
 
 
+------------
 Dependencies
 ------------
 
@@ -38,6 +40,7 @@ work:
 
 
 Install the required dependencies:
+------------------------------------
 
   - on **Ubuntu/Debian**::
 
@@ -47,14 +50,20 @@ Install the required dependencies:
 
       brew install python3 boost cmake
 
+------------------------------------
+Installation of the WordSeg package
+------------------------------------
+
+There are two options:
+
+  - **System-wide**: This is the recommended installation if you want to use ``wordseg`` on
+  your personal computer (and you do not want to modify/contribute to the code).
+
+  - **In a virtual environment**: In all other cases.
+
 
 System-wide installation
 ------------------------
-
-This is the recommended installation if you want to use ``wordseg`` on
-your personal computer (and you do not want to modify/contribute to
-the code). In all other cases, consider installing ``wordseg`` in a
-virtual environment.
 
 * Create a directory where to store intermediate (built) files::
 
@@ -79,10 +88,16 @@ virtual environment.
 
 Installation in a virtual environment
 -------------------------------------
+.. note::
+  If you have already followed the instructions under ``System-wide installation``
+  skip this section to go directly to ``Run tests to check your installation``.
 
 This is the recommended installation if you are not administrator of
-your machine, if you are working in multiuser environment (e.g. a
+your machine, if you are working in a multi-user environment (e.g. a
 computing cluster) or if you are developing with ``wordseg``.
+If you want to use ``wordseg`` on your personal computer
+(and you do not want to modify/contribute to the code),
+consider using the system-wide installation instead.
 
 This installation process is based on the conda_ python package
 manager and can be performed on any Linux, Mac OS or Windows system
@@ -111,13 +126,55 @@ supported by conda (but you can virtualenv_ as well).
 
      source activate wordseg
 
+Optional: Build the documentation
+`````````````
 
-Running the tests
------------------
+To build the html documentation (the one you are currently reading),
+first install some dependencies.
 
-* From the `build` directory have a::
+- on **Ubuntu/Debian**::
+
+    sudo apt-get install texlive textlive-latex-extra dvipng
+
+- on **Mac OSX**::
+
+    - install macports https://www.macports.org/install.php
+    - install sphinx: http://www.sphinx-doc.org/en/stable/install.html
+    - install matplotlib https://matplotlib.org/users/installing.html
+
+
+On **both**::
+
+     [sudo] pip install sphinx sphinx_rtd_theme numpydoc
+
+Then from the build/ folder do::
+
+     make html
+
+The main page is built as ``build/html/index.html``.
+
+     .. _conda: https://conda.io/miniconda.html
+     .. _pytest: https://docs.pytest.org/en/latest/
+     .. _virtualenv: https://virtualenv.pypa.io/en/stable/
+
+------------
+Run tests to check your installation
+------------
+
+We recommend you always run this test, because that will allow you to
+make sure that all dependencies and all subparts of the package have
+been appropriately installed.
+
+* From the `build` directory do::
 
     make test
+
+Further information
+--------------------
+
+If all your tests passed, then you can skip this section. You have
+successfully installed WordSeg. If some of the tests failed, then the
+package's capabilities may be reduced.
 
 * The tests are located in ``../test`` and are executed by pytest_. In
   case of test failure, you may want to rerun the tests with the
@@ -126,23 +183,3 @@ Running the tests
 * pytest supports a lot of options. For exemple to stop the execution
   at the first failure, use ``pytest -x``. To execute a single test
   case, use ``pytest ../test/test_separator.py::test_bad_separators``.
-
-
-Build the documentation
------------------------
-
-To build the html documentation (the one you are currently reading),
-first install some dependancies::
-
-  sudo apt-get install texlive textlive-latex-extra dvipng
-  [sudo] pip install sphinx sphinx_rtd_theme numpydoc
-
-Then just have a::
-
-  make html
-
-The main page is built as ``build/html/index.html``.
-
-.. _conda: https://conda.io/miniconda.html
-.. _pytest: https://docs.pytest.org/en/latest/
-.. _virtualenv: https://virtualenv.pypa.io/en/stable/

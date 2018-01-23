@@ -1,8 +1,13 @@
 wordseg-0.6.1 (not yet released)
 -------------
 
+* Documentation improved
+
 * Simplified output in `wordseg-stats`, removed redundancy, renamed
   'uniques' to 'hapaxes'. See #18.
+
+* Bugfix in **wordseg-tp -t relative** when the last utterance of a
+  text is made of a single phone. See #25.
 
 * Bugfix when compiling adaptor grammar on MacOS (removed pstream.h
   from AG). See #15.
