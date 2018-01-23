@@ -10,7 +10,6 @@ from wordseg import utils
 
 def _threshold_relative(units, tps):
     """Relative threshold segmentation method"""
-    print(units)
     prelast = units[0]
     last = units[1]
     unit = units[2]
@@ -27,7 +26,6 @@ def _threshold_relative(units, tps):
             cwords.append(cword)
 
         cword.append(unit)
-        print(_next, cwords)
         prelast = last
         last = unit
         unit = _next
