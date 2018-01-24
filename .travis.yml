@@ -9,6 +9,7 @@ git:
 branches:
   only:
   - master
+  - debug-macos
 
 env:
   global:
@@ -54,7 +55,7 @@ install:
   - cd ..
 
 script:
-  - pytest ./test -v
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ./test/debug_macos.sh; else pytest ./test -v; fi
 
 after_success:
   - cd $TRAVIS_BUILD_DIR
