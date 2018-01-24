@@ -36,7 +36,7 @@ work:
   - **cmake** for configuration and build (see `here <https://cmake.org/>`_),
   - the **boost program options** C++ library for option parsing (see `here
     <http://www.boost.org/doc/libs/1_65_1/doc/html/program_options.html>`_),
-  - the following Python packages; **joblib**, **numpy** and **pandas**.
+  - the **joblib** Python package for parallel (multicore) processing.
 
 
 Install the required dependencies:
@@ -108,7 +108,7 @@ supported by conda (but you can virtualenv_ as well).
 * Create a new Python 3 virtual environment named *wordseg* and
   install some required dependencies::
 
-    conda create --name wordseg python=3 pytest joblib numpy pandas
+    conda create --name wordseg python=3 pytest joblib
 
 * Activate your virtual environment::
 

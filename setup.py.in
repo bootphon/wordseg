@@ -55,8 +55,6 @@ def requires():
         return [
             'six',
             'joblib',
-            'numpy',
-            'pandas',
             'numpydoc',
             'pytest',
             'sphinx',

@@ -15,7 +15,6 @@ retrieve the original text "A3 B2 C1".
 """
 
 import itertools
-import numpy
 
 
 def _permute(l):
@@ -26,6 +25,16 @@ def _permute(l):
 def _flatten(l):
     """Flattens a list of lists in a single list"""
     return list(itertools.chain(*l))
+
+
+def _cumsum(l):
+    """Return the cumulative sum of the elements in `l`"""
+    cumsum = 0
+    out = []
+    for e in l:
+        cumsum += e
+        out.append(cumsum)
+    return out
 
 
 def _fold_boundaries(text, nfolds):
@@ -101,7 +110,7 @@ def fold(text, nfolds):
     idx = list(range(nfolds))
     for _ in range(nfolds):
         folds += [_flatten([blocks[idx[j]] for j in range(nfolds)])]
-        index += [numpy.cumsum(
+        index += [_cumsum(
             [len(blocks[idx[j]]) for j in range(nfolds)])[-2]]
         idx = _permute(idx)
 

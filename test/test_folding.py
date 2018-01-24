@@ -19,6 +19,12 @@ def test_flatten():
     assert folding._flatten([[0], [1], [2, 3]]) == [0, 1, 2, 3]
 
 
+def test_cumsum():
+    assert folding._cumsum([]) == []
+    assert folding._cumsum([1]) == [1]
+    assert folding._cumsum([1, 2, 3]) == [1, 3, 6]
+
+
 def test_boundaries():
     with pytest.raises(ValueError):
         folding._fold_boundaries([], 1)
