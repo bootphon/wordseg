@@ -142,14 +142,14 @@ Model* get_sampler(CorpusData* data,
 
 int main(int argc, char** argv)
 {
-    // Set a new global UTF8 locale to make output streams handle utf8.
-    // Otherwise we'll get aborts when trying to output large character
-    // values.
+    // Set a new global UTF8 locale to make output streams handle
+    // utf8. Otherwise we'll get aborts when trying to output large
+    // character values.
     std::locale utf8_locale(std::locale(), new utf8_codecvt_facet());
     std::locale::global(utf8_locale);
 
-    // std::wcerr.imbue(utf8_locale);
-    // std::wcout.imbue(utf8_locale);
+    std::wcerr.imbue(utf8_locale);
+    std::wcout.imbue(utf8_locale);
     std::wcout.precision(5);
 
     std::ios_base::sync_with_stdio(false);
@@ -406,7 +406,7 @@ int main(int argc, char** argv)
             std::cerr << "Error: couldn't open " << data_file << std::endl;
             exit(1);
         }
-        // is.imbue(std::locale(std::locale(), new utf8_codecvt_facet()));
+        is.imbue(std::locale(std::locale(), new utf8_codecvt_facet()));
 
         data.read(is, vm["data-start-index"].as<U>(), vm["data-num-sents"].as<U>());
     }
@@ -424,7 +424,7 @@ int main(int argc, char** argv)
             std::cerr << "Error: couldn't open " << eval_file << std::endl;
             exit(1);
         }
-        // is.imbue(std::locale(std::locale(), new utf8_codecvt_facet()));
+        is.imbue(std::locale(std::locale(), new utf8_codecvt_facet()));
         data.read_eval(is,vm["eval-start-index"].as<U>(),vm["eval-num-sents"].as<U>());
     }
 
@@ -452,7 +452,7 @@ int main(int argc, char** argv)
                   << std::endl;
         exit(1);
     }
-    // os.imbue(utf8_locale);
+    os.imbue(utf8_locale);
 
     for(unsigned int subject = 0; subject < vm["nsubjects"].as<unsigned int>(); subject++)
     {
