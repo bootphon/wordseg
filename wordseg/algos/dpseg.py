@@ -252,7 +252,7 @@ class UnicodeGenerator(object):
 def _dpseg(text, args, log_level=logging.ERROR, log_name='wordseg-dpseg'):
     log = utils.get_logger(name=log_name, level=log_level)
 
-    with tempfile.NamedTemporaryFile() as tmp_output:
+    with tempfile.NamedTemporaryFile(delete=False) as tmp_output:
         command = '{binary} --output-file {output} {args}'.format(
             binary=utils.get_binary('dpseg'),
             output=tmp_output.name,
@@ -292,8 +292,10 @@ def _dpseg(text, args, log_level=logging.ERROR, log_name='wordseg-dpseg'):
             raise RuntimeError(
                 'failed with error code {}'.format(process.returncode))
 
+        log.info('wrote %s', tmp_output.name)
         tmp_output.seek(0)
-        return tmp_output.read().decode('utf8').split('\n')
+        output_text = tmp_output.read().decode('utf8').split('\n')
+        return output_text
 
 
 def segment(text, nfolds=5, njobs=1,
@@ -301,7 +303,7 @@ def segment(text, nfolds=5, njobs=1,
             log=utils.null_logger()):
     """Run the 'dpseg' binary on `nfolds` folds"""
     # force the text to be a list of utterances
-    text = list(text)
+    text = [utt.strip() for utt in text]
 
     # set of unique units (syllables or phones) present in the text
     units = set(unit for utt in text for unit in utt.split())
@@ -331,6 +333,13 @@ def segment(text, nfolds=5, njobs=1,
     log.debug('converting output back from unicode')
     unit_mapping = {v: k for k, v in unicode_mapping.items()}
     unit_mapping[' '] = ' '
+
+    # debug...
+    log.info(text)
+    log.info(unicode_text)
+    log.info(output_text)
+    log.info(unit_mapping)
+
     segmented_text = (
         ''.join(unit_mapping[char] for char in utt) for utt in output_text)
 

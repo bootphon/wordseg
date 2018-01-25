@@ -406,7 +406,7 @@ int main(int argc, char** argv)
             std::cerr << "Error: couldn't open " << data_file << std::endl;
             exit(1);
         }
-        is.imbue(std::locale(std::locale(), new utf8_codecvt_facet()));
+        is.imbue(utf8_locale);
 
         data.read(is, vm["data-start-index"].as<U>(), vm["data-num-sents"].as<U>());
     }
@@ -424,7 +424,7 @@ int main(int argc, char** argv)
             std::cerr << "Error: couldn't open " << eval_file << std::endl;
             exit(1);
         }
-        is.imbue(std::locale(std::locale(), new utf8_codecvt_facet()));
+        is.imbue(utf8_locale);
         data.read_eval(is,vm["eval-start-index"].as<U>(),vm["eval-num-sents"].as<U>());
     }
 
