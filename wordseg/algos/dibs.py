@@ -6,7 +6,7 @@ A DiBS model assigns, for each phrase-medial diphone, a value between
 there is a word-boundary there).
 
 For details, see Daland, R., Pierrehumbert, J.B., "Learning
-diphone-based segmentation". Cognitive science 35(1), 119–155 (2011).
+diphone-based segmentation". Cognitive science 35(1), 119-155 (2011).
 
 """
 
