@@ -18,6 +18,13 @@ def test_permute():
 def test_flatten():
     assert folding._flatten([[0], [1], [2, 3]]) == [0, 1, 2, 3]
 
+def test_cumsum():
+    c = folding._cumsum
+    assert c([]) == []
+    assert c([2, 3]) == [2, 5]
+    assert c([1, 2, 3]) == [1, 3, 6]
+    assert c([2, 2, 3]) == [2, 4, 7]
+
 
 def test_boundaries():
     with pytest.raises(ValueError):
