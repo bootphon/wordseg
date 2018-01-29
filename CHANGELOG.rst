@@ -1,7 +1,7 @@
 wordseg-0.6.1 (not yet released)
 -------------
 
-* Documentation improved
+* Documentation improved, installation with docker.
 
 * Simplified output in `wordseg-stats`, removed redundancy, renamed
   'uniques' to 'hapaxes'. See #18.

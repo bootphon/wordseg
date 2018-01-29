@@ -8,12 +8,17 @@ The ``wordseg`` package is made of a collection of command-line
 programs and a Python library that can be installed using the
 instructions below.
 
-It is tested on `continuous integration
-<https://travis-ci.org/bootphon/wordseg>`_ to work on Python 2 and 3,
-both on Linux and Mac OS. On Windows, you can use the `Linux subsytem
-for Windows
-<https://msdn.microsoft.com/en-us/commandline/wsl/about>`_, see `the issue #6
-<https://github.com/bootphon/wordseg/issues/6>`_ for a discussion.
+* **On Linux:** native support, tested on `continuous integration
+  <https://travis-ci.org/bootphon/wordseg>`_.
+
+* **On MacOS:** two algorithms are actually unsupported on MacOS,
+  **wordseg-ag** and **wordseg-dpseg**. You can still use them with
+  docker (see below).
+
+* **On Windows:** use docker or the `Linux subsytem for Windows
+  <https://msdn.microsoft.com/en-us/commandline/wsl/about>`_, see
+  `issue #6 <https://github.com/bootphon/wordseg/issues/6>`_ for a
+  discussion.
 
 .. note::
 
@@ -40,7 +45,7 @@ work:
 
 
 Install the required dependencies:
-------------------------------------
+----------------------------------
 
   - on **Ubuntu/Debian**::
 
@@ -54,12 +59,17 @@ Install the required dependencies:
 Installation of the WordSeg package
 ------------------------------------
 
-There are two options:
+There are three options:
 
   - **System-wide**: This is the recommended installation if you want to use ``wordseg`` on
   your personal computer (and you do not want to modify/contribute to the code).
 
-  - **In a virtual environment**: In all other cases.
+  - **In a virtual environment**: This is the recommended installation
+    if you are not administrator of your machine, if you are working
+    in a multi-user environment (e.g. a computing cluster) or if you
+    are developing with ``wordseg``.
+
+  - **Using docker**:
 
 
 System-wide installation
@@ -67,8 +77,8 @@ System-wide installation
 
 * Create a directory where to store intermediate (built) files::
 
-      mkdir -p build
-      cd build
+    mkdir -p build
+    cd build
 
 * Configure the installation with::
 
@@ -79,8 +89,8 @@ System-wide installation
 
 * Finally compile and install ``wordseg``::
 
-      make
-      [sudo] make install
+    make
+    [sudo] make install
 
 * If you planned to modify the wordseg's code, use ``make develop``
   instead of ``make install``
@@ -91,13 +101,6 @@ Installation in a virtual environment
 .. note::
   If you have already followed the instructions under ``System-wide installation``
   skip this section to go directly to ``Run tests to check your installation``.
-
-This is the recommended installation if you are not administrator of
-your machine, if you are working in a multi-user environment (e.g. a
-computing cluster) or if you are developing with ``wordseg``.
-If you want to use ``wordseg`` on your personal computer
-(and you do not want to modify/contribute to the code),
-consider using the system-wide installation instead.
 
 This installation process is based on the conda_ python package
 manager and can be performed on any Linux, Mac OS or Windows system
@@ -126,6 +129,53 @@ supported by conda (but you can virtualenv_ as well).
 
      source activate wordseg
 
+
+Installation in docker
+----------------------
+
+We provide a `Dockerfile` to build a docker image of wordseg that can
+be run on Linux, Mac and Windows.
+
+* First install docker for you OS:
+
+  - `docker for Mac <https://docs.docker.com/docker-for-mac/install/>`_
+  - `docker for Windows <https://docs.docker.com/docker-for-windows/install/>`_,
+  - `docker for Linux <https://docs.docker.com/install/linux/docker-ce/ubuntu/>`_.
+
+* Build the `wordseg` image::
+
+    [sudo] docker build -t wordseg .
+
+* Now you can run `wordseg` from within a docker container.
+
+  For exemple run an interactive bash session in docker, mapping a
+  data directory on your local host to `/data` in docker::
+
+    [sudo] docker run -v $PWD/test/data/:/data -it wordseg /bin/bash
+    # you are now in the docker machine, run wordseg as usual
+    root@1d32398b8c8e:/wordseg# head -5 /data/tagged.txt | wordseg-prep | wordseg-dpseg --nfolds 1
+    yuw kuhdiytihtwihdhaxspuwn
+    yuw hhaev t axkaht dhaet kaorn tuw
+    aen d baxnaenax
+    guhdchiyz
+    ehmehm teystiy kaorn
+
+.. note::
+
+   On Mac use **wordseg-ag** and **wordseg-dpseg** within docker. For
+   exemple, if you already have a wordseg installation on your
+   computer, you can use it for all but ag an dpseg algorithms, and
+   use those two from docker. Here we use the local `wordseg-prep`
+   along with the docker `wordseg-dpseg`::
+
+     user@host:~/dev/wordseg$ head -5 $PWD/test/data/tagged.txt | wordseg-prep | docker run -i wordseg wordseg-dpseg --nfolds 1
+     yuw kuhdiytihtwihdhaxspuwn
+     yuw hhaev t axkaht dhaet kaorn tuw
+     aen d baxnaenax
+     guhdchiyz
+     ehmehm teystiy kaorn
+
+
 Optional: Build the documentation
 `````````````
 
@@ -153,10 +203,6 @@ Then from the build/ folder do::
 
 The main page is built as ``build/html/index.html``.
 
-     .. _conda: https://conda.io/miniconda.html
-     .. _pytest: https://docs.pytest.org/en/latest/
-     .. _virtualenv: https://virtualenv.pypa.io/en/stable/
-
 ------------
 Run tests to check your installation
 ------------
@@ -183,3 +229,8 @@ package's capabilities may be reduced.
 * pytest supports a lot of options. For exemple to stop the execution
   at the first failure, use ``pytest -x``. To execute a single test
   case, use ``pytest ../test/test_separator.py::test_bad_separators``.
+
+
+.. _conda: https://conda.io/miniconda.html
+.. _pytest: https://docs.pytest.org/en/latest/
+.. _virtualenv: https://virtualenv.pypa.io/en/stable/
