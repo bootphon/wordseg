@@ -396,6 +396,10 @@ def main():
     dpseg_args = ' '.join('--{} {}'.format(k, v)
                           for k, v in dpseg_args.items())
 
+    # adapt boolean values
+    dpseg_args = dpseg_args.replace('--eval-maximize True', '--eval-maximize 1')
+    dpseg_args = dpseg_args.replace('--do-mbdp True', '--do-mbdp 1')
+
     segmented = segment(
         streamin, nfolds=args.nfolds, njobs=args.njobs,
         args=dpseg_args, log=log)
