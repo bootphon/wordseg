@@ -66,147 +66,147 @@ DPSEG_ARGUMENTS = [
               'default is sample')),
 
     utils.Argument(
-        name='--eval-interval', type=int, default=0,
+        name='--eval-interval', type=int,
         help=('how many iterations are run before the test set is evaluated, '
               '0 (default) means to only evaluate the test set after all'
               'iterations are complete')),
 
     utils.Argument(
-        short_name='-E', name='--estimator', default='flip',
+        short_name='-E', name='--estimator',
         type=['viterbi', 'flip', 'tree', 'decayed-flip'],
         help=('Viterbi does dynamic programming maximization, '
               'Tree does dynamic programming sampling, '
-              'Flip does original Gibbs sampler')),
+              'Flip does original Gibbs sampler (default)')),
 
     utils.Argument(
-        short_name='-D', name='--decay-rate', type=float, default=1.0,
-        help='decay rate for decayed-flip estimator'),
+        short_name='-D', name='--decay-rate', type=float,
+        help='decay rate for decayed-flip estimator, default = 1.0'),
 
     utils.Argument(
-        short_name='-S', name='--samples-per-utt', type=int, default=1000,
-        help='samples per utterance for decayed-flip estimator'),
+        short_name='-S', name='--samples-per-utt', type=int,
+        help='samples per utterance for decayed-flip estimator, default = 1000'),
 
     utils.Argument(
         short_name='-m', name='--mode', type=['batch', 'online'],
-        default='batch', help=''),
+        help='default is batch'),
 
     utils.Argument(
         short_name='-n', name='--ngram', type=['unigram', 'bigram'],
-        default='unigram', help=''),
+        help='default is unigram'),
 
     utils.Argument(
         name='--do-mbdp', type=bool,
         help='maximize using Brent ngram instead of DP'),
 
     utils.Argument(
-        name='--a1', type=float, default=0.0,
-        help='unigram Pitman-Yor a parameter'),
+        name='--a1', type=float,
+        help='unigram Pitman-Yor a parameter, default = 0.0'),
 
     utils.Argument(
-        name='--b1', type=float, default=1.0,
-        help='unigram Pitman-Yor b parameter'),
+        name='--b1', type=float,
+        help='unigram Pitman-Yor b parameter, default = 1.0'),
 
     utils.Argument(
-        name='--a2', type=float, default=0.0,
-        help='bigram Pitman-Yor a parameter'),
+        name='--a2', type=float,
+        help='bigram Pitman-Yor a parameter, default = 0.0'),
 
     utils.Argument(
-        name='--b2', type=float, default=1.0,
-        help='bigram Pitman-Yor a parameter'),
+        name='--b2', type=float,
+        help='bigram Pitman-Yor a parameter, default = 1.0'),
 
     utils.Argument(
-        short_name='-p', name='--Pstop', type=float, default=0.5,
-        help='monkey model stop probability'),
+        short_name='-p', name='--Pstop', type=float,
+        help='monkey model stop probability, default = 0.5'),
 
     utils.Argument(
-        short_name='-H', name='--hypersamp-ratio', type=float, default=0.1,
-        help='standard deviation for new hyperparmeters proposals'),
+        short_name='-H', name='--hypersamp-ratio', type=float,
+        help='standard deviation for new hyperparmeters proposals, default = 0.1'),
 
     utils.Argument(
-        name='--nchartypes', type=int, default=0,
+        name='--nchartypes', type=int,
         help=('number of characters assumed in P_0, '
-              '0 will compute from input')),
+              '0 will compute from input, default = 0')),
 
     utils.Argument(
-        name='--aeos', type=float, default=2,
-        help='beta prior on end of sentence prob'),
+        name='--aeos', type=float,
+        help='beta prior on end of sentence prob, default is 2'),
 
     utils.Argument(
-        short_name='-b', name='--init-pboundary', type=float, default=0,
-        help='initial segmentation boundary probability (-1 = gold)'),
+        short_name='-b', name='--init-pboundary', type=float,
+        help='initial segmentation boundary probability (-1 = gold, default = 0)'),
 
     utils.Argument(
-        name='--pya-beta-a', type=float, default=1.0,
-        help='if non-zero, a parameter of Beta prior on pya'),
+        name='--pya-beta-a', type=float,
+        help='if non-zero, a parameter of Beta prior on pya, default = 1.0'),
 
     utils.Argument(
         name='--pya-beta-b', type=float, default=1.0,
-        help='if non-zero, b parameter of Beta prior on pya'),
+        help='if non-zero, b parameter of Beta prior on pya, default = 1.0'),
 
     utils.Argument(
         name='--pya-gamma-s', type=float, default=10.0,
-        help='if non-zero, parameter of Gamma prior on pyb'),
+        help='if non-zero, parameter of Gamma prior on pyb, default = 10.0'),
 
     utils.Argument(
         name='--pya-gamma-c', type=float, default=0.1,
-        help='if non-zero, parameter of Gamma prior on pyb'),
+        help='if non-zero, parameter of Gamma prior on pyb, default = 0.1'),
 
     utils.Argument(
         name='--trace-every', type=int, default=0,
         help=('epochs between printing out trace information '
-              '(0 = don\'t trace)')),
+              '(0 = don\'t trace), default = 0')),
 
     utils.Argument(
-        short_name='-s', name='--nsubjects', type=int, default=1,
-        help='number of subjects to simulate'),
+        short_name='-s', name='--nsubjects', type=int,
+        help='number of subjects to simulate, default = 1'),
 
     utils.Argument(
-        short_name='-F', name='--forget-rate', type=int, default=1,
-        help='number of utterances whose words can be remembered'),
+        short_name='-F', name='--forget-rate', type=int,
+        help='number of utterances whose words can be remembered, default = 1'),
 
     utils.Argument(
-        short_name='-i', name='--burnin-iterations', type=int, default=2000,
+        short_name='-i', name='--burnin-iterations', type=int,
         help=('number of burn-in epochs. This is actually the total '
-              'number of iterations through the training data.')),
+              'number of iterations through the training data, default = 2000')),
 
     utils.Argument(
-        name='--anneal-iterations', type=int, default=0,
+        name='--anneal-iterations', type=int,
         help=('number of epochs to anneal for. So e.g. burn-in = 100 '
               'and anneal = 90 would leave 10 iters at the end at '
-              'the final annealing temp.')),
+              'the final annealing temp, default = 0')),
 
     utils.Argument(
-        name='--anneal-start-temperature', type=float, default=1,
-        help='start annealing at this temperature'),
+        name='--anneal-start-temperature', type=float,
+        help='start annealing at this temperature, default = 1'),
 
     utils.Argument(
-        name='--anneal-stop-temperature', type=float, default=1,
-        help='stop annealing at this temperature'),
+        name='--anneal-stop-temperature', type=float,
+        help='stop annealing at this temperature, default = 1'),
 
     utils.Argument(
-        name='--anneal-a', type=float, default=0.0,
+        name='--anneal-a', type=float,
         help=('parameter in annealing temperature sigmoid function, '
-              '(0 = use ACL06 schedule')),
+              '(0 = use ACL06 schedule, deafult = 0')),
 
     utils.Argument(
-        name='--anneal-b', type=float, default=0.2,
-        help='parameter in annealing temperature sigmoid function'),
+        name='--anneal-b', type=float,
+        help='parameter in annealing temperature sigmoid function, default = 0.2'),
 
     utils.Argument(
-        name='--result-field-separator', type=str, default='\t',
-        help='Field separator used to print results'),
+        name='--result-field-separator', type=str,
+        help='Field separator used to print results, default is "\t"'),
 
     utils.Argument(
         name='--forget-method', type=['uniformly', 'proportional'],
-        default='uniformly', help='method for deleting lexical items'),
+        help='method for deleting lexical items, default is uniformly'),
 
     utils.Argument(
-        short_name='-N', name='--token-memory', type=int, default=0,
-        help='number of tokens that can be remembered'),
+        short_name='-N', name='--token-memory', type=int,
+        help='number of tokens that can be remembered, default = 0'),
 
     utils.Argument(
-        short_name='-L', name='--type-memory', type=int, default=0,
-        help='number of types that can be remembered')
+        short_name='-L', name='--type-memory', type=int,
+        help='number of types that can be remembered, default = 0')
 ]
 
 
