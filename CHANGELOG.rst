@@ -1,20 +1,26 @@
-wordseg-0.6.1 (not yet released)
+wordseg-0.6.1
 -------------
 
-* Documentation improved, installation with docker.
+* Documentation improved, installation guide for working with docker.
 
-* Simplified output in `wordseg-stats`, removed redundancy, renamed
+* Removed dependancies to *numpy* and *pandas*.
+
+* Tests are now done on a subpart of the CHILDES corpus (was Buckeye, 
+  under restrictive licence).
+
+* Simplified output in **wordseg-stats**, removed redundancy, renamed
   'uniques' to 'hapaxes'. See #18.
 
 * Bugfix in **wordseg-tp -t relative** when the last utterance of a
   text is made of a single phone. See #25.
 
-* Bugfix when compiling adaptor grammar on MacOS (removed pstream.h
-  from AG). See #15.
+* Bugfix in **wordseg-dpseg** when loading parameters from a configuration file
 
-* Improvements in adaptor grammar: replaced
-  std::tr1::unordered_{map,set} by std::unordered_{map,set}, removed
-  useless code (custom allocator).
+* In **wordseg-ag**:
+  * Bugfix when compiling adaptor grammar on MacOS (removed pstream.h 
+    from AG). See #15.
+  * Replaced std::tr1::unordered_{map,set} by std::unordered_{map,set}, 
+    removed useless code (custom allocator).
 
 wordseg-0.6
 -----------
