@@ -55,17 +55,17 @@ wordseg-0.6
 
 * Bugfixes
 
-    * **wordseg-dibs** has been debugged (#16).
+  * **wordseg-dibs** has been debugged (#16).
 
-    * **wordseg-ag** has been debugged.
+  * **wordseg-ag** has been debugged.
 
-    * The following characters are now forbidden in separators, they
-      interfer with regular expression matching::
+  * The following characters are now forbidden in separators, they
+    interfer with regular expression matching::
 
-        !#$%&'*+-.^`|~:\\\"
+      !#$%&'*+-.^`|~:\\\"
 
-    * Type scoring is now correctly implemented in **wordseg-eval**
-      (#10, #14).
+  * Type scoring is now correctly implemented in **wordseg-eval**
+    (#10, #14).
 
 
 wordseg-0.5
