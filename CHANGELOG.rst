@@ -30,28 +30,28 @@ wordseg-0.6
 
 * Features
 
-    * New methods for basic statistics and normalized segmentation
-      entropy in **wordseg-stats**
+  * New methods for basic statistics and normalized segmentation
+    entropy in **wordseg-stats**
 
-    * New forward/backward option in **wordseg-tp**.
+  * New forward/backward option in **wordseg-tp**.
 
-    * New command **wordseg-baseline** that produces a random
-      segmentation given the probability of a word boundary. If an
-      oracle text is provided, the probability of word boundary is
-      estimated from that text.
+  * New command **wordseg-baseline** that produces a random
+    segmentation given the probability of a word boundary. If an
+    oracle text is provided, the probability of word boundary is
+    estimated from that text.
 
-    * New command **wordseg-syll** estimates syllable boundaries on a
-      text using the maximal onset principle. Exemples of onsets and
-      vowels files for syllabifications are given in the directory
-      `data/syllabification`.
+  * New command **wordseg-syll** estimates syllable boundaries on a
+    text using the maximal onset principle. Exemples of onsets and
+    vowels files for syllabifications are given in the directory
+    `data/syllabification`.
 
-    * Support for punctuation in input of **wordseg-prep** with the
-      ``--punctuation`` option (#10).
+  * Support for punctuation in input of **wordseg-prep** with the
+    ``--punctuation`` option (#10).
 
-    * For citation purposes a DOI is now automatically attached to
-      each wordseg release.
+  * For citation purposes a DOI is now automatically attached to
+    each wordseg release.
 
-    * Improved documentation.
+  * Improved documentation.
 
 * Bugfixes
 
