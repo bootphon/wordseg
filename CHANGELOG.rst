@@ -17,10 +17,13 @@ wordseg-0.6.1
 * Bugfix in **wordseg-dpseg** when loading parameters from a configuration file
 
 * In **wordseg-ag**:
+
   * Bugfix when compiling adaptor grammar on MacOS (removed pstream.h 
     from AG). See #15.
+    
   * Replaced std::tr1::unordered_{map,set} by std::unordered_{map,set}, 
     removed useless code (custom allocator).
+
 
 wordseg-0.6
 -----------
