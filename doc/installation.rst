@@ -41,7 +41,7 @@ work:
   - **cmake** for configuration and build (see `here <https://cmake.org/>`_),
   - the **boost program options** C++ library for option parsing (see `here
     <http://www.boost.org/doc/libs/1_65_1/doc/html/program_options.html>`_),
-  - the **joblib** package for parallel processing.
+  - the **joblib** Python package for parallel processing.
 
 
 Install the required dependencies:
@@ -177,7 +177,7 @@ be run on Linux, Mac and Windows.
 
 
 Optional: Build the documentation
-`````````````
+--------------------
 
 To build the html documentation (the one you are currently reading),
 first install some dependencies.
@@ -186,11 +186,11 @@ first install some dependencies.
 
     sudo apt-get install texlive textlive-latex-extra dvipng
 
-- on **Mac OSX**::
+- on **Mac OSX**:
 
-    - install macports https://www.macports.org/install.php
-    - install sphinx: http://www.sphinx-doc.org/en/stable/install.html
-    - install matplotlib https://matplotlib.org/users/installing.html
+  - install macports: https://www.macports.org/install.php
+  - install sphinx: http://www.sphinx-doc.org/en/stable/install.html
+  - install matplotlib: https://matplotlib.org/users/installing.html
 
 
 On **both**::

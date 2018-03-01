@@ -131,12 +131,14 @@ def _add_arguments(parser):
         choices=['relative', 'absolute'], default='relative',
         help='''Use a relative or absolute threshold for boundary decisions on
         transition probabilities. When absolute, the threshold is set
-        to the mean transition probability over the entire text.''')
+        to the mean transition probability over the entire text.
+        Default is relative.''')
 
     group.add_argument(
         '-p', '--probability', type=str,
         choices=['forward', 'backward'], default='forward',
-        help='''Compute forward or backward transition probabilities''')
+        help='''Compute forward or backward transition probabilities,
+        default is forward''')
 
 
 @utils.CatchExceptions

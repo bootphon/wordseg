@@ -1,3 +1,14 @@
+# Use this file to build a docker image of wordseg:
+#
+#    sudo docker build -t wordseg
+#
+# Then open a bash session in docker with:
+#
+#    sudo docker run -it wordseg /bin/bash
+#
+# You can then use wordseg within docker. See the docker doc for
+# advanced usage.
+
 # Use an official Ubuntu as a parent image
 FROM ubuntu:16.04
 
