@@ -1,3 +1,12 @@
+wordseg-0.6.2 (not yet released)
+-------------
+
+* Improved docker image (use python-anaconda)
+
+* New test to ensure bash and python calls to wordseg lead to
+  identical results.
+
+
 wordseg-0.6.1
 -------------
 
@@ -5,7 +14,7 @@ wordseg-0.6.1
 
 * Removed dependancies to *numpy* and *pandas*.
 
-* Tests are now done on a subpart of the CHILDES corpus (was Buckeye, 
+* Tests are now done on a subpart of the CHILDES corpus (was Buckeye,
   under restrictive licence).
 
 * Simplified output in **wordseg-stats**, removed redundancy, renamed
@@ -18,10 +27,10 @@ wordseg-0.6.1
 
 * In **wordseg-ag**:
 
-  * Bugfix when compiling adaptor grammar on MacOS (removed pstream.h 
+  * Bugfix when compiling adaptor grammar on MacOS (removed pstream.h
     from AG). See #15.
-    
-  * Replaced std::tr1::unordered_{map,set} by std::unordered_{map,set}, 
+
+  * Replaced std::tr1::unordered_{map,set} by std::unordered_{map,set},
     removed useless code (custom allocator).
 
 
