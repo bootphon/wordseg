@@ -22,11 +22,8 @@ def test_bash_python(algo, unit):
 
     # run it as a subprocess, res is a list of token f-score obtained
     # from bash and python
-    res = subprocess.run(
-        [test_script, algo, unit],
-        check=True,
-        stdout=subprocess.PIPE,
-        encoding='utf8').stdout.strip().split()
+    res = subprocess.check_output(
+        [test_script, algo, unit]).strip().split()
 
     # make sure all the scores are equal
     assert len(set(res)) == 1
