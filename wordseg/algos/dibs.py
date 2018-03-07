@@ -84,6 +84,10 @@ class CorpusSummary(object):
     diphones : Counter
         The count of all diphones, sum of internal and spanning diphones.
 
+    Raises
+    ------
+    ValueError if a line in the `text` does not contain a word separator.
+
     """
     def __init__(self, text, separator=Separator(), log=utils.null_logger()):
         self.separator = separator
@@ -94,7 +98,12 @@ class CorpusSummary(object):
         self.internal_diphones = Counter()
         self.spanning_diphones = Counter()
 
-        for utt in text:
+        for index, utt in enumerate(text):
+            if separator.word not in utt:
+                raise ValueError(
+                    'word separator ("{}") not found in train text: line {}'
+                    .format(separator.word, index + 1))
+
             self._read_utterance(utt)
 
         self.diphones = Counter(self.internal_diphones)
@@ -358,7 +367,8 @@ def _add_arguments(parser):
 
     group.add_argument(
         'train_file', metavar='<train-file>', type=str,
-        help='Dibs requires a little train corpus to compute some statistics')
+        help='Dibs requires a little train corpus to compute some statistics, '
+        'must be in phonologized from (NOT in prepared form)')
 
     group.add_argument(
         '-p', '--phone-separator', metavar='<str>',

@@ -40,6 +40,11 @@ def test_phone_sep():
     assert model.summary == {'nlines': 2, 'nwords': 4, 'nphones': 10}
 
 
+def test_bad_train(prep):
+    # cannot have a train text without word separators
+    with pytest.raises(ValueError):
+        dibs.CorpusSummary(prep)
+
 def test_replicate_cdswordseg(datadir):
     sep = Separator()
 
@@ -55,7 +60,9 @@ def test_replicate_cdswordseg(datadir):
     score = evaluate(segmented, _gold)
 
     # we obtained that score from the dibs version in CDSWordSeg
-    # (using wordseg.prepare and wordseg.evaluate in both cases)
+    # (using wordseg.prepare and wordseg.evaluate in both cases). You
+    # can replicate this result in CDSWordseg using
+    # ".../CDSwordSeg/algoComp/segment.py test/data/tagged.txt -a dibs"
     expected = {
         'type_fscore': 0.2359,
         'type_precision': 0.2084,
