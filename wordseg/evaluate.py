@@ -6,6 +6,7 @@ precision, recall and f-score at type, token and boundary levels.
 """
 
 import codecs
+import collections
 
 from wordseg import utils
 from wordseg.separator import Separator
@@ -206,17 +207,19 @@ def evaluate(text, gold, separator=_DEFAULT_SEPARATOR):
         _stringpos_boundarypos(text_stringpos),
         _stringpos_boundarypos(gold_stringpos))
 
-    return {
-        'token_precision': token_eval.precision(),
-        'token_recall': token_eval.recall(),
-        'token_fscore': token_eval.fscore(),
-        'type_precision': type_eval.precision(),
-        'type_recall': type_eval.recall(),
-        'type_fscore': type_eval.fscore(),
-        'boundary_precision': boundary_eval.precision(),
-        'boundary_recall': boundary_eval.recall(),
-        'boundary_fscore': boundary_eval.fscore()
-    }
+    # return the scores in a fixed order (the default dict does not
+    # repect insertion order). This is needed for python<3.6, see
+    # https://docs.python.org/3.6/whatsnew/3.6.html#new-dict-implementation
+    return collections.OrderedDict((k, v) for k, v in (
+        ('token_precision', token_eval.precision()),
+        ('token_recall', token_eval.recall()),
+        ('token_fscore', token_eval.fscore()),
+        ('type_precision', type_eval.precision()),
+        ('type_recall', type_eval.recall()),
+        ('type_fscore', type_eval.fscore()),
+        ('boundary_precision', boundary_eval.precision()),
+        ('boundary_recall', boundary_eval.recall()),
+        ('boundary_fscore', boundary_eval.fscore())))
 
 
 def _load_text(text):
