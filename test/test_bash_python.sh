@@ -1,9 +1,10 @@
 #!/bin/bash
 
-# Display the token f-score obtained on tp, dibs and puddle from the
-# same input file, calling the algo with 3 variant calls and
-# displaying the results summary. This uses the default arguments for
-# each algo, and the default separator for input text.
+# Display the token f-score obtained on tp, dibs or puddle from the
+# wordseg/test/data/tagged.txt file, calling the algo with 3 variant
+# calls (python and bash in 2 flavors) and displaying the results
+# summary. This uses the default arguments for each algo, and the
+# default separator for input text.
 
 set -e
 
@@ -17,7 +18,7 @@ tags=$scriptpath/data/tagged.txt
 data=$(mktemp -d)
 trap "rm -rf $data" EXIT
 
-# generate preparaed and gold text
+# generate prepared and gold textn take 10 first lines only
 gold=$data/gold.txt
 prep=$data/prep.txt
 head -10 $tags | wordseg-prep -u $unit -g $gold -o $prep
@@ -28,7 +29,7 @@ then
     train=$data/train
     head -200 $tags > $train
 
-    # version 1: python
+    # dibs python script
     cat <<EOF > $data/segment.py
 import codecs
 import sys
@@ -39,15 +40,11 @@ segmented = segment(text, CorpusSummary(train))
 print('\n'.join(s for s in segmented))
 EOF
 
-    python $data/segment.py $prep $train | wordseg-eval $gold > $data/v1
+else  # $algo is tp or puddle
+    # no train file
+    train=
 
-    # version 3: bash, read from python
-    wordseg-$algo $prep $train | wordseg-eval $gold > $data/v2
-
-    # version 2: bash, read from bash
-    cat $prep | wordseg-$algo $train | wordseg-eval $gold > $data/v3
-else
-    # version 1: python
+    # default python script
     cat <<EOF > $data/segment.py
 import codecs
 import sys
@@ -55,15 +52,16 @@ from wordseg.algos.$algo import segment
 segmented = segment([l.strip() for l in codecs.open(sys.argv[1], 'r', encoding='utf8')])
 print('\n'.join(s for s in segmented))
 EOF
-
-    python $data/segment.py $prep | wordseg-eval $gold > $data/v1
-
-    # version 2: bash, read from python
-    wordseg-$algo $prep | wordseg-eval $gold > $data/v2
-
-    # version 3: bash, read from bash
-    cat $prep | wordseg-$algo | wordseg-eval $gold > $data/v3
 fi
+
+# version 1: pure python
+python $data/segment.py $prep $train | wordseg-eval $gold > $data/v1
+
+# version 2: bash, read from python
+wordseg-$algo $prep $train | wordseg-eval $gold > $data/v2
+
+# version 3: bash, read from bash
+cat $prep | wordseg-$algo $train | wordseg-eval $gold > $data/v3
 
 # collapse results
 paste $data/v* | tr -s "\t" " " | cut -d' ' -f1-2,4,6,8 | \
