@@ -316,7 +316,11 @@ def segment(text, nfolds=5, njobs=1,
                     for utt in text]
 
     log.debug('building %s folds', nfolds)
-    folded_texts, fold_index = folding.fold(unicode_text, nfolds)
+    fold_boundaries = _dpseg_bugfix(
+        unicode_text, folding.boundaries(unicode_text, nfolds), log)
+
+    folded_texts, fold_index = folding.fold(
+        unicode_text, nfolds, fold_boundaries=fold_boundaries)
 
     segmented_texts = joblib.Parallel(n_jobs=njobs, verbose=0)(
         joblib.delayed(_dpseg)(
@@ -335,6 +339,81 @@ def segment(text, nfolds=5, njobs=1,
         ''.join(unit_mapping[char] for char in utt) for utt in output_text)
 
     return (utt for utt in segmented_text if utt)
+
+
+def _find_first_line_with_min_len(lines, min_len=2):
+    """Return the index of first line in `lines` with len >= `min_len`
+
+    Or return None when no line found.
+
+    """
+    for i, l in enumerate(lines):
+        if len(l) >= min_len:
+            return i
+    return None
+
+
+def _dpseg_bugfix(text, boundaries, log=utils.null_logger()):
+    """Ensure all folds have their first line with more than one symbol
+
+    There is a bug in the C++ implementation of dpseg: when the first
+    input line is composed of a single character (i.e. a unicode
+    symbol), the program fails. To avoid this, this method ensures all
+    the folds begin with at least two symbols. If this is not the
+    case, the boundary position is moved to the next line containing
+    at least two symbols.
+
+    Raises
+    ------
+    ValueError if the bugfix is needed and cannot be applied
+
+    Notes
+    -----
+    This implementation differs with the one in CDSWordSeg. In wordseg
+    we modify the fold index and thus the fold size, whereas in
+    CDSWordSeg we permute lines in the text (and thus to the gold
+    file). In wordseg we don't want to expose the gold file at this
+    level.
+
+    """
+    # we have something to fix if one of those lengths is 1
+    first_len = [len(text[i]) for i in boundaries]
+    if not 1 in first_len:
+        log.debug('folds boundaries are OK for dpseg')
+        return boundaries
+
+    if first_len[0] == 1:
+        raise ValueError(
+            'The input text\'s first line has a single symbol, '
+            'this will cause wordseg-dpseg to bug. '
+            'Please re-arrange your text manually and try again.')
+
+    need_to_fix = [i for i, l in enumerate(first_len) if l == 1]
+    log.debug(
+        'dpseg bugfix: need to fix folds {}'
+        .format([i+1 for i in need_to_fix]))
+
+    for i in need_to_fix:
+        # find the first line of the fold with len >= 2
+        index = _find_first_line_with_min_len(
+            text[boundaries[i]:], min_len=2)
+
+        if index is None:
+            raise ValueError(
+                'dpseg bugfix failed: all lines in the fold {} have len == 1'
+                .format(i+1))
+
+        log.debug(
+            'dpseg bugfix: fixing fold {} index from {} to {}'
+            .format(i+1, boundaries[i], boundaries[i] + index))
+        boundaries[i] += index
+
+    if not boundaries == sorted(set(boundaries)):
+        raise ValueError(
+            'dpseg bugfix failed: broke the folds order. '
+            'Please re-arrange (shuffle) your text manually and try again.')
+
+    return boundaries
 
 
 def _add_arguments(parser):

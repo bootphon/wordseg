@@ -6,7 +6,7 @@ import pytest
 import wordseg
 from wordseg import utils
 from wordseg.separator import Separator
-from wordseg.algos.dpseg import segment
+from wordseg.algos.dpseg import segment, _dpseg_bugfix
 from . import prep
 
 
@@ -59,3 +59,19 @@ def test_dpseg_from_config_file(prep, conf):
     segmented = segment(
         prep[:5], nfolds=1, args='--config-file {}'.format(conf))
     assert len(list(segmented)) == 5
+
+
+def test_dpseg_bugfix(prep):
+    with pytest.raises(ValueError):
+        _dpseg_bugfix(['.', '.', '.', '.'], [0, 2])
+
+    with pytest.raises(ValueError):
+        _dpseg_bugfix(['..', '.', '.', '.'], [0, 2])
+
+    assert _dpseg_bugfix(['..', '.', '..', '.'], [0, 2]) == [0, 2]
+    assert _dpseg_bugfix(['..', '.', '.', '..'], [0, 2]) == [0, 3]
+
+    with pytest.raises(ValueError):
+        _dpseg_bugfix(['..', '.', '.', '..'], [0, 1, 2])
+
+    assert _dpseg_bugfix(['..', '..', '.', '..'], [0, 1, 2]) == [0, 1, 3]

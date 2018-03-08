@@ -31,7 +31,7 @@ def _cumsum(l):
     """Return the cumulative sum from a list `l`"""
     return [sum(l[:i+1]) for i in range(len(l))]
 
-def _fold_boundaries(text, nfolds):
+def boundaries(text, nfolds):
     """Returns `nfolds` boundaries as a list of line indices in `text`
 
     Parameters
@@ -43,7 +43,7 @@ def _fold_boundaries(text, nfolds):
 
     Returns
     -------
-    list
+    boundaries : list
         The list of indices in `text` corresponding to the computed
         fold boundaries.
 
@@ -67,8 +67,8 @@ def _fold_boundaries(text, nfolds):
     return [i * int(len(text)/nfolds) for i in range(nfolds)]
 
 
-def fold(text, nfolds):
-    """Create `nfolds` versions of an input `text`.
+def fold(text, nfolds, fold_boundaries=None):
+    """Create `nfolds` versions of an input `text`
 
     In order to serve the unfold operation, this functions also build
     the index of the beginning of the last block in each fold.
@@ -76,9 +76,12 @@ def fold(text, nfolds):
     Parameters
     ----------
     text : list
-        The input text as a list of utterances
+        The input text as a list of utterances.
     nfolds : int
-        The number of folds to build on `text`
+        The number of folds to build on `text`.
+    fold_boundaries : list, optional
+        An increasing list of length `nfolds` with the start index of
+        each fold in `text`. By default, use the boundaries() function.
 
     Returns
     -------
@@ -91,8 +94,12 @@ def fold(text, nfolds):
     if nfolds == 1:
         return [text], [0]
 
+    # compute boundaries if not specified in arguments
+    if fold_boundaries is None:
+        fold_boundaries = boundaries(text, nfolds)
+
     # create data blocks from boundaries
-    b = _fold_boundaries(text, nfolds)
+    b = fold_boundaries
     blocks = [text[b[i]:b[i+1]] for i in range(len(b)-1)]
     blocks.append(text[b[-1]:])
 
