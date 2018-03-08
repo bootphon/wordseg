@@ -378,7 +378,7 @@ def main():
     excluded_args = ['verbose', 'quiet', 'input', 'output', 'nfolds', 'njobs']
     for k, v in vars(args).items():
         # ignored arguments
-        if k in excluded_args or v in (None, False):
+        if k in excluded_args or (v in (None, False) and v != 0):
             continue
 
         if k == 'estimator':
@@ -398,7 +398,9 @@ def main():
 
     # adapt boolean values
     dpseg_args = dpseg_args.replace('--eval-maximize True', '--eval-maximize 1')
+    dpseg_args = dpseg_args.replace('--eval-maximize False', '')
     dpseg_args = dpseg_args.replace('--do-mbdp True', '--do-mbdp 1')
+    dpseg_args = dpseg_args.replace('--do-mbdp False', '')
 
     segmented = segment(
         streamin, nfolds=args.nfolds, njobs=args.njobs,
