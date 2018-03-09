@@ -42,6 +42,15 @@ eval_tp = evaluate(segmented_tp, gold)
 eval_puddle = evaluate(segmented_puddle, gold)
 eval_dpseg = evaluate(segmented_dpseg, gold)
 
+
+# a little function to display score with 4-digits precision
+def display(score):
+    if score is None:
+        return 'None'
+    else:
+        return '%.4g' % score
+
+
 # concatenate the evaluations in a table and display them
 sys.stdout.write(
     '\n* Evaluation\n\n' +
@@ -50,8 +59,8 @@ sys.stdout.write(
 for score in eval_tp.keys():
     line = '\t'.join((
         score,
-        '%.4g' % eval_baseline[score],
-        '%.4g' % eval_tp[score],
-        '%.4g' % eval_puddle[score],
-        '%.4g' % eval_dpseg[score]))
+        display(eval_baseline[score]),
+        display(eval_tp[score]),
+        display(eval_puddle[score]),
+        display(eval_dpseg[score])))
     sys.stdout.write(line + '\n')

@@ -75,8 +75,11 @@ def test_replicate(datadir):
         'token_fscore': 0.3994,
         'token_precision': 0.3674,
         'token_recall': 0.4375,
-        'boundary_fscore': 0.6144,
-        'boundary_precision': 0.557,
-        'boundary_recall': 0.685}
+        'boundary_all_fscore': 0.7174,
+        'boundary_all_precision': 0.6671,
+        'boundary_all_recall': 0.776,
+        'boundary_noedge_fscore': 0.6144,
+        'boundary_noedge_precision': 0.557,
+        'boundary_noedge_recall': 0.685}
 
     assert score == pytest.approx(expected, rel=1e-3)

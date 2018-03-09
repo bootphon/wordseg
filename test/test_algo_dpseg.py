@@ -108,8 +108,11 @@ def test_replicate_cds_wordseg(datadir):
         'token_fscore': 0.3836,
         'token_precision': 0.4118,
         'token_recall': 0.359,
-        'boundary_fscore': 0.6415,
-        'boundary_precision': 0.7083,
-        'boundary_recall': 0.5862}
+        'boundary_all_fscore': 0.7957,
+        'boundary_all_precision': 0.8409,
+        'boundary_all_recall': 0.7551,
+        'boundary_noedge_fscore': 0.6415,
+        'boundary_noedge_precision': 0.7083,
+        'boundary_noedge_recall': 0.5862}
 
     assert score == pytest.approx(expected, rel=1e-3)
