@@ -5,6 +5,18 @@ wordseg-0.6.2 (not yet released)
 
 * New test to ensure bash and python calls to wordseg lead to
   identical results.
+  
+* New tests to ensure replication of scores from CDSWordSeg to 
+  wordseg for puddle, tp, dibs and dpseg.
+  
+* In **wordseg-dpseg**, bugfix in forwarding some arguments from
+  Python to C++ and when the first line of a fold contains a single char.
+  
+* In **wordseg-dibs**, safer use of train text (ensure there are word 
+  separators in it).
+  
+* In **wordseg-eval**, when called from bash, the scores are now displayed 
+  in a fixed order. See #31.
 
 
 wordseg-0.6.1
