@@ -28,10 +28,10 @@ class TokenEvaluation(object):
         self.n_exactmatch = 0
 
     def precision(self):
-        return self.correct / self.test if self.test != 0 else None
+        return float(self.correct) / self.test if self.test != 0 else None
 
     def recall(self):
-        return self.correct / self.gold if self.gold != 0 else None
+        return float(self.correct) / self.gold if self.gold != 0 else None
 
     def fscore(self):
         # p = self.precision()
@@ -41,10 +41,10 @@ class TokenEvaluation(object):
         # else:
         #     return 2 * p * r / (p + r)
         total = self.test + self.gold
-        return 2 * self.correct / total if total != 0 else None
+        return float(2 * self.correct) / total if total != 0 else None
 
     def exact_match(self):
-        return self.n_exactmatch / self.n if self.n else None
+        return float(self.n_exactmatch) / self.n if self.n else None
 
     def update(self, test_set, gold_set):
         self.n += 1
@@ -100,7 +100,7 @@ class TypeEvaluation(TokenEvaluation):
 
     def update_lists(self, text, gold):
         lt, lg = self.lexicon_check(text, gold)
-        super().update_lists(lt, lg)
+        super(TypeEvaluation, self).update_lists(lt, lg)
 
 
 class BoundaryEvaluation(TokenEvaluation):
@@ -111,7 +111,7 @@ class BoundaryEvaluation(TokenEvaluation):
     def update_lists(self, text, gold):
         lt = self.get_boundary_positions(text)
         lg = self.get_boundary_positions(gold)
-        super().update_lists(lt, lg)
+        super(BoundaryEvaluation, self).update_lists(lt, lg)
 
 
 class BoundaryNoEdgeEvaluation(BoundaryEvaluation):
