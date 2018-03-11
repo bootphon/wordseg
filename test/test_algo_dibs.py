@@ -32,11 +32,17 @@ def test_basic(prep, tags, type, threshold, pwb):
         assert s(a) == s(b), 'line {}: "{}" != "{}"'.format(n+1, s(a), s(b))
 
 
-def test_phone_sep():
+@pytest.mark.parametrize('level', ['phone', 'syllable'])
+def test_phone_sep(level):
     text = ['hh_ih_r_;eword ',
             'dh_eh_r_;eword w_iy_;eword g_ow_;eword ']
-    sep = Separator(phone='_', syllable=None, word=';eword ')
-    model = dibs.CorpusSummary(text, separator=sep)
+
+    sep = Separator(
+        phone='_' if level == 'phone' else None,
+        syllable='_' if level == 'syllable' else None,
+        word=';eword ')
+
+    model = dibs.CorpusSummary(text, separator=sep, level=level)
     assert model.summary == {'nlines': 2, 'nwords': 4, 'nphones': 10}
 
 
@@ -44,6 +50,7 @@ def test_bad_train(prep):
     # cannot have a train text without word separators
     with pytest.raises(ValueError):
         dibs.CorpusSummary(prep)
+
 
 def test_replicate_cdswordseg(datadir):
     sep = Separator()
