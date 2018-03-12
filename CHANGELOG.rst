@@ -1,22 +1,37 @@
+.. note::
+
+   Version numbers follow the `semantic versioning
+   <https://semver.org/>`_ principles.
+
+
 wordseg-0.6.2 (not yet released)
--------------
+--------------------------------
 
-* Improved docker image (use python-anaconda)
+* Docker image now uses python-3.6 from anaconda,
 
-* New test to ensure bash and python calls to wordseg lead to
-  identical results.
-  
-* New tests to ensure replication of scores from CDSWordSeg to 
+* New tests to ensure replication of scores from CDSWordSeg to
   wordseg for puddle, tp, dibs and dpseg.
-  
-* In **wordseg-dpseg**, bugfix in forwarding some arguments from
-  Python to C++ and when the first line of a fold contains a single char.
-  
-* In **wordseg-dibs**, safer use of train text (ensure there are word 
-  separators in it).
-  
-* In **wordseg-eval**, when called from bash, the scores are now displayed 
-  in a fixed order. See #31.
+
+* In **wordseg-dpseg**:
+
+  * fixed forwarding of some arguments from Python to C++,
+  * implementation of dpseg bugfix when single char on first line of
+    a fold,
+  * use the original random number generator to replicate exactly
+    CDSWprdSeg.
+
+* In **wordseg-dibs**
+
+  * fixed bug when loading train text at syllable level (new
+    *--unit** option)
+  * safer use of train text (ensure there are word separators in
+    it).
+
+* In **wordseg-eval**, when called from bash, the scores are now
+  displayed in a fixed order. New test to ensure bash and python
+  calls to wordseg lead to identical results. See #31.
+
+* In **wordseg-stats** the scores are now displayed in a fixed order.
 
 
 wordseg-0.6.1

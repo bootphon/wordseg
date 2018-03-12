@@ -99,11 +99,11 @@ class CorpusStatistics(object):
         This method is a simple wrapper on the other statistical
         methods. It call all the methods available for the defined
         separator (some of them requires 'phone' tokens) and wraps the
-        results in a dictionary.
+        results in an ordered dictionary.
 
         """
         # store the output statistics in a dictionary
-        results = {}
+        results = collections.OrderedDict()
 
         # corpus description at utterance level
         results['corpus'] = self.describe_corpus()
@@ -125,7 +125,7 @@ class CorpusStatistics(object):
 
         Returns
         -------
-        stats : dict
+        stats : ordered dict
             A dictionnary made of the following entries (all counts
             being on the entire corpus):
 
@@ -145,14 +145,13 @@ class CorpusStatistics(object):
         # length of utterances in number of words
         wlen = [len(utt) for utt in self.tokens['word']]
 
-        stats = {
+        stats = collections.OrderedDict((k, v) for k, v in (
             # number of utterances
-            'nutts': len(self.corpus),
+            ('nutts', len(self.corpus)),
             # number of single word utterances
-            'nutts_single_word': wlen.count(1),
+            ('nutts_single_word', wlen.count(1)),
             # mean ratio of unique words per chunk of 10 words
-            'mattr': self._mattr('word', size=10)
-        }
+            ('mattr', self._mattr('word', size=10))))
 
         return stats
 
@@ -167,7 +166,7 @@ class CorpusStatistics(object):
 
         Returns
         -------
-        stats : dict
+        stats : ordered dict
             A dictionnary made of the following entries (all counts
             being on the entire corpus):
 
@@ -176,7 +175,7 @@ class CorpusStatistics(object):
             - 'hapaxes': number of types occuring only once in the corpus
 
         """
-        stats = {}
+        stats = collections.OrderedDict()
 
         # length of utterances in number of words
         tokens_len = [len(utt) for utt in self.tokens[level]]
