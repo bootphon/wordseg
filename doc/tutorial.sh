@@ -9,22 +9,20 @@ cat $1 | wordseg-stats --json > stats.json
 # segment the prepared text with different algorithms (we show few
 # options for them, use --help to list all of them)
 cat prepared.txt | wordseg-baseline -P 0.5 > segmented.baseline.txt
-cat prepared.txt | wordseg-tp -p forward -t relative > segmented.tp_f_rel.txt
+cat prepared.txt | wordseg-tp -p forward -t relative > segmented.tp.txt
 cat prepared.txt | wordseg-puddle -w 2 > segmented.puddle.txt
-cat prepared.txt | wordseg-dpseg > segmented.dpseg.txt
+cat prepared.txt | wordseg-dpseg -f 1 -r 1 > segmented.dpseg.txt
 
-#AG has a similar call but additional files can be provided
-GRAMMAR=test/data/ag/Colloc0_enFestival.lt
+# AG has a similar call but additional files can be provided
+GRAMMAR=../data/ag/Colloc0_enFestival.lt
 CATEGORY=Colloc0
-cat prepared.txt | wordseg-ag  $GRAMMAR $CATEGORY --njobs 4 --verbose > segmented.ag.txt
+cat prepared.txt | wordseg-ag $GRAMMAR $CATEGORY --njobs 4 > segmented.ag.txt
 
-
-# dibs' call looks pretty different (we provide the name of the output file, and a training file)
-wordseg-dibs -t baseline -o segmented.dibs.txt prepared.txt $1
-
+# dibs' call looks pretty different (we provide a training file)
+wordseg-dibs -t baseline prepared.txt $1 > segmented.dibs.txt
 
 # evaluate them against the gold file
-for algo in baseline tp_f_rel puddle dpseg ag dibs
+for algo in baseline tp puddle dpseg dibs ag
 do
     cat segmented.$algo.txt | wordseg-eval gold.txt > eval.$algo.txt
 done
@@ -38,14 +36,16 @@ cat stats.json
 echo
 echo "* Evaluation"
 echo
-echo "score baseline tp puddle dpseg ag dibs"
-echo "------------------ -------- -------- -------- --------"
-for i in $(seq 1 9)
-do
-    awk -v i=$i 'NR==i {printf $0}; END {printf " "}' eval.baseline.txt
-    awk -v i=$i 'NR==i {printf $2}; END {printf " "}' eval.tp_f_rel.txt
-    awk -v i=$i 'NR==i {printf $2} END {printf " "}' eval.puddle.txt
-    awk -v i=$i 'NR==i {print $2}' eval.dpseg.txt
-    awk -v i=$i 'NR==i {print $2}' eval.ag.txt
-    awk -v i=$i 'NR==i {print $2}' eval.dibs.txt
-done
+(
+    echo "score baseline tp puddle dpseg ag dibs"
+    echo "------------------ ------- ------- ------- ------- -------"
+    for i in $(seq 1 12)
+    do
+        awk -v i=$i 'NR==i {printf $0}; END {printf " "}' eval.baseline.txt
+        awk -v i=$i 'NR==i {printf $2}; END {printf " "}' eval.tp.txt
+        awk -v i=$i 'NR==i {printf $2}; END {printf " "}' eval.puddle.txt
+        awk -v i=$i 'NR==i {printf $2}; END {printf " "}' eval.dpseg.txt
+        awk -v i=$i 'NR==i {printf $2}; END {printf " "}' eval.ag.txt
+        awk -v i=$i 'NR==i {print $2}' eval.dibs.txt
+    done
+    ) | column -t
