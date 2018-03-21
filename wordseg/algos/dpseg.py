@@ -92,7 +92,7 @@ DPSEG_ARGUMENTS = [
 
     utils.Argument(
         short_name='-n', name='--ngram', type=['unigram', 'bigram'],
-        help='default is unigram'),
+        help='default is bigram'),
 
     utils.Argument(
         name='--do-mbdp', type=bool,
