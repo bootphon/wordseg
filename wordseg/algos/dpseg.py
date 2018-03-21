@@ -84,7 +84,8 @@ DPSEG_ARGUMENTS = [
 
     utils.Argument(
         short_name='-S', name='--samples-per-utt', type=int,
-        help='samples per utterance for decayed-flip estimator, default = 1000'),
+        help='samples per utterance for decayed-flip estimator, '
+        'default is 1000'),
 
     utils.Argument(
         short_name='-m', name='--mode', type=['batch', 'online'],
@@ -120,7 +121,8 @@ DPSEG_ARGUMENTS = [
 
     utils.Argument(
         short_name='-H', name='--hypersamp-ratio', type=float,
-        help='standard deviation for new hyperparmeters proposals, default = 0.1'),
+        help='standard deviation for new hyperparmeters proposals, '
+        'default = 0.1'),
 
     utils.Argument(
         name='--nchartypes', type=int,
@@ -133,7 +135,8 @@ DPSEG_ARGUMENTS = [
 
     utils.Argument(
         short_name='-b', name='--init-pboundary', type=float,
-        help='initial segmentation boundary probability (-1 = gold, default = 0)'),
+        help='initial segmentation boundary probability (-1 = gold, '
+        'default = 0)'),
 
     utils.Argument(
         name='--pya-beta-a', type=float,
@@ -162,12 +165,14 @@ DPSEG_ARGUMENTS = [
 
     utils.Argument(
         short_name='-F', name='--forget-rate', type=int,
-        help='number of utterances whose words can be remembered, default = 1'),
+        help='number of utterances whose words can be remembered, '
+        'default = 1'),
 
     utils.Argument(
         short_name='-i', name='--burnin-iterations', type=int,
         help=('number of burn-in epochs. This is actually the total '
-              'number of iterations through the training data, default = 2000')),
+              'number of iterations through the training data, '
+              'default = 2000')),
 
     utils.Argument(
         name='--anneal-iterations', type=int,
@@ -190,7 +195,8 @@ DPSEG_ARGUMENTS = [
 
     utils.Argument(
         name='--anneal-b', type=float,
-        help='parameter in annealing temperature sigmoid function, default = 0.2'),
+        help='parameter in annealing temperature sigmoid function, '
+        'default = 0.2'),
 
     utils.Argument(
         name='--result-field-separator', type=str,
@@ -378,7 +384,7 @@ def _dpseg_bugfix(text, boundaries, log=utils.null_logger()):
     """
     # we have something to fix if one of those lengths is 1
     first_len = [len(text[i]) for i in boundaries]
-    if not 1 in first_len:
+    if 1 not in first_len:
         log.debug('folds boundaries are OK for dpseg')
         return boundaries
 
@@ -388,7 +394,7 @@ def _dpseg_bugfix(text, boundaries, log=utils.null_logger()):
             'this will cause wordseg-dpseg to bug. '
             'Please re-arrange your text manually and try again.')
 
-    need_to_fix = [i for i, l in enumerate(first_len) if l == 1]
+    need_to_fix = [i for i, len in enumerate(first_len) if len == 1]
     log.debug(
         'dpseg bugfix: need to fix folds {}'
         .format([i+1 for i in need_to_fix]))
@@ -476,10 +482,12 @@ def main():
                           for k, v in dpseg_args.items())
 
     # adapt boolean values
-    dpseg_args = dpseg_args.replace('--eval-maximize True', '--eval-maximize 1')
-    dpseg_args = dpseg_args.replace('--eval-maximize False', '')
-    dpseg_args = dpseg_args.replace('--do-mbdp True', '--do-mbdp 1')
-    dpseg_args = dpseg_args.replace('--do-mbdp False', '')
+    for orig, new in (
+            ('--eval-maximize True', '--eval-maximize 1'),
+            ('--eval-maximize False', ''),
+            ('--do-mbdp True', '--do-mbdp 1'),
+            ('--do-mbdp False', '')):
+        dpseg_args = dpseg_args.replace(orig, new)
 
     segmented = segment(
         streamin, nfolds=args.nfolds, njobs=args.njobs,
