@@ -21,6 +21,8 @@ args = [
     '--ngram 1 --a1 0 --b1 1 --estimator V --mode batch',
     '--ngram 1 --a1 0 --b1 1 --estimator F',
     '--ngram 1 --a1 0 --b1 1 --estimator T',
+    '--ngram 1 --a1 0 --b1 1 --estimator D --mode online',
+    '--ngram 1 --a1 0 --b1 1 --estimator D --mode online --burnin-iterations 1',
     utils.strip('''
     --ngram 1 --a1 0 --b1 1 --estimator D --mode online --eval-maximize 1
     --eval-interval 50 --decay-rate 1.5 --samples-per-utt 20
