@@ -25,9 +25,9 @@
 // code (with 'extern' declarations). This is bad (source of bugs,
 // hard to read/debug). Use parameters instead.
 
-uniform01_type unif01;     // random number generator
-unsigned int debug_level;  // higher -> mode debug messages on stdout
-std::wstring sep;          // separator used to separate fields during printing of results
+uniform01_type unif01; // random number generator
+uint debug_level;      // higher -> mode debug messages on stdout
+std::wstring sep;      // separator used to separate fields during printing of results
 
 
 std::wstring str2wstr(std::string str)
@@ -39,8 +39,12 @@ std::wstring str2wstr(std::string str)
 
 
 Model* get_sampler(CorpusData* data,
-                   const unsigned int ngram, const std::string& mode, const std::string& estimator,
-                   const float forget_rate, const float decay_rate, const unsigned int samples_per_utt)
+                   const uint ngram,
+                   const std::string& mode,
+                   const std::string& estimator,
+                   const float forget_rate,
+                   const float decay_rate,
+                   const uint samples_per_utt)
 {
     Model* sampler = NULL;
 
@@ -428,7 +432,8 @@ int main(int argc, char** argv)
         data.read_eval(is,vm["eval-start-index"].as<U>(),vm["eval-num-sents"].as<U>());
     }
 
-    if (debug_level >= 98000) {
+    if (debug_level >= 98000)
+    {
         TRACE(S::data.size());
         TRACE(S::data);
         TRACE(data.sentence_boundary_list());

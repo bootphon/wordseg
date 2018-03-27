@@ -15,8 +15,10 @@ typedef std::vector<U> Us;
 typedef std::vector<B> Bs;
 typedef std::vector<I> Is;
 
+
 class Data;
 class Scoring;
+
 
 class Sentence: public S
 {
@@ -24,7 +26,8 @@ public:
     typedef std::vector<S> Words;
     typedef Words::const_iterator Words_iterator;
 
-    Sentence() {}
+    Sentence()
+        {}
 
     Sentence(U start, U end, Bs possible_boundaries,
              Bs true_boundaries, const Data* d);
@@ -39,7 +42,7 @@ public:
             return get_words(_true_boundaries);
         }
 
-    std::wostream&  print(std::wostream& os) const;
+    std::wostream& print(std::wostream& os) const;
 
     // add counts of whole sentence
     void insert_words(Unigrams& lex) const;
@@ -70,7 +73,10 @@ public:
 
     friend std::wostream& operator<< (std::wostream& os, const Sentence& s);
 
-    Us get_possible_boundaries(){return _possible_boundaries;};
+    Us get_possible_boundaries()
+        {
+            return _possible_boundaries;
+        };
 
     Bs _boundaries;
 

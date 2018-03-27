@@ -97,6 +97,7 @@ protected:
         }
 };
 
+
 class Model: public ModelBase {
 public:
     Model(Data* constants):
@@ -152,6 +153,7 @@ protected:
     virtual void estimate_eval_sentence(Sentence& s, F temperature, bool maximize = false) = 0;
 };
 
+
 class UnigramModel: public Model {
 public:
     UnigramModel(Data* constants):
@@ -204,221 +206,337 @@ protected:
 };
 
 
-class BigramModel: public Model {
+class BigramModel: public Model
+{
 public:
-  BigramModel(Data* constants):
-    Model(constants),
-    _ulex(_base_dist, unif01, _constants->a1, _constants->b1),
-    _lex(_ulex, unif01, _constants->a2, _constants->b2) {
-  }
-  virtual ~BigramModel() {}
-  virtual bool sanity_check() const {
-    bool sane = Model::sanity_check();
-    sane = sane && _ulex.sanity_check();
-    sane = sane && _lex.sanity_check();
-    //    sane = sane && _lex.get_a() ==  _constants->a2;
-    //    sane = sane && _lex.get_b() ==  _constants->b2;
-    return sane;
-  }
-  virtual F log_posterior() const {
-    return ModelBase::log_posterior(_ulex, _lex);
-  }
-  virtual void estimate(U iters, std::wostream& os, U eval_iters = 0,
-						F temperature = 1, bool maximize = false, bool is_decayed = false) = 0;
-  virtual Fs predict_pairs(const TestPairs& test_pairs) const {
-    return ModelBase::predict_pairs(test_pairs, _lex);
-  }
-  virtual void print_lexicon(std::wostream& os) const {
-    os << "Unigram lexicon:" << std::endl;
-    _ulex.print(os);
-  }
+    BigramModel(Data* constants):
+        Model(constants),
+        _ulex(_base_dist, unif01, _constants->a1, _constants->b1),
+        _lex(_ulex, unif01, _constants->a2, _constants->b2)
+        {}
+
+  virtual ~BigramModel()
+        {}
+
+  virtual bool sanity_check() const
+        {
+            bool sane = Model::sanity_check();
+            sane = sane && _ulex.sanity_check();
+            sane = sane && _lex.sanity_check();
+            //    sane = sane && _lex.get_a() ==  _constants->a2;
+            //    sane = sane && _lex.get_b() ==  _constants->b2;
+            return sane;
+        }
+
+  virtual F log_posterior() const
+        {
+            return ModelBase::log_posterior(_ulex, _lex);
+        }
+
+    virtual void estimate(
+        U iters, std::wostream& os, U eval_iters = 0,
+        F temperature = 1, bool maximize = false, bool is_decayed = false) = 0;
+
+  virtual Fs predict_pairs(const TestPairs& test_pairs) const
+        {
+            return ModelBase::predict_pairs(test_pairs, _lex);
+        }
+
+    virtual void print_lexicon(std::wostream& os) const
+        {
+            os << "Unigram lexicon:" << std::endl;
+            _ulex.print(os);
+        }
+
 protected:
-  Unigrams _ulex;
-  Bigrams _lex;
-  virtual void print_statistics(std::wostream& os, U iters, F temp, bool do_header=false);
-  virtual Bs hypersample(F temperature){
-    return ModelBase::hypersample(_ulex, _lex, temperature);
-  }
-  virtual void estimate_sentence(Sentence& s, F temperature) = 0;
-  virtual void estimate_eval_sentence(Sentence& s, F temperature, bool maximize = false);
+    Unigrams _ulex;
+    Bigrams _lex;
+
+    virtual void print_statistics(std::wostream& os, U iters, F temp, bool do_header=false);
+
+    virtual Bs hypersample(F temperature)
+        {
+            return ModelBase::hypersample(_ulex, _lex, temperature);
+        }
+
+    virtual void estimate_sentence(Sentence& s, F temperature) = 0;
+    virtual void estimate_eval_sentence(Sentence& s, F temperature, bool maximize = false);
 };
 
-class BatchUnigram: public UnigramModel {
+
+class BatchUnigram: public UnigramModel
+{
 public:
-  BatchUnigram(Data* constants);
-  virtual ~BatchUnigram() {}
-  virtual void estimate(U iters, std::wostream& os, U eval_iters = 0,
-						F temperature = 1, bool maximize = false, bool is_decayed = false);
+    BatchUnigram(Data* constants);
+
+    virtual ~BatchUnigram()
+        {}
+
+    virtual void estimate(
+        U iters, std::wostream& os, U eval_iters = 0,
+        F temperature = 1, bool maximize = false, bool is_decayed = false);
+
 protected:
-  virtual void estimate_sentence(Sentence& s, F temperature) = 0;
+    virtual void estimate_sentence(Sentence& s, F temperature) = 0;
 };
 
-class BatchUnigramViterbi: public BatchUnigram {
+
+class BatchUnigramViterbi: public BatchUnigram
+{
 public:
-  BatchUnigramViterbi(Data* constants): BatchUnigram(constants) {}
-  virtual ~BatchUnigramViterbi() {}
+    BatchUnigramViterbi(Data* constants): BatchUnigram(constants)
+        {}
+
+    virtual ~BatchUnigramViterbi()
+        {}
+
 protected:
-  virtual void estimate_sentence(Sentence& s, F temperature);
+    virtual void estimate_sentence(Sentence& s, F temperature);
 };
 
-class BatchUnigramFlipSampler: public BatchUnigram {
+
+class BatchUnigramFlipSampler: public BatchUnigram
+{
 public:
-  BatchUnigramFlipSampler(Data* constants): BatchUnigram(constants) {
-  if(debug_level >= 1000)
-      std::wcout << "BatchUnigramFlipSampler::Printing current _lex:"
-                 << std::endl << _lex << std::endl;
-  }
-  virtual ~BatchUnigramFlipSampler() {}
+    BatchUnigramFlipSampler(Data* constants)
+        : BatchUnigram(constants)
+        {
+            if(debug_level >= 1000)
+                std::wcout << "BatchUnigramFlipSampler::Printing current _lex:"
+                           << std::endl << _lex << std::endl;
+        }
+
+    virtual ~BatchUnigramFlipSampler()
+        {}
+
 protected:
-  virtual void estimate_sentence(Sentence& s, F temperature);
+    virtual void estimate_sentence(Sentence& s, F temperature);
 };
 
-class BatchUnigramTreeSampler: public BatchUnigram {
+
+class BatchUnigramTreeSampler: public BatchUnigram
+{
 public:
-  BatchUnigramTreeSampler(Data* constants): BatchUnigram(constants) {}
-  virtual ~BatchUnigramTreeSampler() {}
+    BatchUnigramTreeSampler(Data* constants): BatchUnigram(constants)
+        {}
+
+    virtual ~BatchUnigramTreeSampler()
+        {}
+
 protected:
-  virtual void estimate_sentence(Sentence& s, F temperature);
+    virtual void estimate_sentence(Sentence& s, F temperature);
 };
 
-class OnlineUnigram: public UnigramModel {
+
+class OnlineUnigram: public UnigramModel
+{
 public:
-  OnlineUnigram(Data* constants, F forget_rate = 0):
-    UnigramModel(constants), _forget_rate(forget_rate) {
-    Model::_nsentences_seen = 0;}
-  virtual ~OnlineUnigram() {}
-  virtual void estimate(U iters, std::wostream& os, U eval_iters = 0,
-						F temperature = 1, bool maximize = false, bool is_decayed = false);
+    OnlineUnigram(Data* constants, F forget_rate = 0)
+        : UnigramModel(constants), _forget_rate(forget_rate)
+        {
+            Model::_nsentences_seen = 0;
+        }
+
+    virtual ~OnlineUnigram()
+        {}
+
+    virtual void estimate(
+        U iters, std::wostream& os, U eval_iters = 0,
+        F temperature = 1, bool maximize = false, bool is_decayed = false);
+
 protected:
-  F _forget_rate;
-  Sentences _sentences_seen; // for use with DeacyedMCMC model in particular
-  virtual void estimate_sentence(Sentence& s, F temperature) = 0;
-  void forget_items(Sentences::iterator i);
+    F _forget_rate;
+    Sentences _sentences_seen; // for use with DeacyedMCMC model in particular
+    virtual void estimate_sentence(Sentence& s, F temperature) = 0;
+    void forget_items(Sentences::iterator i);
 };
 
-class OnlineUnigramViterbi: public OnlineUnigram {
+
+class OnlineUnigramViterbi: public OnlineUnigram
+{
 public:
-  OnlineUnigramViterbi(Data* constants, F forget_rate = 0):
-    OnlineUnigram(constants, forget_rate) {}
-  virtual ~OnlineUnigramViterbi() {}
+    OnlineUnigramViterbi(Data* constants, F forget_rate = 0):
+        OnlineUnigram(constants, forget_rate)
+        {}
+
+    virtual ~OnlineUnigramViterbi()
+        {}
+
 protected:
-  virtual void estimate_sentence(Sentence& s, F temperature);
+    virtual void estimate_sentence(Sentence& s, F temperature);
 };
 
-class OnlineUnigramTreeSampler: public OnlineUnigram {
+
+class OnlineUnigramTreeSampler: public OnlineUnigram
+{
 public:
-  OnlineUnigramTreeSampler(Data* constants, F forget_rate = 0):
-    OnlineUnigram(constants, forget_rate) {
-	}
-  virtual ~OnlineUnigramTreeSampler() {}
+    OnlineUnigramTreeSampler(Data* constants, F forget_rate = 0):
+        OnlineUnigram(constants, forget_rate)
+        {}
+
+    virtual ~OnlineUnigramTreeSampler() {}
+
 protected:
-  virtual void estimate_sentence(Sentence& s, F temperature);
+    virtual void estimate_sentence(Sentence& s, F temperature);
 };
 
-class DecayedMCMC{
+
+class DecayedMCMC
+{
 public:
-	DecayedMCMC(F decay_rate = 0, U samples_per_utt = 100);
-	virtual ~DecayedMCMC(){}
+    DecayedMCMC(F decay_rate = 0, U samples_per_utt = 100);
+
+    virtual ~DecayedMCMC()
+        {}
 
 protected:
-  F _decay_rate;
-  U _samples_per_utt;
-  Fs _decay_offset_probs;
-  F _cum_decay_prob;
-  U _num_total_pot_boundaries;
-  U _num_curr_pot_boundaries;
-  Us _boundaries_num_sampled;
-  U _boundary_within_sentence;
-  Sentences::iterator _sentence_sampled;
-  virtual void decayed_initialization(Sentences _sentences);
-  virtual void calc_new_cum_prob(Sentence& s, U num_boundaries);
-  virtual U find_boundary_to_sample();
-  virtual void find_sent_to_sample(U b_to_sample, Sentence& to_sample, Sentences& sentences_seen);
-  void replace_sampled_sentence(Sentence s, Sentences& sentences_seen);
+    F _decay_rate;
+    U _samples_per_utt;
+    Fs _decay_offset_probs;
+    F _cum_decay_prob;
+    U _num_total_pot_boundaries;
+    U _num_curr_pot_boundaries;
+    Us _boundaries_num_sampled;
+    U _boundary_within_sentence;
+    Sentences::iterator _sentence_sampled;
+    virtual void decayed_initialization(Sentences _sentences);
+    virtual void calc_new_cum_prob(Sentence& s, U num_boundaries);
+    virtual U find_boundary_to_sample();
+    virtual void find_sent_to_sample(U b_to_sample, Sentence& to_sample, Sentences& sentences_seen);
+    void replace_sampled_sentence(Sentence s, Sentences& sentences_seen);
 };
 
 
-class OnlineUnigramDecayedMCMC:public OnlineUnigram, public DecayedMCMC {
+class OnlineUnigramDecayedMCMC: public OnlineUnigram, public DecayedMCMC
+{
 public:
-  OnlineUnigramDecayedMCMC(Data* constants, F forget_rate = 0, F decay_rate = 1.0, U samples_per_utt = 1000);
-  virtual ~OnlineUnigramDecayedMCMC() {}
-protected:
-  virtual void estimate_sentence(Sentence& s, F temperature);
+    OnlineUnigramDecayedMCMC(Data* constants, F forget_rate = 0, F decay_rate = 1.0, U samples_per_utt = 1000);
 
+    virtual ~OnlineUnigramDecayedMCMC() {}
+
+protected:
+    virtual void estimate_sentence(Sentence& s, F temperature);
 };
 
-class BatchBigram: public BigramModel {
+
+class BatchBigram: public BigramModel
+{
 public:
-  BatchBigram(Data* constants);
-  virtual ~BatchBigram() {}
-  virtual void estimate(U iters, std::wostream& os, U eval_iters = 0,
-						F temperature = 1, bool maximize = false, bool is_decayed = false);
+    BatchBigram(Data* constants);
+    virtual ~BatchBigram() {}
+    virtual void estimate(
+        U iters, std::wostream& os, U eval_iters = 0,
+        F temperature = 1, bool maximize = false, bool is_decayed = false);
+
 protected:
-  virtual void estimate_sentence(Sentence& s, F temperature) = 0;
+    virtual void estimate_sentence(Sentence& s, F temperature) = 0;
 };
 
-class BatchBigramViterbi: public BatchBigram {
-  public:
-  BatchBigramViterbi(Data* constants): BatchBigram(constants) {}
-  virtual ~BatchBigramViterbi() {}
-protected:
-  virtual void estimate_sentence(Sentence& s, F temperature);
-};
 
-class BatchBigramFlipSampler: public BatchBigram {
-  public:
-  BatchBigramFlipSampler(Data* constants): BatchBigram(constants) {}
-  virtual ~BatchBigramFlipSampler() {}
-protected:
-  virtual void estimate_sentence(Sentence& s, F temperature);
-};
-
-class BatchBigramTreeSampler: public BatchBigram {
-  public:
-  BatchBigramTreeSampler(Data* constants): BatchBigram(constants) {}
-  virtual ~BatchBigramTreeSampler() {}
-protected:
-  virtual void estimate_sentence(Sentence& s, F temperature);
-};
-
-class OnlineBigram: public BigramModel {
+class BatchBigramViterbi: public BatchBigram
+{
 public:
-  OnlineBigram(Data* constants, F forget_rate = 0):
-    BigramModel(constants), _forget_rate(forget_rate) {
-    Model::_nsentences_seen = 0;}
-  virtual ~OnlineBigram() {}
-  virtual void estimate(
-      U iters, std::wostream& os, U eval_iters = 0,
-      F temperature = 1, bool maximize = false, bool is_decayed = false);
+    BatchBigramViterbi(Data* constants): BatchBigram(constants)
+        {}
+
+    virtual ~BatchBigramViterbi()
+        {}
+
 protected:
-  F _forget_rate;
-  Sentences _sentences_seen; // for use with DeacyedMCMC model in particular
-  virtual void estimate_sentence(Sentence& s, F temperature) = 0;
-  void forget_items(Sentences::iterator i);
+    virtual void estimate_sentence(Sentence& s, F temperature);
 };
 
-class OnlineBigramViterbi: public OnlineBigram {
+
+class BatchBigramFlipSampler: public BatchBigram
+{
 public:
-  OnlineBigramViterbi(Data* constants): OnlineBigram(constants) {}
-  virtual ~OnlineBigramViterbi() {}
+    BatchBigramFlipSampler(Data* constants): BatchBigram(constants)
+        {}
+
+    virtual ~BatchBigramFlipSampler()
+        {}
+
 protected:
-  virtual void estimate_sentence(Sentence& s, F temperature);
+    virtual void estimate_sentence(Sentence& s, F temperature);
 };
 
-class OnlineBigramTreeSampler: public OnlineBigram {
-  public:
-  OnlineBigramTreeSampler(Data* constants): OnlineBigram(constants) {}
-  virtual ~OnlineBigramTreeSampler() {}
-protected:
-  virtual void estimate_sentence(Sentence& s, F temperature);
-};
 
-class OnlineBigramDecayedMCMC:public OnlineBigram, public DecayedMCMC {
+class BatchBigramTreeSampler: public BatchBigram
+{
 public:
-  OnlineBigramDecayedMCMC(Data* constants, F forget_rate = 0, F decay_rate = 1.0, U samples_per_utt = 1000);
-  virtual ~OnlineBigramDecayedMCMC() {}
+    BatchBigramTreeSampler(Data* constants): BatchBigram(constants)
+        {}
+
+    virtual ~BatchBigramTreeSampler()
+        {}
+
 protected:
-  virtual void estimate_sentence(Sentence& s, F temperature);
+    virtual void estimate_sentence(Sentence& s, F temperature);
+};
+
+
+class OnlineBigram: public BigramModel
+{
+public:
+    OnlineBigram(Data* constants, F forget_rate = 0):
+        BigramModel(constants), _forget_rate(forget_rate)
+        {
+            Model::_nsentences_seen = 0;
+        }
+
+    virtual ~OnlineBigram()
+        {}
+
+    virtual void estimate(
+        U iters, std::wostream& os, U eval_iters = 0,
+        F temperature = 1, bool maximize = false, bool is_decayed = false);
+
+protected:
+    F _forget_rate;
+    Sentences _sentences_seen; // for use with DeacyedMCMC model in particular
+    virtual void estimate_sentence(Sentence& s, F temperature) = 0;
+    void forget_items(Sentences::iterator i);
+};
+
+
+class OnlineBigramViterbi: public OnlineBigram
+{
+public:
+    OnlineBigramViterbi(Data* constants): OnlineBigram(constants)
+        {}
+
+    virtual ~OnlineBigramViterbi()
+        {}
+
+protected:
+    virtual void estimate_sentence(Sentence& s, F temperature);
+};
+
+
+class OnlineBigramTreeSampler: public OnlineBigram
+{
+public:
+    OnlineBigramTreeSampler(Data* constants): OnlineBigram(constants)
+        {}
+
+  virtual ~OnlineBigramTreeSampler()
+        {}
+
+protected:
+    virtual void estimate_sentence(Sentence& s, F temperature);
+};
+
+
+class OnlineBigramDecayedMCMC: public OnlineBigram, public DecayedMCMC
+{
+public:
+    OnlineBigramDecayedMCMC(Data* constants, F forget_rate = 0, F decay_rate = 1.0, U samples_per_utt = 1000);
+
+    virtual ~OnlineBigramDecayedMCMC()
+        {}
+
+protected:
+    virtual void estimate_sentence(Sentence& s, F temperature);
 };
 
 #endif
