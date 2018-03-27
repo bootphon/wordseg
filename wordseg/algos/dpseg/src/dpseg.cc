@@ -205,7 +205,7 @@ int main(int argc, char** argv)
          "(default) means to only evaluate the test set after all iterations "
          "are complete.w")
 
-        ("output-file,o", po::value<std::string>(),
+        ("output-file,o", po::value<std::string>()->required(),
          "segmented output file")
 
         ("estimator", po::value<std::string>()->default_value("F"),
