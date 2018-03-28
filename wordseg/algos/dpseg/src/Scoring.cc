@@ -3,6 +3,68 @@
 
 using namespace std;
 
+
+Scoring::Scoring()
+    : _sentences(0),
+      _words_correct(0),
+      _segmented_words(0),
+      _reference_words(0),
+      _bs_correct(0),
+      _segmented_bs(0),
+      _reference_bs(0)
+{}
+
+Scoring::~Scoring()
+{}
+
+
+double Scoring::precision() const
+{
+    return (double)_words_correct/_segmented_words;
+}
+
+double Scoring::recall() const
+{
+    return (double)_words_correct/_reference_words;
+}
+
+double Scoring::fmeas() const
+{
+    return 2*recall()*precision()/(recall()+precision());
+}
+
+double Scoring::b_precision() const
+{
+    return (double)_bs_correct/_segmented_bs;
+}
+
+double Scoring::b_recall() const
+{
+    return (double)_bs_correct/_reference_bs;
+}
+
+double Scoring::b_fmeas() const
+{
+    return 2*b_recall()*b_precision()/(b_recall()+b_precision());
+}
+
+double Scoring::lexicon_precision() const
+{
+    return (double)lexicon_correct()/_segmented_lex.ntypes();
+}
+
+double Scoring::lexicon_recall() const
+{
+    return (double)lexicon_correct()/_reference_lex.ntypes();
+}
+
+double Scoring::lexicon_fmeas() const
+{
+    return 2*lexicon_precision()*lexicon_recall() /
+        (lexicon_precision() + lexicon_recall());
+}
+
+
 void Scoring::reset()
 {
     _sentences = 0;
@@ -60,7 +122,7 @@ int Scoring::lexicon_correct() const
 {
     int correct = 0;
     for(const auto& item: _segmented_lex)
-    // cforeach(Lexicon, iter, _segmented_lex)
+        // cforeach(Lexicon, iter, _segmented_lex)
     {
         if (_reference_lex.count(item.first))
             correct++;
