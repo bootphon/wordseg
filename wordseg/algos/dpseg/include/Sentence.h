@@ -7,13 +7,7 @@
 #include "Unigrams.h"
 #include "Base.h"
 
-
-typedef int I;
-typedef unsigned char B;
-typedef std::vector<F> Fs;
-typedef std::vector<U> Us;
-typedef std::vector<B> Bs;
-typedef std::vector<I> Is;
+#include "typedefs.hh"
 
 
 class Data;

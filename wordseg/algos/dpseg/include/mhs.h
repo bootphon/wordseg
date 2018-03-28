@@ -35,12 +35,11 @@
 #include <utility>
 
 
+#include "typedefs.hh"
 #include "random-mt19937ar.h"
 #include "util.h"
 
-typedef int I;           //!< 32-bit signed integers
-typedef unsigned int U;  //!< 32-bit unsigned integers
-typedef double F;        //!< floating-point numbers
+
 extern U debug_level;
 
 // Note that in this class, both the base distribution and the
@@ -121,6 +120,25 @@ protected:
         U erase(I r)
             {
                 --n;
+
+                // U_U::iterator it = n_m.begin();
+                // while (it != n_m.end())
+                // {
+                //     if ((r -= it->first * it->second) <= 0)
+                //     {
+                //         U n1 = it->first-1;  //!< new table size
+                //         if (--it->second == 0)
+                //             n_m.erase(++it);
+                //         if (n1 == 0)
+                //             --m;
+                //         else
+                //             ++n_m[n1];
+                //         return n1;
+                //     }
+                //     else
+                //         ++it;
+                // }
+
                 for (U_U::iterator it = n_m.begin(); it != n_m.end(); ++it)
                 {
                     if ((r -= it->first * it->second) <= 0)
@@ -151,8 +169,8 @@ protected:
                 U mm = 0, nn = 0;
                 for(const auto& item: n_m)
                 {
-                    assert(n > 0);   // shouldn't have any empty tables
-                    assert(m > 0);
+                    // assert(n > 0);   // shouldn't have any empty tables
+                    // assert(m > 0);
 
                     mm += item.second;
                     nn += item.first * item.second;

@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "typedefs.hh"
 #include "Sentence.h"
 
 extern U debug_level;
