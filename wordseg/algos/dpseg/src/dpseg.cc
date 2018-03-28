@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 
-
 // with gcc below the version 5.0, the <codecvt> header of the
 // standard library is not implemented, so we use the codecvt in
 // boost::locale instead
@@ -18,14 +17,17 @@
 #include <boost/program_options.hpp>
 
 #include "random-mt19937ar.h"
-#include "Estimators.h"
 #include "Data.h"
+
+#include "sampler/dmcmc.hh"
+#include "sampler/flip.hh"
+#include "sampler/tree.hh"
+#include "sampler/viterbi.hh"
 
 
 // TODO The following are global variables accessed across the whole
 // code (with 'extern' declarations). This is bad (source of bugs,
 // hard to read/debug). Use parameters instead.
-
 uniform01_type unif01; // random number generator
 uint debug_level;      // higher -> mode debug messages on stdout
 std::wstring sep;      // separator used to separate fields during printing of results
@@ -39,7 +41,7 @@ std::wstring str2wstr(std::string str)
 }
 
 
-std::shared_ptr<Model> get_sampler(
+std::shared_ptr<sampler::base> get_sampler(
     CorpusData* data,
     const uint ngram,
     const std::string& mode,
@@ -48,7 +50,9 @@ std::shared_ptr<Model> get_sampler(
     const double decay_rate,
     const uint samples_per_utt)
 {
-    using model_ptr = std::shared_ptr<Model>;
+    std::cout << "Init sampler with ngram=" << ngram << ", " << mode << ", " << estimator << std::endl;
+
+    using model_ptr = std::shared_ptr<sampler::base>;
     model_ptr sampler;
 
     // make sure the ngram is 1 or 2
@@ -77,11 +81,20 @@ std::shared_ptr<Model> get_sampler(
     if(ngram == 2 and mode == "batch")
     {
         if(estimator == "F")
-            sampler = model_ptr(new BatchBigramFlipSampler(data));
+        {
+            TRACE(data->nsentences());
+            TRACE(data->get_sentences());
+            TRACE(data->get_eval_sentences());
+            // TRACE(data->nchartypes());
+
+            sampler = model_ptr(new sampler::batch_bigram_flip(data));
+        }
         else if(estimator == "V")
-            sampler = model_ptr(new BatchBigramViterbi(data));
+        {
+            sampler = model_ptr(new sampler::batch_bigram_viterbi(data));
+        }
         else if(estimator == "T")
-            sampler = model_ptr(new BatchBigramTreeSampler(data));
+            sampler = model_ptr(new sampler::batch_bigram_tree(data));
         else if(estimator == "D")
             std::cerr
                 << "D(ecayed Flip) estimator cannot be used in batch mode."
@@ -96,9 +109,9 @@ std::shared_ptr<Model> get_sampler(
                 << "Error: F(lip) estimator cannot be used in online mode."
                 << std::endl;
         else if(estimator == "V")
-            sampler = model_ptr(new OnlineBigramViterbi(data));
+            sampler = model_ptr(new sampler::online_bigram_viterbi(data));
         else if(estimator == "T")
-            sampler = model_ptr(new OnlineBigramTreeSampler(data));
+            sampler = model_ptr(new sampler::online_bigram_tree(data));
         else if(estimator == "D")
         {
             if(debug_level >= 1000)
@@ -107,17 +120,17 @@ std::shared_ptr<Model> get_sampler(
                     << " and samples per utterance " << samples_per_utt << std::endl;
 
             sampler = model_ptr(
-                new OnlineBigramDecayedMCMC(data, forget_rate, decay_rate, samples_per_utt));
+                new sampler::online_bigram_dmcmc(data, forget_rate, decay_rate, samples_per_utt));
         }
     }
     else if(ngram == 1 and mode == "batch")
     {
         if(estimator == "F")
-            sampler = model_ptr(new BatchUnigramFlipSampler(data));
+            sampler = model_ptr(new sampler::batch_unigram_flip(data));
         else if(estimator == "V")
-            sampler = model_ptr(new BatchUnigramViterbi(data));
+            sampler = model_ptr(new sampler::batch_unigram_viterbi(data));
         else if(estimator == "T")
-            sampler = model_ptr(new BatchUnigramTreeSampler(data));
+            sampler = model_ptr(new sampler::batch_unigram_tree(data));
         else if(estimator == "D")
             std::cerr << "D(ecayed Flip) estimator cannot be used in batch mode." << std::endl;
     }
@@ -129,9 +142,9 @@ std::shared_ptr<Model> get_sampler(
                 << "Error: F(lip) estimator cannot be used in online mode."
                 << std::endl;
         else if(estimator == "V")
-            sampler = model_ptr(new OnlineUnigramViterbi(data, forget_rate));
+            sampler = model_ptr(new sampler::online_unigram_viterbi(data, forget_rate));
         else if(estimator == "T")
-            sampler = model_ptr(new OnlineUnigramTreeSampler(data, forget_rate));
+            sampler = model_ptr(new sampler::online_unigram_tree(data, forget_rate));
         else if(estimator == "D")
         {
             if(debug_level >= 1000)
@@ -141,7 +154,7 @@ std::shared_ptr<Model> get_sampler(
                     << std::endl;
 
             sampler = model_ptr(
-                new OnlineUnigramDecayedMCMC(data, forget_rate, decay_rate, samples_per_utt));
+                new sampler::online_unigram_dmcmc(data, forget_rate, decay_rate, samples_per_utt));
         }
     }
 

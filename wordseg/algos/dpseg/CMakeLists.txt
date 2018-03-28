@@ -24,7 +24,7 @@ find_package(Boost REQUIRED COMPONENTS program_options)
 set(CMAKE_CXX_FLAGS "-std=c++11 -DNDEBUG")
 
 # the source files to compile
-file(GLOB SOURCES src/*.cc include/*)
+file(GLOB SOURCES src/* src/sampler/* include/* include/sampler/*)
 
 add_executable(dpseg ${SOURCES})
 include_directories(include ${Boost_INCLUDE_DIRS})
