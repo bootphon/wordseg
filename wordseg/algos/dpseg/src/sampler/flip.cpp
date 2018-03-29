@@ -1,7 +1,7 @@
 #include "sampler/flip.hh"
 
 
-sampler::batch_unigram_flip::batch_unigram_flip(Data* constants)
+sampler::batch_unigram_flip::batch_unigram_flip(data::data* constants)
     : batch_unigram(constants)
 {
     if(debug_level >= 1000)
@@ -20,7 +20,7 @@ void sampler::batch_unigram_flip::estimate_sentence(Sentence& s, F temperature)
 }
 
 
-sampler::batch_bigram_flip::batch_bigram_flip(Data* constants)
+sampler::batch_bigram_flip::batch_bigram_flip(data::data* constants)
     : batch_bigram(constants)
 {}
 

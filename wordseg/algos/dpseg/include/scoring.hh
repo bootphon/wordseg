@@ -5,7 +5,7 @@
 
 #include "substring.hh"
 #include "sentence.hh"
-#include "sg_lexicon.hpp"
+#include "lexicon.hpp"
 
 /*
   Scoring class calculates number of words correct
@@ -14,8 +14,7 @@
 */
 class Scoring
 {
-    typedef size_t Count;
-    typedef SGLexicon<substring, Count> Lexicon;
+    typedef lexicon<substring, std::size_t> Lexicon;
 
 public:
     Scoring();

@@ -9,7 +9,7 @@
 
 
 std::shared_ptr<sampler::base> sampler::get_sampler(
-    CorpusData* data,
+    data::corpus_data* data,
     const uint ngram,
     const std::string& mode,
     const std::string& estimator,

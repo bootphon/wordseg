@@ -1,5 +1,6 @@
-#include "data.hh"
 #include "sentence.hh"
+
+#include "data/data.hh"
 #include "scoring.hh"
 
 using namespace std;
@@ -89,7 +90,7 @@ std::wostream& Sentence::print(std::wostream& os) const
 
 //initializes possible boundaries and actual boundaries.
 Sentence::Sentence(U start, U end, Bs possible_boundaries,
-		   Bs true_boundaries, const Data* d)
+		   Bs true_boundaries, const data::data* d)
     : substring(start, end), _true_boundaries(true_boundaries), _constants(d)
 {
     _true_boundaries.push_back(1);

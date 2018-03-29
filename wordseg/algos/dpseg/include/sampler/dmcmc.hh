@@ -30,11 +30,12 @@ namespace sampler
         void replace_sampled_sentence(Sentence s, Sentences& sentences_seen);
     };
 
+
     class online_unigram_dmcmc: public online_unigram, dmcmc
     {
     public:
         online_unigram_dmcmc(
-            Data* constants, F forget_rate = 0, F decay_rate = 1.0, U samples_per_utt = 1000);
+            data::data* constants, F forget_rate = 0, F decay_rate = 1.0, U samples_per_utt = 1000);
 
         virtual ~online_unigram_dmcmc()
             {}
@@ -43,11 +44,12 @@ namespace sampler
         virtual void estimate_sentence(Sentence& s, F temperature);
     };
 
+
     class online_bigram_dmcmc: public online_bigram, dmcmc
     {
     public:
         online_bigram_dmcmc(
-            Data* constants, F forget_rate = 0, F decay_rate = 1.0, U samples_per_utt = 1000);
+            data::data* constants, F forget_rate = 0, F decay_rate = 1.0, U samples_per_utt = 1000);
 
         virtual ~online_bigram_dmcmc()
             {}

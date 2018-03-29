@@ -1,20 +1,19 @@
 #ifndef _BASE_H_
 #define _BASE_H_
 
-//
-// All other classes are various base distributions to generate
-// lexical items.
+// various base distributions to generate lexical items.
 
 
 #include <cassert>
 #include <iostream>
 
 #include "substring.hh"
-#include "py_adaptor.hpp"
+#include "py/adaptor.hpp"
+#include "py/unigrams.hpp"
+#include "py/bigrams.hpp"
 
 
 extern uniform01_type unif01;
-
 
 
 // the template type is actually irrelevant for the probabilities...
@@ -261,7 +260,7 @@ class CharSeqLearned
 {
 private:
     typedef UniformMultinomial<wchar_t> Char;
-    typedef PYAdaptor<Char> CharProbs;
+    typedef py::adaptor<Char> CharProbs;
 
     F p_nl;      // dummy, for compatibility w/ CharSeq
     U nc;        //!< number of distinct characters
@@ -386,8 +385,8 @@ class BigramChars
 {
 private:
     typedef UniformMultinomial<wchar_t> Char;
-    typedef PYAdaptor<Char> UnigramChars;
-    typedef BigramsT<UnigramChars> CharProbs;
+    typedef py::adaptor<Char> UnigramChars;
+    typedef py::bigrams<UnigramChars> CharProbs;
 
 private:
     F p_nl;  // dummy, for compatibility w/ CharSeq
@@ -517,11 +516,6 @@ public:
             return _logprob;
         }
 };
-
-
-typedef CharSeqLearned<substring> P0;
-typedef UnigramsT<P0> Unigrams;
-typedef BigramsT<Unigrams> Bigrams;
 
 
 #endif  // _BASE_H_

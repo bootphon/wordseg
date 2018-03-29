@@ -6,7 +6,6 @@
 #include <cmath>
 #include <limits>
 
-#include "unigrams.hpp"
 #include "base.hpp"
 
 

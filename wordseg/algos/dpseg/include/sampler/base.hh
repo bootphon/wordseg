@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "data.hh"
+#include "data/data.hh"
 #include "scoring.hh"
 
 
@@ -53,7 +53,7 @@ namespace sampler
     class base
     {
     public:
-        base(Data* constants);
+        base(data::data* constants);
         virtual ~base();
 
         virtual bool sanity_check() const;
@@ -78,10 +78,9 @@ namespace sampler
         void print_scores(std::wostream& os);
         void print_eval_scores(std::wostream& os);
 
-
     protected:
         P0 _base_dist;
-        Data* _constants;
+        data::data* _constants;
         Sentences _sentences;
         Sentences _eval_sentences;
         U _nsentences_seen;
@@ -106,7 +105,6 @@ namespace sampler
         virtual void print_statistics(std::wostream& os, U iters, F temp, bool do_header=false) = 0;
         virtual void estimate_sentence(Sentence& s, F temperature) = 0;
         virtual void estimate_eval_sentence(Sentence& s, F temperature, bool maximize = false) = 0;
-
     };
 }
 

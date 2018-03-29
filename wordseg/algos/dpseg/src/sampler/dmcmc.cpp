@@ -249,7 +249,7 @@ void sampler::dmcmc::replace_sampled_sentence(Sentence s, Sentences &sentences_s
 
 
 sampler::online_unigram_dmcmc::online_unigram_dmcmc(
-    Data* constants, F forget_rate, F decay_rate, U samples_per_utt)
+    data::data* constants, F forget_rate, F decay_rate, U samples_per_utt)
     : online_unigram(constants, forget_rate), dmcmc(decay_rate, samples_per_utt)
 {
     if(debug_level >= 10000)
@@ -338,7 +338,7 @@ void sampler::online_unigram_dmcmc::estimate_sentence(Sentence& s, F temperature
 
 
 sampler::online_bigram_dmcmc::online_bigram_dmcmc(
-    Data* constants, F forget_rate, F decay_rate, U samples_per_utt)
+    data::data* constants, F forget_rate, F decay_rate, U samples_per_utt)
     : online_bigram(constants, forget_rate), dmcmc(decay_rate, samples_per_utt)
 {
     if(debug_level >= 10000)

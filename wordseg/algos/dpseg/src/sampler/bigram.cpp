@@ -1,7 +1,7 @@
 #include "sampler/bigram.hh"
 
 
-sampler::bigram::bigram(Data* constants)
+sampler::bigram::bigram(data::data* constants)
     : sampler::base(constants),
       _ulex(_base_dist, unif01, constants->a1, constants->b1),
       _lex(_ulex, unif01, constants->a2, constants->b2)
@@ -81,7 +81,7 @@ void sampler::bigram::estimate_eval_sentence(Sentence& s, F temperature, bool ma
 }
 
 
-sampler::batch_bigram::batch_bigram(Data* constants)
+sampler::batch_bigram::batch_bigram(data::data* constants)
     : bigram(constants)
 {
     for(const auto& item: _sentences)
@@ -164,7 +164,7 @@ void sampler::batch_bigram::estimate(
 }
 
 
-sampler::online_bigram::online_bigram(Data* constants, F forget_rate)
+sampler::online_bigram::online_bigram(data::data* constants, F forget_rate)
     : bigram(constants)
 {
     base::_nsentences_seen = 0;

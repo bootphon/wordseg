@@ -10,7 +10,7 @@ namespace sampler
     class batch_unigram_viterbi: public batch_unigram
     {
     public:
-        batch_unigram_viterbi(Data* constants);
+        batch_unigram_viterbi(data::data* constants);
         virtual ~batch_unigram_viterbi();
 
     protected:
@@ -21,7 +21,7 @@ namespace sampler
     class online_unigram_viterbi: public online_unigram
     {
     public:
-        online_unigram_viterbi(Data* constants, F forget_rate = 0);
+        online_unigram_viterbi(data::data* constants, F forget_rate = 0);
         virtual ~online_unigram_viterbi();
 
     protected:
@@ -32,7 +32,7 @@ namespace sampler
     class batch_bigram_viterbi: public batch_bigram
     {
     public:
-        batch_bigram_viterbi(Data* constants);
+        batch_bigram_viterbi(data::data* constants);
         virtual ~batch_bigram_viterbi();
 
     protected:
@@ -43,7 +43,7 @@ namespace sampler
     class online_bigram_viterbi: public online_bigram
     {
     public:
-        online_bigram_viterbi(Data* constants);
+        online_bigram_viterbi(data::data* constants);
         virtual ~online_bigram_viterbi();
 
     protected:

@@ -9,7 +9,7 @@ namespace sampler
     class bigram: public base
     {
     public:
-        bigram(Data* constants);
+        bigram(data::data* constants);
         virtual ~bigram();
 
         virtual bool sanity_check() const;
@@ -34,7 +34,7 @@ namespace sampler
     class batch_bigram: public bigram
     {
     public:
-        batch_bigram(Data* constants);
+        batch_bigram(data::data* constants);
         virtual ~batch_bigram();
         virtual void estimate(
             U iters, std::wostream& os, U eval_iters = 0,
@@ -48,7 +48,7 @@ namespace sampler
     class online_bigram: public bigram
     {
     public:
-        online_bigram(Data* constants, F forget_rate = 0);
+        online_bigram(data::data* constants, F forget_rate = 0);
         virtual ~online_bigram();
         virtual void estimate(
             U iters, std::wostream& os, U eval_iters = 0,

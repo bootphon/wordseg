@@ -1,22 +1,23 @@
-#include "chinese_restaurant.hh"
+#include "py/chinese_restaurant.hh"
 #include "util.hpp"
 #include <cassert>
 
-ChineseRestaurant::ChineseRestaurant()
+
+py::chinese_restaurant::chinese_restaurant()
     : n(), m(), n_m()
 {}
 
 
-ChineseRestaurant::ChineseRestaurant(const ChineseRestaurant& other)
+py::chinese_restaurant::chinese_restaurant(const chinese_restaurant& other)
     : n(other.n), m(other.m), n_m(other.n_m)
 {}
 
 
-ChineseRestaurant::~ChineseRestaurant()
+py::chinese_restaurant::~chinese_restaurant()
 {}
 
 
-void ChineseRestaurant::insert_old(F r, const F& a)
+void py::chinese_restaurant::insert_old(F r, const F& a)
 {
     // when r is not positive, we have reached our table
     for (auto it = n_m.begin(); it != n_m.end(); ++it)
@@ -47,7 +48,7 @@ void ChineseRestaurant::insert_old(F r, const F& a)
 }
 
 
-void ChineseRestaurant::insert_new()
+void py::chinese_restaurant::insert_new()
 {
     ++n;
     ++m;
@@ -55,7 +56,7 @@ void ChineseRestaurant::insert_new()
 }
 
 
-U ChineseRestaurant::erase(I r)
+U py::chinese_restaurant::erase(I r)
 {
     --n;
     for (auto it = n_m.begin(); it != n_m.end(); ++it)
@@ -63,13 +64,14 @@ U ChineseRestaurant::erase(I r)
         if ((r -= it->first * it->second) <= 0)
         {
             // new table size
-            U n1 = it->first-1;
+            U n1 = it->first - 1;
             if (--it->second == 0)
                 n_m.erase(it);
             if (n1 == 0)
                 --m;
             else
                 ++n_m[n1];
+
             return n1;
         }
     }
@@ -80,31 +82,32 @@ U ChineseRestaurant::erase(I r)
 }
 
 
-const std::map<U, U>& ChineseRestaurant::get_n_m() const
+const std::map<U, U>& py::chinese_restaurant::get_n_m() const
 {
     return n_m;
 }
 
-U ChineseRestaurant::get_n() const
+
+const U& py::chinese_restaurant::get_n() const
 {
     return n;
 }
 
 
-U ChineseRestaurant::get_m() const
+const U& py::chinese_restaurant::get_m() const
 {
     return m;
 }
 
 
-bool ChineseRestaurant::is_empty() const
+bool py::chinese_restaurant::is_empty() const
 {
     assert(m <= n);
     return n == 0;
 }
 
 
-bool ChineseRestaurant::sanity_check() const
+bool py::chinese_restaurant::sanity_check() const
 {
     assert(m > 0);
     assert(n > 0);
@@ -113,17 +116,20 @@ bool ChineseRestaurant::sanity_check() const
     U mm = 0, nn = 0;
     for(const auto& item: n_m)
     {
-        // assert(n > 0);   // shouldn't have any empty tables
-        // assert(m > 0);
-
         mm += item.second;
         nn += item.first * item.second;
     }
 
+    bool sane_n = (n == nn);
+    bool sane_m = (m == mm);
+
+    assert(sane_n);
+    assert(sane_m);
+    return sane_n && sane_m;
 }
 
 
-std::wostream& ChineseRestaurant::print(std::wostream& os) const
+std::wostream& py::chinese_restaurant::print(std::wostream& os) const
 {
     return os << "(n=" << n << ", m=" << m << ", n_m=" << n_m << ")";
 }

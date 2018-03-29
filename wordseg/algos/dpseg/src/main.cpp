@@ -1,9 +1,9 @@
-#include <algorithm>
 #include <chrono>
+#include <fstream>
 #include <iostream>
-#include <locale>
 #include <string>
 #include <vector>
+#include <boost/program_options.hpp>
 
 // with gcc below the version 5.0, the <codecvt> header of the
 // standard library is not implemented, so we use the codecvt in
@@ -13,10 +13,9 @@
 #define BOOST_UTF8_DECL
 #include <boost/detail/utf8_codecvt_facet.ipp>
 
-#include <boost/program_options.hpp>
-#include "random-mt19937ar.hpp"
-#include "data.hh"
+#include "data/corpus_data.hh"
 #include "sampler.hh"
+#include "random-mt19937ar.hpp"
 
 
 // TODO The following are global variables accessed across the whole
@@ -50,7 +49,7 @@ int main(int argc, char** argv)
     std::ios_base::sync_with_stdio(false);
     std::cin.tie(0);
 
-    CorpusData data;
+    data::corpus_data data;
     std::string csep;
 
     // define the command line arguments

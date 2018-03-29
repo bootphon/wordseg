@@ -1,7 +1,7 @@
 #include "sampler/viterbi.hh"
 
 
-sampler::batch_unigram_viterbi::batch_unigram_viterbi(Data* constants)
+sampler::batch_unigram_viterbi::batch_unigram_viterbi(data::data* constants)
     : batch_unigram(constants)
 {}
 
@@ -16,7 +16,7 @@ void sampler::batch_unigram_viterbi::estimate_sentence(Sentence& s, F temperatur
 }
 
 
-sampler::batch_bigram_viterbi::batch_bigram_viterbi(Data* constants)
+sampler::batch_bigram_viterbi::batch_bigram_viterbi(data::data* constants)
     : batch_bigram(constants)
 {}
 
@@ -33,7 +33,7 @@ void sampler::batch_bigram_viterbi::estimate_sentence(Sentence& s, F temperature
 
 
 
-sampler::online_unigram_viterbi::online_unigram_viterbi(Data* constants, F forget_rate)
+sampler::online_unigram_viterbi::online_unigram_viterbi(data::data* constants, F forget_rate)
     : online_unigram(constants, forget_rate)
 {}
 
@@ -47,7 +47,7 @@ void sampler::online_unigram_viterbi::estimate_sentence(Sentence& s, F temperatu
 }
 
 
-sampler::online_bigram_viterbi::online_bigram_viterbi(Data* constants)
+sampler::online_bigram_viterbi::online_bigram_viterbi(data::data* constants)
     : online_bigram(constants)
 {}
 

@@ -22,7 +22,7 @@ inline double normal_density (double val, double mean=0, double std=1)
 }
 
 
-sampler::base::base(Data* constants):
+sampler::base::base(data::data* constants):
     _constants(constants),
     _sentences(constants->get_sentences()),
     _eval_sentences(constants->get_eval_sentences()),

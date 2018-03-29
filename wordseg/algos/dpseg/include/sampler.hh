@@ -3,14 +3,14 @@
 
 #include <memory>
 #include <string>
-#include "data.hh"
 #include "sampler/base.hh"
+#include "data/corpus_data.hh"
 
 
 namespace sampler
 {
     std::shared_ptr<sampler::base> get_sampler(
-        CorpusData* data,
+        data::corpus_data* data,
         const uint ngram,
         const std::string& mode,
         const std::string& estimator,

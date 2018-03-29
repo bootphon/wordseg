@@ -1,7 +1,7 @@
 #include "sampler/unigram.hh"
 
 
-sampler::unigram::unigram(Data* constants)
+sampler::unigram::unigram(data::data* constants)
     : base(constants),
       _lex(_base_dist, unif01, constants->a1, constants->b1)
 {}
@@ -74,7 +74,7 @@ void sampler::unigram::estimate_eval_sentence(Sentence& s, F temperature, bool m
 }
 
 
-sampler::batch_unigram::batch_unigram(Data* constants)
+sampler::batch_unigram::batch_unigram(data::data* constants)
     : unigram(constants)
 {
     for(const auto& sent: _sentences)
@@ -160,7 +160,7 @@ void sampler::batch_unigram::estimate(
 }
 
 
-sampler::online_unigram::online_unigram(Data* constants, F forget_rate)
+sampler::online_unigram::online_unigram(data::data* constants, F forget_rate)
     : unigram(constants), _forget_rate(forget_rate)
 {
     base::_nsentences_seen = 0;

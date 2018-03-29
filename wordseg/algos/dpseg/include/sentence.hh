@@ -4,14 +4,18 @@
 #include <iostream>
 #include <vector>
 
-#include "unigrams.hpp"
+#include "py/unigrams.hpp"
 #include "base.hpp"
 
 #include "typedefs.hh"
 
 
-class Data;
+namespace data{class data;}
 class Scoring;
+
+typedef CharSeqLearned<substring> P0;
+typedef py::unigrams<P0> Unigrams;
+typedef py::bigrams<Unigrams> Bigrams;
 
 
 class Sentence: public substring
@@ -24,7 +28,7 @@ public:
         {}
 
     Sentence(U start, U end, Bs possible_boundaries,
-             Bs true_boundaries, const Data* d);
+             Bs true_boundaries, const data::data* d);
 
     Words get_segmented_words() const
         {
@@ -78,7 +82,7 @@ private:
     Us _possible_boundaries;
     Us _padded_possible;  // for use with dynamic programming
     Bs _true_boundaries;
-    const Data* _constants;
+    const data::data* _constants;
 
     substring word_at(U left, U right) const
         {

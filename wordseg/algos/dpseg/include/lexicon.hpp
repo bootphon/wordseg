@@ -1,5 +1,5 @@
-#ifndef _SGLEXICON_H_
-#define _SGLEXICON_H_
+#ifndef _LEXICON_HPP_
+#define _LEXICON_HPP_
 
 #include <algorithm>
 #include <iostream>
@@ -19,22 +19,22 @@
 // classes in Mark's utils.h) this base class assumes that datatype is
 // numeric, although redefining inc and dec can change that.
 template <typename key_type, typename data_type>
-class SGLexiconBase: public std::unordered_map<key_type, data_type>
+class lexicon_base: public std::unordered_map<key_type, data_type>
 {
     typedef typename std::pair<data_type, data_type> dd_t;
-    typedef typename std::unordered_map<typename SGLexiconBase::key_type, data_type> parent_t;
+    typedef typename std::unordered_map<typename lexicon_base::key_type, data_type> parent_t;
 
 public:
-    typedef typename std::pair<typename SGLexiconBase::key_type, data_type> value_type;
-    typedef typename std::unordered_map<typename SGLexiconBase::key_type, data_type>::iterator iterator;
-    typedef typename std::unordered_map<typename SGLexiconBase::key_type, data_type>::const_iterator const_iterator;
+    typedef typename std::pair<typename lexicon_base::key_type, data_type> value_type;
+    typedef typename std::unordered_map<typename lexicon_base::key_type, data_type>::iterator iterator;
+    typedef typename std::unordered_map<typename lexicon_base::key_type, data_type>::const_iterator const_iterator;
     typedef typename std::vector<value_type> LexVector;
     typedef typename std::vector<value_type>::iterator LexVectorIter;
     typedef typename std::vector<value_type>::const_iterator LexVectorCIter;
 
-    SGLexiconBase() : _ntokens(0) {}
+    lexicon_base() : _ntokens(0) {}
 
-    virtual ~SGLexiconBase() {}
+    virtual ~lexicon_base() {}
 
     virtual iterator begin() {return parent_t::begin();}
     virtual const_iterator begin() const {return parent_t::begin();}
@@ -74,7 +74,7 @@ public:
             return parent_t::size();
         }
 
-    virtual data_type operator()(const typename SGLexiconBase::key_type& s) const
+    virtual data_type operator()(const typename lexicon_base::key_type& s) const
         {
             const_iterator i = this->find(s);
             if (i == end()) return 0;
@@ -83,7 +83,7 @@ public:
 
     // return true if a new type was added
     // Unless redefined in subcalss, return value is 0/1 only.
-    virtual size_t inc(const typename SGLexiconBase::key_type& s)
+    virtual size_t inc(const typename lexicon_base::key_type& s)
         {
             _ntokens++;
             if (this->find(s) != end())
@@ -92,12 +92,12 @@ public:
                 return 0;
             }
 
-            parent_t::insert(std::pair<typename SGLexiconBase::key_type, data_type>(s,1));
+            parent_t::insert(std::pair<typename lexicon_base::key_type, data_type>(s,1));
             return 1;
         }
 
     //return true if a type was deleted
-    virtual size_t dec(const typename SGLexiconBase::key_type& s)
+    virtual size_t dec(const typename lexicon_base::key_type& s)
         {
             (*this)[s]--;
             my_assert((*this)[s] >= 0, value_type(s,(*this)[s]));
@@ -154,7 +154,7 @@ public:
             os << std::endl;
         }
 
-    friend std::wostream& operator<< (std::wostream& os, const SGLexiconBase& lexicon)
+    friend std::wostream& operator<< (std::wostream& os, const lexicon_base& lexicon)
         {
             for (const_iterator iter = lexicon.begin(); iter != lexicon.end(); iter++)
             {
@@ -169,7 +169,7 @@ protected:
     data_type _ntokens;
 
     // don't accidentally use these from outside
-    virtual data_type& operator[](const typename SGLexiconBase::key_type& s)
+    virtual data_type& operator[](const typename lexicon_base::key_type& s)
         {
             return parent_t::operator[](s);
         }
@@ -202,17 +202,17 @@ protected:
 // increment by more than 1 at a time.  data_type must have ==, <, >,
 // +=, and -= (i.e. numeric)
 template <typename key_type, typename data_type>
-class SGLexicon: public SGLexiconBase<key_type, data_type>
+class lexicon: public lexicon_base<key_type, data_type>
 {
-    typedef SGLexiconBase<typename SGLexicon::key_type, data_type> parent_t;
+    typedef lexicon_base<typename lexicon::key_type, data_type> parent_t;
 
 public:
-    typedef typename std::pair<typename SGLexicon::key_type, data_type> value_type;
-    typedef typename std::unordered_map<typename SGLexicon::key_type, data_type>::iterator iterator;
-    typedef typename std::unordered_map<typename SGLexicon::key_type, data_type>::const_iterator const_iterator;
+    typedef typename std::pair<typename lexicon::key_type, data_type> value_type;
+    typedef typename std::unordered_map<typename lexicon::key_type, data_type>::iterator iterator;
+    typedef typename std::unordered_map<typename lexicon::key_type, data_type>::const_iterator const_iterator;
 
-    SGLexicon() {}
-    virtual ~SGLexicon() {}
+    lexicon() {}
+    virtual ~lexicon() {}
 
     virtual iterator begin() {return parent_t::begin();}
     virtual const_iterator begin() const {return parent_t::begin();}
@@ -221,18 +221,18 @@ public:
 
     void test_function() {std::wcout << "got the function"  <<std::endl;}
 
-    virtual size_t inc(const typename SGLexicon::key_type& s)
+    virtual size_t inc(const typename lexicon::key_type& s)
         {
             return parent_t::inc(s);
         }
 
-    virtual size_t dec(const typename SGLexicon::key_type& s)
+    virtual size_t dec(const typename lexicon::key_type& s)
         {
             return parent_t::dec(s);
         }
 
     //return 1 if a new type was added, else 0.
-    virtual size_t inc(const typename SGLexicon::key_type& s, data_type count)
+    virtual size_t inc(const typename lexicon::key_type& s, data_type count)
         {
             parent_t::_ntokens += count;
             if (this->find(s) != end())
@@ -241,12 +241,12 @@ public:
                 return 0;
             }
 
-            parent_t::insert(std::pair<typename SGLexicon::key_type, data_type>(s,count));
+            parent_t::insert(std::pair<typename lexicon::key_type, data_type>(s,count));
             return 1;
         }
 
     //return true if a type was deleted
-    virtual size_t dec(const typename SGLexicon::key_type& s, data_type count)
+    virtual size_t dec(const typename lexicon::key_type& s, data_type count)
         {
             (*this)[s] -= count;
             my_assert((*this)[s] >= 0, value_type(s,(*this)[s]));
@@ -261,4 +261,4 @@ public:
 };
 
 
-#endif
+#endif  // _LEXICON_HPP_

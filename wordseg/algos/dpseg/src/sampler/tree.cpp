@@ -1,7 +1,7 @@
 #include "sampler/tree.hh"
 
 
-sampler::batch_unigram_tree::batch_unigram_tree(Data* constants)
+sampler::batch_unigram_tree::batch_unigram_tree(data::data* constants)
     : batch_unigram(constants)
 {}
 
@@ -16,7 +16,7 @@ void sampler::batch_unigram_tree::estimate_sentence(Sentence& s, F temperature)
 }
 
 
-sampler::batch_bigram_tree::batch_bigram_tree(Data* constants)
+sampler::batch_bigram_tree::batch_bigram_tree(data::data* constants)
     : batch_bigram(constants)
 {}
 
@@ -32,7 +32,7 @@ void sampler::batch_bigram_tree::estimate_sentence(Sentence& s, F temperature)
 
 
 
-sampler::online_bigram_tree::online_bigram_tree(Data* constants)
+sampler::online_bigram_tree::online_bigram_tree(data::data* constants)
     : online_bigram(constants)
 {}
 
@@ -46,7 +46,7 @@ void sampler::online_bigram_tree::estimate_sentence(Sentence& s, F temperature)
 }
 
 
-sampler::online_unigram_tree::online_unigram_tree(Data* constants, F forget_rate)
+sampler::online_unigram_tree::online_unigram_tree(data::data* constants, F forget_rate)
     : online_unigram(constants, forget_rate)
 {}
 
