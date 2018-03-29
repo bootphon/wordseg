@@ -1,28 +1,20 @@
-#ifndef MHS_H
-#define MHS_H
+#ifndef _PY_ADAPTER_HPP
+#define _PY_ADAPTER_HPP
 
-//! \file
-//!
-//! mhs.h defines the Pitman-Yor adaptor class
-//!
-//! A sampler needs to implement the following API (where F is a floating-point type
-//! and U is an unsigned int type)
-//!
-//! typedef V argument_type               -- type of objects over which labels are defined
-//!
-//! typedef S state_type                  -- type of hidden state information
-//!
-//! F operator()(const V& v) const        -- returns proposal prob of generating a v,
-//!                                          summing over all possible states
-//!
-//! F insert(const V& v)                  -- inserts v
-//!
-//! F erase(const V& v)                   -- erases v
-//!
-//! F insert(const V& v, S& s)            -- inserts (v,s), returns exact prob of (v,s)
-//!
-//! F erase(const V& v, S& s)             -- removes (v,s), returns exact prob of insert(v,s)
-//!
+// py_adapter.hpp defines the Pitman-Yor adaptor class
+//
+// A sampler needs to implement the following API (where F is a
+// floating-point type and U is an unsigned int type)
+//
+// typedef V argument_type               -- type of objects over which labels are defined
+// typedef S state_type                  -- type of hidden state information
+// F operator()(const V& v) const        -- returns proposal prob of generating a v,
+//                                          summing over all possible states
+// F insert(const V& v)                  -- inserts v
+// F erase(const V& v)                   -- erases v
+// F insert(const V& v, S& s)            -- inserts (v,s), returns exact prob of (v,s)
+// F erase(const V& v, S& s)             -- removes (v,s), returns exact prob of insert(v,s)
+
 
 #include <cassert>
 #include <cmath>
@@ -37,6 +29,7 @@
 
 #include "typedefs.hh"
 #include "random-mt19937ar.hpp"
+#include "chinese_restaurant.hh"
 #include "util.hpp"
 
 
@@ -69,127 +62,8 @@ protected:
 
     typedef argument_type V;
     typedef std::map<U,U> U_U;
+    typedef std::unordered_map<V, ChineseRestaurant> V_T;
 
-    struct T
-    {
-        U n;      //!< total number of customers at tables with this label
-        U m;      //!< number of tables with this label
-        U_U n_m;  //!< number of customers at table -> number of tables
-
-        T() : n(), m() {}
-
-        //! insert_old() inserts a customer at a random old table
-        //! using PY sampling distribution
-        //
-        void insert_old(F r, F a) {
-            // when r is not positive, we have reached our table
-            for (U_U::iterator it = n_m.begin(); it != n_m.end(); ++it)
-            {
-                if ((r -= it->second * (it->first - a)) <= 0)
-                {
-                    U n1 = it->first+1;  // new table size
-                    if (--it->second == 0)
-                        n_m.erase(it);
-                    ++n_m[n1];           // add customer to new table
-                    break;
-                }
-            }
-
-            assert(r <= 0);          // check that we actually updated a table
-            ++n;                     // increment no of customers with this label
-        }
-
-        //! insert_new() inserts a customer at a new table
-        void insert_new()
-            {
-                ++n;
-                ++m;
-                ++n_m[1];
-            }
-
-        //! empty() is true if there are no customers left with this
-        //! label
-        bool empty() const
-            {
-                assert(m <= n);
-                return n == 0;
-            }
-
-        //! erase() removes a customer from a randomly chosen table,
-        //!  returns number of customers left at table
-        U erase(I r)
-            {
-                --n;
-
-                // U_U::iterator it = n_m.begin();
-                // while (it != n_m.end())
-                // {
-                //     if ((r -= it->first * it->second) <= 0)
-                //     {
-                //         U n1 = it->first-1;  //!< new table size
-                //         if (--it->second == 0)
-                //             n_m.erase(++it);
-                //         if (n1 == 0)
-                //             --m;
-                //         else
-                //             ++n_m[n1];
-                //         return n1;
-                //     }
-                //     else
-                //         ++it;
-                // }
-
-                for (U_U::iterator it = n_m.begin(); it != n_m.end(); ++it)
-                {
-                    if ((r -= it->first * it->second) <= 0)
-                    {
-                        U n1 = it->first-1;  //!< new table size
-                        if (--it->second == 0)
-                            n_m.erase(it);
-                        if (n1 == 0)
-                            --m;
-                        else
-                            ++n_m[n1];
-                        return n1;
-                    }
-                }
-
-                // shouldn't ever get here
-                assert(r <= 0);
-                return 0;
-            }
-
-        //! sanity_check() checks that all of our numbers add up
-        bool sanity_check() const
-            {
-                assert(m > 0);
-                assert(n > 0);
-                assert(m <= n);
-
-                U mm = 0, nn = 0;
-                for(const auto& item: n_m)
-                {
-                    // assert(n > 0);   // shouldn't have any empty tables
-                    // assert(m > 0);
-
-                    mm += item.second;
-                    nn += item.first * item.second;
-                }
-
-                bool sane_n = (n == nn);
-                bool sane_m = (m == mm);
-                assert(sane_n);
-                assert(sane_m);
-                return sane_n && sane_m;
-            }
-
-        std::wostream& print(std::wostream& os) const
-            {
-                return os << "(n=" << n << ", m=" << m << ", n_m=" << n_m << ")";
-            }
-    };
-
-    typedef std::unordered_map<V,T> V_T;
     V_T label_tables;
 
 public:
@@ -255,7 +129,7 @@ public:
     U ntokens(const V& v) const
         {
             typename V_T::const_iterator tit = label_tables.find(v);
-            return (tit == label_tables.end()) ? 0 : tit->second.n;
+            return (tit == label_tables.end()) ? 0 : tit->second.get_n();
         }
 
     const Base& base_dist() const
@@ -274,7 +148,7 @@ public:
         {
             if (debug_level >= 1000000) TRACE1(v);
             typename V_T::const_iterator tit = label_tables.find(v);
-            F p_old = (tit == label_tables.end()) ? 0 : (tit->second.n - tit->second.m*a) / (n + b);
+            F p_old = (tit == label_tables.end()) ? 0 : (tit->second.get_n() - tit->second.get_m()*a) / (n + b);
             F p_new = base(v) * (m*a + b) / (n + b);
 
             assert(p_new > 0);
@@ -290,7 +164,7 @@ public:
             typename V_T::iterator tit = label_tables.find(v);
 
             // note: ignores (n - b) factor
-            F p_old = (tit == label_tables.end()) ? 0 : (tit->second.n - tit->second.m*a);
+            F p_old = (tit == label_tables.end()) ? 0 : (tit->second.get_n() - tit->second.get_m()*a);
             F p_new = base(v) * (m*a + b);
             F p = p_old + p_new;  //sgwater: unnormalized prob
 
@@ -305,7 +179,7 @@ public:
             else
             {
                 // insert customer at a new table
-                T& t = (tit == label_tables.end()) ? label_tables[v] : tit->second;
+                ChineseRestaurant& t = (tit == label_tables.end()) ? label_tables[v] : tit->second;
                 t.insert_new();
                 ++m;    // one more table
                 base.insert(v);
@@ -322,14 +196,14 @@ public:
             typename V_T::iterator tit = label_tables.find(v);
             assert(tit != label_tables.end());  // we should have tables with this label
 
-            I r = (I) tit->second.n * u01();
+            I r = (I) tit->second.get_n() * u01();
             --n;  // one less customer
 
             if (tit->second.erase(r) == 0)
             {
                 --m;
                 base.erase(v);
-                if (tit->second.empty())
+                if (tit->second.is_empty())
                     label_tables.erase(tit);
             }
 
@@ -342,7 +216,7 @@ public:
             F r = ntokens()*u01();
             for(const auto& item: label_tables)
             {
-                r -= item.second.n;
+                r -= item.second.get_n();
                 if (r < 0)
                 {
                     erase(item.first);
@@ -382,14 +256,14 @@ public:
             F max = 0;
             for(const auto& item: label_tables)
             {
-                if (item.second.n > max) max = item.second.n;
+                if (item.second.get_n() > max) max = item.second.get_n();
             }
 
             //compute partition func
             F tot = 0;
             for(const auto& item: label_tables)
             {
-                tot += max / item.second.n;
+                tot += max / item.second.get_n();
             }
 
             // I r = (I)  ntypes()*(ntokens()-1)*u01();
@@ -397,7 +271,7 @@ public:
             for(const auto& item: label_tables)
             {
                 // r -= ntokens() - it->second.n;
-                r -= max / item.second.n;
+                r -= max / item.second.get_n();
                 if (r < 0)
                 {
                     erase(item.first);
@@ -431,7 +305,7 @@ public:
             F logp = 0;
             for(const auto& it0: label_tables)
             {
-                for(const auto& it1: it0.second.n_m)
+                for(const auto& it1: it0.second.get_n_m())
                 {
                     logp += it1.second * (lgamma(it1.first - a) - lgamma(1 - a));
                 }
@@ -477,8 +351,8 @@ public:
             bool sane_tables = true;
             for(const auto& item: label_tables)
             {
-                nn += item.second.n;
-                mm += item.second.m;
+                nn += item.second.get_n();
+                mm += item.second.get_m();
                 sane_tables = (sane_tables && item.second.sanity_check());
             }
 
@@ -496,4 +370,5 @@ std::wostream& operator<< (std::wostream& os, const PYAdaptor<Base>& py) {
     return py.print(os);
 }
 
-#endif // MHS_H
+
+#endif // _PY_ADAPTER_HPP

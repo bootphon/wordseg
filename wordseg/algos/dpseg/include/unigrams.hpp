@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "mhs.hpp"
+#include "py_adaptor.hpp"
 
 
 template <typename Base>
@@ -14,7 +14,7 @@ private:
     typedef typename Base::argument_type V;
 
 public:
-    typedef std::unordered_map<V,typename parent::T> WordTypes;
+    typedef std::unordered_map<V, ChineseRestaurant> WordTypes;
 
     UnigramsT(Base& base, uniform01_type& u01, F a=0, F b=1)
         : parent(base, u01, a, b)

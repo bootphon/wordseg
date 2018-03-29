@@ -12,7 +12,7 @@
 #include <cassert>
 #include <iostream>
 
-#include "mhs.hpp"
+#include "py_adaptor.hpp"
 
 
 extern uniform01_type unif01;
