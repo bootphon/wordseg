@@ -325,8 +325,8 @@ int main(int argc, char** argv)
 
     if (debug_level >= 98000)
     {
-        TRACE(S::data.size());
-        TRACE(S::data);
+        TRACE(substring::data.size());
+        TRACE(substring::data);
         TRACE(data.sentence_boundary_list());
         TRACE(data.nchars());
         TRACE(data.possible_boundaries());

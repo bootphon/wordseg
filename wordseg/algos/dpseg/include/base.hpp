@@ -1,9 +1,6 @@
 #ifndef _BASE_H_
 #define _BASE_H_
 
-// Class S can be thought of as a string, but avoids copying
-// characters all over by simply storing pointers to begin/end indices
-// in the global string storing the entire data set.
 //
 // All other classes are various base distributions to generate
 // lexical items.
@@ -12,130 +9,12 @@
 #include <cassert>
 #include <iostream>
 
+#include "substring.hh"
 #include "py_adaptor.hpp"
 
 
 extern uniform01_type unif01;
 
-
-class S
-{
-public:
-    typedef wchar_t value_type;
-    typedef std::wstring::iterator iterator;
-    typedef std::wstring::const_iterator const_iterator;
-
-    static std::wstring data;
-
-    S()
-        {}
-
-    S(std::size_t start, std::size_t end)
-        : _start(start),
-          _length(end-start)
-        {
-            assert(start < end);
-            assert(end <= data.size());
-        }
-
-    std::wstring string() const
-        {
-            return data.substr(_start, _length);
-        }
-
-    std::size_t size() const
-        {
-            return _length;
-        }
-
-    iterator begin()
-        {
-            return data.begin()+_start;
-        }
-
-    iterator end()
-        {
-            return begin()+_length;
-        }
-
-    const_iterator begin() const
-        {
-            return data.begin()+_start;
-        }
-
-    const_iterator end() const
-        {
-            return begin()+_length;
-        }
-
-    std::size_t begin_index() const
-        {
-            return _start;
-        }
-
-    std::size_t end_index() const
-        {
-            return _start+_length-1;
-        }
-
-    int compare(const S& s) const
-        {
-            return data.compare(_start, _length, data, s._start, s._length);
-        }
-
-    bool operator== (const S& s) const
-        {
-            return compare(s) == 0;
-        }
-
-    bool operator!= (const S& s) const
-        {
-            return compare(s) != 0;
-        }
-
-    bool operator< (const S& s) const
-        {
-            return compare(s) < 0;
-        }
-
-    friend std::wostream& operator<< (std::wostream& os, const S& s);
-
-    size_t hash() const
-        {
-            size_t h = 0;
-            size_t g;
-            const_iterator p = begin();
-            const_iterator end = p + _length;
-
-            while (p != end)
-            {
-                h = (h << 4) + (*p++);
-                if ((g = h&0xf0000000))
-                {
-                    h = h ^ (g >> 24);
-                    h = h ^ g;
-                }
-            }
-
-            return size_t(h);
-        }
-
-private:
-    std::size_t _start;
-    std::size_t _length;
-};
-
-
-namespace std
-{
-    template <> struct hash<S> : public std::unary_function<S, std::size_t>
-    {
-        std::size_t operator()(const S& s) const
-            {
-                return s.hash();
-            }
-    };
-}
 
 
 // the template type is actually irrelevant for the probabilities...
@@ -640,7 +519,7 @@ public:
 };
 
 
-typedef CharSeqLearned<S> P0;
+typedef CharSeqLearned<substring> P0;
 typedef UnigramsT<P0> Unigrams;
 typedef BigramsT<Unigrams> Bigrams;
 

@@ -4,9 +4,9 @@
 
 using namespace std;
 
-std::wstring S::data;   //!< global data object, which holds training and eval data
+std::wstring substring::data;   //!< global data object, which holds training and eval data
 
-std::wostream& operator<< (std::wostream& os, const S& s)
+std::wostream& operator<< (std::wostream& os, const substring& s)
 {
     return os << s.string();
 }
@@ -90,7 +90,7 @@ std::wostream& Sentence::print(std::wostream& os) const
 //initializes possible boundaries and actual boundaries.
 Sentence::Sentence(U start, U end, Bs possible_boundaries,
 		   Bs true_boundaries, const Data* d)
-    : S(start, end), _true_boundaries(true_boundaries), _constants(d)
+    : substring(start, end), _true_boundaries(true_boundaries), _constants(d)
 {
     _true_boundaries.push_back(1);
     _padded_possible.push_back(1);
@@ -848,7 +848,7 @@ Sentence::surrounding_boundaries(U i, U& i0, U& i1, U& i2, U& i3) const {
     assert(i3 <= n);
 }
 
-F Sentence::mbdp_prob(Unigrams& lex, const S& word, U nsentences) const
+F Sentence::mbdp_prob(Unigrams& lex, const substring& word, U nsentences) const
 {
     // counts include current instance of word, so add one.
     // also include utterance boundaries, incl. one at start.

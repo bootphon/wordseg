@@ -3,8 +3,8 @@
 
 #include <iostream>
 
+#include "substring.hh"
 #include "sentence.hh"
-#include "base.hpp"
 #include "sg_lexicon.hpp"
 
 /*
@@ -15,7 +15,7 @@
 class Scoring
 {
     typedef size_t Count;
-    typedef SGLexicon<S, Count> Lexicon;
+    typedef SGLexicon<substring, Count> Lexicon;
 
 public:
     Scoring();

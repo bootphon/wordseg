@@ -42,9 +42,9 @@ void Data::initialize_chars()
     if (! nchartypes)
     {
         std::set<wchar_t> sc;   //!< used to calculate nchartypes
-        for (U i = 0; i < S::data.size(); ++i)
-            if (S::data[i] != L'\n')
-                sc.insert(S::data[i]);
+        for (U i = 0; i < substring::data.size(); ++i)
+            if (substring::data[i] != L'\n')
+                sc.insert(substring::data[i]);
         nchartypes = sc.size();
     }
 }
@@ -123,9 +123,9 @@ std::wostream& Data::write_segmented_corpus(
 
     for (I i = begin; i < end; ++i)
     {
-        if (S::data[i] != L'\n' and S::data[i-1] != L'\n' && b[i])
+        if (substring::data[i] != L'\n' and substring::data[i-1] != L'\n' && b[i])
             os << L' ';
-        os << S::data[i];
+        os << substring::data[i];
     }
     return os;
 }
@@ -180,17 +180,17 @@ Sentences CorpusData::get_eval_sentences() const
 
 void CorpusData::read(std::wistream& is, U start, U ns)
 {
-    S::data.clear();
+    substring::data.clear();
     sentenceboundaries.clear();
     _true_boundaries.clear();
     _possible_boundaries.clear();
 
     if (debug_level >= 99000) TRACE2(_true_boundaries, _possible_boundaries);
 
-    S::data.push_back(L'\n');
+    substring::data.push_back(L'\n');
     _true_boundaries.push_back(true);
     _possible_boundaries.push_back(false);
-    sentenceboundaries.push_back(S::data.size());
+    sentenceboundaries.push_back(substring::data.size());
 
     if (debug_level >= 99000) TRACE2(_true_boundaries, _possible_boundaries);
 
@@ -220,9 +220,9 @@ void CorpusData::read_eval(std::wistream& is, U start, U ns)
 
 void CorpusData::read_data(std::wistream& is, U start, U ns)
 {
-    assert(S::data.size() >0);
-    assert(*(S::data.end()-1) == L'\n');
-    assert(*(sentenceboundaries.end()-1) == S::data.size());
+    assert(substring::data.size() >0);
+    assert(*(substring::data.end()-1) == L'\n');
+    assert(*(sentenceboundaries.end()-1) == substring::data.size());
 
     U i = sentenceboundaries.size()-1;
     U offset = i;
@@ -244,14 +244,14 @@ void CorpusData::read_data(std::wistream& is, U start, U ns)
         }
 
         //prev. char was space -- already did boundary info
-        else if (_true_boundaries.size() > S::data.size())
+        else if (_true_boundaries.size() > substring::data.size())
         {
             if (c == L'\n') error("Input file contains line-final spaces");
-            S::data.push_back(c);
+            substring::data.push_back(c);
         }
         else
         {
-            if (*(S::data.end()-1) == L'\n' || c == L'\n')
+            if (*(substring::data.end()-1) == L'\n' || c == L'\n')
             {
                 _true_boundaries.push_back(true);
                 _possible_boundaries.push_back(false);
@@ -262,10 +262,10 @@ void CorpusData::read_data(std::wistream& is, U start, U ns)
                 _possible_boundaries.push_back(true);
             }
 
-            S::data.push_back(c);
+            substring::data.push_back(c);
             if (c == L'\n')
             {
-                sentenceboundaries.push_back(S::data.size());
+                sentenceboundaries.push_back(substring::data.size());
                 i++;
             }
         }
@@ -274,20 +274,20 @@ void CorpusData::read_data(std::wistream& is, U start, U ns)
         // TRACE3(c, _true_boundaries, _possible_boundaries);
     }
 
-    if (*(S::data.end()-1) != L'\n')
+    if (*(substring::data.end()-1) != L'\n')
     {
-        S::data.push_back(L'\n');
-        sentenceboundaries.push_back(S::data.size());
+        substring::data.push_back(L'\n');
+        sentenceboundaries.push_back(substring::data.size());
     }
 
-    if (debug_level >= 98000) TRACE2(S::data.size(), _possible_boundaries.size());
-    // TRACE2(S::data.size(), _possible_boundaries.size());
+    if (debug_level >= 98000) TRACE2(substring::data.size(), _possible_boundaries.size());
+    // TRACE2(substring::data.size(), _possible_boundaries.size());
 
-    assert(S::data.size() >0);
-    assert(*(S::data.end()-1) == L'\n');
-    assert(*(sentenceboundaries.end()-1) == S::data.size());
+    assert(substring::data.size() >0);
+    assert(*(substring::data.end()-1) == L'\n');
+    assert(*(sentenceboundaries.end()-1) == substring::data.size());
     assert(_true_boundaries.size() == _possible_boundaries.size());
-    assert(S::data.size() == _possible_boundaries.size());
+    assert(substring::data.size() == _possible_boundaries.size());
 }
 
 void CorpusData::initialize(U ns)
@@ -315,7 +315,7 @@ ExperimentalData::~ExperimentalData() {}
 
 void ExperimentalData::read(std::wistream& is, U start, U ns)
 {
-    S::data.clear();
+    substring::data.clear();
     sentenceboundaries.clear();
 
     //where in the file are we?
@@ -349,13 +349,13 @@ void ExperimentalData::read(std::wistream& is, U start, U ns)
         {
             //lexicon = false;
             training = true;
-            S::data.push_back(L'\n');
+            substring::data.push_back(L'\n');
         }
         else if (utterance.length() > 3 and utterance.substr(0,4) == L"Test")
         {
             training = false;
             testing = true;
-            _testboundaries.push_back(S::data.size());
+            _testboundaries.push_back(substring::data.size());
         }
         else
         {
@@ -363,10 +363,10 @@ void ExperimentalData::read(std::wistream& is, U start, U ns)
             {
                 for (U i = 0; i < utterance.size(); i++)
                 {
-                    S::data.push_back(utterance[i]);
+                    substring::data.push_back(utterance[i]);
                 }
-                S::data.push_back(L'\n');
-                sentenceboundaries.push_back(S::data.size());
+                substring::data.push_back(L'\n');
+                sentenceboundaries.push_back(substring::data.size());
             }
 
             if (testing && !utterance.empty())
@@ -375,17 +375,17 @@ void ExperimentalData::read(std::wistream& is, U start, U ns)
                 assert(breakpt != utterance.npos);
                 for (U i = 0; i < breakpt; i++)
                 {
-                    S::data.push_back(utterance[i]);
+                    substring::data.push_back(utterance[i]);
                 }
 
-                S::data.push_back('\t');
-                _testboundaries.push_back(S::data.size());
+                substring::data.push_back('\t');
+                _testboundaries.push_back(substring::data.size());
                 for (U i = breakpt+1; i < utterance.size(); i++)
                 {
-                    S::data.push_back(utterance[i]);
+                    substring::data.push_back(utterance[i]);
                 }
-                S::data.push_back(L'\n');
-                _testboundaries.push_back(S::data.size());
+                substring::data.push_back(L'\n');
+                _testboundaries.push_back(substring::data.size());
             }
         }
     }
@@ -393,10 +393,10 @@ void ExperimentalData::read(std::wistream& is, U start, U ns)
     {
         error("wrong input file format\n");
     }
-    else if (*(S::data.end()-1) != L'\n')
+    else if (*(substring::data.end()-1) != L'\n')
     {
-        S::data.push_back(L'\n');
-        _testboundaries.push_back(S::data.size());
+        substring::data.push_back(L'\n');
+        _testboundaries.push_back(substring::data.size());
     }
     initialize_chars();
     //  _current_pair = _test_pairs.begin();
@@ -423,14 +423,14 @@ void ExperimentalData::initialize(U ns)
 
     //assume any non-s boundary can be a word boundary
     for (U j = 2; j <= ntrain; ++j)
-        if (S::data[j-1] != L'\n' && S::data[j] != L'\n')
+        if (substring::data[j-1] != L'\n' && substring::data[j] != L'\n')
             _possible_boundaries[j] = true;
 
     // _true_boundaries[i] is true iff there really is a boundary at i
     _true_boundaries.resize(ntrain);
 
     for (U i = 0; i < ntrain; ++i)
-        if (S::data[i] == L'\n' || S::data[i-1] == L'\n')
+        if (substring::data[i] == L'\n' || substring::data[i-1] == L'\n')
             // insert sentence boundaries into _true_boundaries[]
             _true_boundaries[i] = true;
 
@@ -438,7 +438,7 @@ void ExperimentalData::initialize(U ns)
     for (U i = 0; i < _testboundaries.size()-2; i+=2)
     {
         _test_pairs.push_back(
-            SS(S(_testboundaries[i],_testboundaries[i+1]-1),
-               S(_testboundaries[i+1],_testboundaries[i+2]-1)));
+            SS(substring(_testboundaries[i],_testboundaries[i+1]-1),
+               substring(_testboundaries[i+1],_testboundaries[i+2]-1)));
     }
 }

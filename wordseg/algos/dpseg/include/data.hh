@@ -15,9 +15,9 @@
 extern U debug_level;
 
 
-typedef std::unordered_map<S,U> S_U;
+typedef std::unordered_map<substring, U> S_U;
 typedef std::vector<S_U> S_Us;
-typedef std::pair<S,S> SS;
+typedef std::pair<substring, substring> SS;
 typedef std::vector<SS> TestPairs;
 
 //! Data{} holds training and evaluation data, as well as model

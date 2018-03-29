@@ -14,10 +14,10 @@ class Data;
 class Scoring;
 
 
-class Sentence: public S
+class Sentence: public substring
 {
 public:
-    typedef std::vector<S> Words;
+    typedef std::vector<substring> Words;
     typedef Words::const_iterator Words_iterator;
 
     Sentence()
@@ -80,9 +80,9 @@ private:
     Bs _true_boundaries;
     const Data* _constants;
 
-    S word_at(U left, U right) const
+    substring word_at(U left, U right) const
         {
-            return S(left + begin_index(), right + begin_index());
+            return substring(left + begin_index(), right + begin_index());
         }
 
     Words get_words(const Bs& boundaries) const;
@@ -94,7 +94,7 @@ private:
     F p_bigram(U i1, U i, U i2, const Bigrams& lex) const;
     F prob_boundary(U i0, U i1, U i, U i2, U i3, const Bigrams& lex, F temperature) const;
     void surrounding_boundaries(U i, U& i0, U& i1, U& i2, U& i3) const;
-    F mbdp_prob(Unigrams& lex, const S& word, U nsentences) const;
+    F mbdp_prob(Unigrams& lex, const substring& word, U nsentences) const;
 };
 
 
