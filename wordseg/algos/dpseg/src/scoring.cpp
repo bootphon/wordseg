@@ -1,5 +1,5 @@
 #include <string>
-#include "Scoring.h"
+#include "scoring.hh"
 
 using namespace std;
 

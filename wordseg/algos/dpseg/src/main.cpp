@@ -14,8 +14,8 @@
 #include <boost/detail/utf8_codecvt_facet.ipp>
 
 #include <boost/program_options.hpp>
-#include "random-mt19937ar.h"
-#include "Data.h"
+#include "random-mt19937ar.hpp"
+#include "data.hh"
 #include "sampler.hh"
 
 

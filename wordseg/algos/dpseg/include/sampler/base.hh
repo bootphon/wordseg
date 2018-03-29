@@ -4,8 +4,8 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "Data.h"
-#include "Scoring.h"
+#include "data.hh"
+#include "scoring.hh"
 
 
 template<typename T>

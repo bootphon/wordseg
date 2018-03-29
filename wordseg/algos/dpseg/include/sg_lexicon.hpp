@@ -15,7 +15,7 @@
 #endif
 
 
-//key_type must have ==, <, and hash() (defined for most standard
+// key_type must have ==, <, and hash() (defined for most standard
 // classes in Mark's utils.h) this base class assumes that datatype is
 // numeric, although redefining inc and dec can change that.
 template <typename key_type, typename data_type>

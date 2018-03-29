@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "mhs.h"
+#include "mhs.hpp"
 
 
 template <typename Base>
@@ -142,5 +142,6 @@ private:
     Base& _base;
     BigramR _empty_bigram;
 };
+
 
 #endif

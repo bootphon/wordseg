@@ -1,5 +1,5 @@
 #include "sampler/base.hh"
-#include "slice-sampler.h"
+#include "slice_sampler.hpp"
 
 
 // using the random number generator defined in dpseg.cc

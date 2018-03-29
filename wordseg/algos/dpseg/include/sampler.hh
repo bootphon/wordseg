@@ -3,7 +3,7 @@
 
 #include <memory>
 #include <string>
-#include "Data.h"
+#include "data.hh"
 #include "sampler/base.hh"
 
 

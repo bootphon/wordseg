@@ -36,8 +36,8 @@
 
 
 #include "typedefs.hh"
-#include "random-mt19937ar.h"
-#include "util.h"
+#include "random-mt19937ar.hpp"
+#include "util.hpp"
 
 
 extern U debug_level;
@@ -321,7 +321,8 @@ public:
         {
             typename V_T::iterator tit = label_tables.find(v);
             assert(tit != label_tables.end());  // we should have tables with this label
-            I r = (I) tit->second.n*u01();
+
+            I r = (I) tit->second.n * u01();
             --n;  // one less customer
 
             if (tit->second.erase(r) == 0)
@@ -487,8 +488,8 @@ public:
             assert(sane_m);
             return sane_n && sane_m;
         }
-
 };
+
 
 template <typename Base>
 std::wostream& operator<< (std::wostream& os, const PYAdaptor<Base>& py) {

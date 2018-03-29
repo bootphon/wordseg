@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "typedefs.hh"
-#include "Sentence.h"
+#include "sentence.hh"
 
 extern U debug_level;
 

@@ -4,8 +4,8 @@
 #include <iostream>
 #include <vector>
 
-#include "Unigrams.h"
-#include "Base.h"
+#include "unigrams.hpp"
+#include "base.hpp"
 
 #include "typedefs.hh"
 

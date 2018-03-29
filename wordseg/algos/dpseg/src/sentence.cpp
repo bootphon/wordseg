@@ -1,6 +1,6 @@
-#include "Sentence.h"
-#include "Data.h"
-#include "Scoring.h"
+#include "data.hh"
+#include "sentence.hh"
+#include "scoring.hh"
 
 using namespace std;
 

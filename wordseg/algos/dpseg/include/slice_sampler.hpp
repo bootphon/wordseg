@@ -6,8 +6,8 @@
 #include <cmath>
 #include <limits>
 
-#include "Unigrams.h"
-#include "Base.h"
+#include "unigrams.hpp"
+#include "base.hpp"
 
 
 //! slice_sampler_rfc_type{} returns the value of a user-specified

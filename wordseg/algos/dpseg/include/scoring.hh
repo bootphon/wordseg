@@ -2,9 +2,10 @@
 #define _SCORING_H_
 
 #include <iostream>
-#include "Sentence.h"
-#include "Base.h"
-#include "SGLexicon.h"
+
+#include "sentence.hh"
+#include "base.hpp"
+#include "sg_lexicon.hpp"
 
 /*
   Scoring class calculates number of words correct

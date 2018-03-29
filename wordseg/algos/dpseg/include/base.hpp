@@ -12,7 +12,7 @@
 #include <cassert>
 #include <iostream>
 
-#include "mhs.h"
+#include "mhs.hpp"
 
 
 extern uniform01_type unif01;
