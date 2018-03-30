@@ -29,7 +29,7 @@ public:
           _prob(1.0/_dimensions),
           _nitems(0)
         {
-            assert(_dimensions >0);
+            assert(_dimensions > 0);
         }
 
     U dimensions() const
@@ -156,10 +156,11 @@ public:
         }
 
     //! logprob() returns the log probability of the corpus
-    F logprob() const {
-        return nstrings * log(p_nl)          // probability of stopping
-            + nchars * log((1.0-p_nl)/nc);   // probability of characters
-    }
+    F logprob() const
+        {
+            return nstrings * log(p_nl)          // probability of stopping
+                + nchars * log((1.0-p_nl)/nc);   // probability of characters
+        }
 };
 
 

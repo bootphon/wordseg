@@ -75,20 +75,20 @@ namespace data
 
         std::vector<Sentence> get_sentences() const;
 
-        //default is no eval sents, only CorpusData might have a real list
+        // default is no eval sents, only CorpusData might have a real list
         virtual std::vector<Sentence> get_eval_sentences() const;
 
-        //! write_segmented_corpus() writes the data out segmented
-        //! according to boundaries.
+        // write_segmented_corpus() writes the data out segmented
+        // according to boundaries.
         std::wostream& write_segmented_corpus(
             const Bs& b, std::wostream& os, I begin=0, I end=0) const;
 
-        //! anneal_temperature() returns the annealing temperature to be
-        //! used at each iteration.  If anneal_a is zero, we use Sharon
-        //! Goldwater's annealing schedule, where anneal_iterations are
-        //! broken into 9 equal sized bins, where the ith bin has
-        //! temperature 10/(bin+1).  If anneal_a is non-zero, we use a
-        //! sigmoid based annealing function.
+        // returns the annealing temperature to be used at each
+        // iteration.  If anneal_a is zero, we use Sharon Goldwater's
+        // annealing schedule, where anneal_iterations are broken into
+        // 9 equal sized bins, where the ith bin has temperature
+        // 10/(bin+1).  If anneal_a is non-zero, we use a sigmoid
+        // based annealing function.
         F anneal_temperature(U iteration) const;
 
     protected:

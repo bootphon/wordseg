@@ -21,7 +21,6 @@
 template <typename key_type, typename data_type>
 class lexicon_base: public std::unordered_map<key_type, data_type>
 {
-    typedef typename std::pair<data_type, data_type> dd_t;
     typedef typename std::unordered_map<typename lexicon_base::key_type, data_type> parent_t;
 
 public:
@@ -49,7 +48,9 @@ public:
                 my_assert(i->second != 0, i->first);
                 total += i->second;
             }
-            my_assert((total == _ntokens), dd_t(total, _ntokens));
+            my_assert(
+                (total == _ntokens),
+                std::pair<data_type, data_type>(total, _ntokens));
 #endif
         }
 

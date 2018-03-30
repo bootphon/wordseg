@@ -149,8 +149,9 @@ namespace py
         //! v, with context
         F operator() (const V& v) const
             {
-                if (debug_level >= 1000000) TRACE1(v);
-                typename V_T::const_iterator tit = label_tables.find(v);
+                if (debug_level >= 1000000)
+                    TRACE1(v);
+                const auto tit = label_tables.find(v);
                 F p_old = (tit == label_tables.end()) ? 0 : (tit->second.get_n() - tit->second.get_m()*a) / (n + b);
                 F p_new = base(v) * (m*a + b) / (n + b);
 
