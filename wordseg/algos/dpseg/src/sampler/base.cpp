@@ -1,5 +1,5 @@
 #include "sampler/base.hh"
-#include "slice_sampler.hpp"
+#include "sampler/slice.hpp"
 
 
 // using the random number generator defined in dpseg.cc
@@ -90,7 +90,7 @@ void sampler::base::resample_pyb(Unigrams& lex)
 {
     // number of resampling iterations
     U niterations = 20;
-    resample_pyb_type pyb_logP(lex, _constants.pyb_gamma_c, _constants.pyb_gamma_s);
+    resample_pyb_type<Unigrams, F> pyb_logP(lex, _constants.pyb_gamma_c, _constants.pyb_gamma_s);
     lex.pyb() = slice_sampler1d(
         pyb_logP, lex.pyb(), unif01, 0.0, std::numeric_limits<F>::infinity(),
         0.0, niterations, 100 * niterations);
@@ -101,7 +101,7 @@ void sampler::base::resample_pya(Unigrams& lex)
 {
     // number of resampling iterations
     U niterations = 20;
-    resample_pya_type pya_logP(lex, _constants.pya_beta_a, _constants.pya_beta_b);
+    resample_pya_type<Unigrams, F> pya_logP(lex, _constants.pya_beta_a, _constants.pya_beta_b);
     lex.pya() = slice_sampler1d(
         pya_logP, lex.pya(), unif01, std::numeric_limits<F>::min(),
         1.0, 0.0, niterations, 100*niterations);
