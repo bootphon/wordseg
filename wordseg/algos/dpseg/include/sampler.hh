@@ -10,7 +10,7 @@
 namespace sampler
 {
     std::shared_ptr<sampler::base> get_sampler(
-        data::corpus_data* data,
+        const data::corpus_data& data,
         const uint ngram,
         const std::string& mode,
         const std::string& estimator,

@@ -1,9 +1,9 @@
 #include "sampler/unigram.hh"
 
 
-sampler::unigram::unigram(data::data* constants)
+sampler::unigram::unigram(const data::data& constants)
     : base(constants),
-      _lex(_base_dist, unif01, constants->a1, constants->b1)
+      _lex(_base_dist, unif01, constants.a1, constants.b1)
 {}
 
 
@@ -67,14 +67,14 @@ void sampler::unigram::estimate_eval_sentence(Sentence& s, F temperature, bool m
 {
     if (maximize)
         s.maximize(
-            _lex, _constants->nsentences()-1, temperature, _constants->do_mbdp);
+            _lex, _constants.nsentences()-1, temperature, _constants.do_mbdp);
     else
         s.sample_tree(
-            _lex, _constants->nsentences()-1, temperature, _constants->do_mbdp);
+            _lex, _constants.nsentences()-1, temperature, _constants.do_mbdp);
 }
 
 
-sampler::batch_unigram::batch_unigram(data::data* constants)
+sampler::batch_unigram::batch_unigram(const data::data& constants)
     : unigram(constants)
 {
     for(const auto& sent: _sentences)
@@ -99,7 +99,7 @@ void sampler::batch_unigram::estimate(
         std::wcout << "Inside BatchUnigram estimate " << std::endl;
     }
 
-    if (_constants->trace_every > 0)
+    if (_constants.trace_every > 0)
     {
         print_statistics(os, 0, 0, true);
     }
@@ -112,7 +112,7 @@ void sampler::batch_unigram::estimate(
     for (U i=1; i <= iters; i++)
     {
         //U nchanged = 0; // if need to print out, use later
-        F temperature = _constants->anneal_temperature(i);
+        F temperature = _constants.anneal_temperature(i);
         // if (i % 10 == 0) wcerr << ".";
 	if (eval_iters && (i % eval_iters == 0))
         {
@@ -130,7 +130,7 @@ void sampler::batch_unigram::estimate(
             if (debug_level >= 9000) std::wcerr << _lex << std::endl;
         }
 
-        if (_constants->hypersampling_ratio)
+        if (_constants.hypersampling_ratio)
         {
             if (temperature > 1)
             {
@@ -144,7 +144,7 @@ void sampler::batch_unigram::estimate(
             }
         }
 
-        if (_constants->trace_every > 0 and i%_constants->trace_every == 0)
+        if (_constants.trace_every > 0 and i%_constants.trace_every == 0)
         {
             print_statistics(os, i, temperature);
         }
@@ -152,7 +152,7 @@ void sampler::batch_unigram::estimate(
     }
 
     os << "hyperparm accept rate: ";
-    if (_constants->hypersampling_ratio)
+    if (_constants.hypersampling_ratio)
         os << accepted_anneal/nanneal << " (during annealing), "
            << accepted/n << " (after)" << std::endl;
     else
@@ -160,7 +160,7 @@ void sampler::batch_unigram::estimate(
 }
 
 
-sampler::online_unigram::online_unigram(data::data* constants, F forget_rate)
+sampler::online_unigram::online_unigram(const data::data& constants, F forget_rate)
     : unigram(constants), _forget_rate(forget_rate)
 {
     base::_nsentences_seen = 0;
@@ -177,14 +177,14 @@ void sampler::online_unigram::estimate(
     if(debug_level >= 10000)
         std::wcout << "Inside OnlineUnigram estimate " << std::endl;
 
-    if (_constants->trace_every > 0)
+    if (_constants.trace_every > 0)
     {
         print_statistics(os, 0, 0, true);
     }
     _nsentences_seen = 0;
     for (U i=1; i <= iters; i++)
     {
-        F temperature = _constants->anneal_temperature(i);
+        F temperature = _constants.anneal_temperature(i);
 	if(!is_decayed)
         {
             // if (i % 10 == 0) wcerr << ".";
@@ -226,7 +226,7 @@ void sampler::online_unigram::estimate(
             if (debug_level >= 15000)  TRACE2(_lex.ntypes(),_lex);
         }
 
-        if (_constants->trace_every > 0 and i%_constants->trace_every == 0)
+        if (_constants.trace_every > 0 and i%_constants.trace_every == 0)
         {
             print_statistics(os, i, temperature);
         }
@@ -240,7 +240,7 @@ void sampler::online_unigram::forget_items(Sentences::iterator iter)
 {
     if (_forget_rate)
     {
-        assert(!_constants->token_memory and !_constants->type_memory);
+        assert(!_constants.token_memory and !_constants.type_memory);
         if (_sentences.begin() + _forget_rate <= iter)
         {
             if (debug_level >= 9000)
@@ -251,15 +251,15 @@ void sampler::online_unigram::forget_items(Sentences::iterator iter)
         }
         assert(sanity_check());
     }
-    else if (_constants->type_memory)
+    else if (_constants.type_memory)
     {
-        while (_lex.ntypes() >_constants->type_memory)
+        while (_lex.ntypes() >_constants.type_memory)
         {
-            if (_constants->forget_method == "U")
+            if (_constants.forget_method == "U")
             {
                 _lex.erase_type_uniform();
             }
-            else if (_constants->forget_method == "P")
+            else if (_constants.forget_method == "P")
             {
                 _lex.erase_type_proportional();
             }
@@ -279,11 +279,11 @@ void sampler::online_unigram::forget_items(Sentences::iterator iter)
         }
         assert(sanity_check());
     }
-    else if (_constants->token_memory)
+    else if (_constants.token_memory)
     {
-        while (_lex.ntokens() >_constants->token_memory)
+        while (_lex.ntokens() >_constants.token_memory)
         {
-            if (_constants->forget_method == "U")
+            if (_constants.forget_method == "U")
             {
                 _lex.erase_token_uniform();
             }
@@ -302,7 +302,7 @@ void sampler::online_unigram::forget_items(Sentences::iterator iter)
         }
         assert(sanity_check());
     }
-    else if (_constants->token_memory)
+    else if (_constants.token_memory)
     {
         error("unigram forgetting scheme not yet implemented");
     }

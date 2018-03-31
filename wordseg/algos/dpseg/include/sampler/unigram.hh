@@ -9,7 +9,7 @@ namespace sampler
     class unigram: public base
     {
     public:
-        unigram(data::data* constants);
+        unigram(const data::data& constants);
         virtual ~unigram();
         virtual bool sanity_check() const;
         virtual F log_posterior() const;
@@ -32,7 +32,7 @@ namespace sampler
     class batch_unigram: public unigram
     {
     public:
-        batch_unigram(data::data* constants);
+        batch_unigram(const data::data& constants);
         virtual ~batch_unigram();
         virtual void estimate(U iters, std::wostream& os, U eval_iters = 0,
             F temperature = 1, bool maximize = false, bool is_decayed = false);
@@ -45,7 +45,7 @@ namespace sampler
     class online_unigram: public unigram
     {
     public:
-        online_unigram(data::data* constants, F forget_rate = 0);
+        online_unigram(const data::data& constants, F forget_rate = 0);
         virtual ~online_unigram();
         virtual void estimate(
             U iters, std::wostream& os, U eval_iters = 0,

@@ -22,12 +22,12 @@ inline double normal_density (double val, double mean=0, double std=1)
 }
 
 
-sampler::base::base(data::data* constants):
+sampler::base::base(const data::data& constants):
     _constants(constants),
-    _sentences(constants->get_sentences()),
-    _eval_sentences(constants->get_eval_sentences()),
-    _nsentences_seen(constants->nsentences()),
-    _base_dist(constants->Pstop, constants->nchartypes)
+    _sentences(constants.get_sentences()),
+    _eval_sentences(constants.get_eval_sentences()),
+    _nsentences_seen(constants.nsentences()),
+    _base_dist(constants.Pstop, constants.nchartypes)
 {}
 
 
@@ -37,9 +37,9 @@ sampler::base::~base()
 
 bool sampler::base::sanity_check() const
 {
-    assert(_base_dist.nchartypes() ==_constants->nchartypes);
+    assert(_base_dist.nchartypes() ==_constants.nchartypes);
     assert(_base_dist.p_stop() < 0 || // if we're learning this parm.
-           _base_dist.p_stop() ==_constants->Pstop);
+           _base_dist.p_stop() ==_constants.Pstop);
     return true;
 }
 
@@ -50,7 +50,7 @@ F sampler::base::log_posterior(const Unigrams& lex) const
     F lp1 = lex.base_dist().logprob(); // word Probs
     if (debug_level >= 110000) TRACE(lp1);
 
-    F tau = _constants->aeos/2.0;
+    F tau = _constants.aeos/2.0;
     F ns = _nsentences_seen;
 
     // sentence length probs: 1st wd of each sent is free.
@@ -90,7 +90,7 @@ void sampler::base::resample_pyb(Unigrams& lex)
 {
     // number of resampling iterations
     U niterations = 20;
-    resample_pyb_type pyb_logP(lex, _constants->pyb_gamma_c, _constants->pyb_gamma_s);
+    resample_pyb_type pyb_logP(lex, _constants.pyb_gamma_c, _constants.pyb_gamma_s);
     lex.pyb() = slice_sampler1d(
         pyb_logP, lex.pyb(), unif01, 0.0, std::numeric_limits<F>::infinity(),
         0.0, niterations, 100 * niterations);
@@ -101,7 +101,7 @@ void sampler::base::resample_pya(Unigrams& lex)
 {
     // number of resampling iterations
     U niterations = 20;
-    resample_pya_type pya_logP(lex, _constants->pya_beta_a, _constants->pya_beta_b);
+    resample_pya_type pya_logP(lex, _constants.pya_beta_a, _constants.pya_beta_b);
     lex.pya() = slice_sampler1d(
         pya_logP, lex.pya(), unif01, std::numeric_limits<F>::min(),
         1.0, 0.0, niterations, 100*niterations);
@@ -194,7 +194,7 @@ Bs sampler::base::hypersample(Unigrams& ulex, Bigrams& lex, F temp)
 // changed.
 bool sampler::base::sample_hyperparm(F& beta, bool is_prob, F temp)
 {
-    F std_ratio = _constants->hypersampling_ratio;
+    F std_ratio = _constants.hypersampling_ratio;
     if (std_ratio <= 0)
         return false;
 

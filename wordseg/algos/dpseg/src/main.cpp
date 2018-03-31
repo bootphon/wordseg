@@ -352,7 +352,7 @@ int main(int argc, char** argv)
     for(uint subject = 0; subject < vm["nsubjects"].as<uint>(); subject++)
     {
         auto sampler = sampler::get_sampler(
-            &data,
+            data,
             vm["ngram"].as<uint>(),
             vm["mode"].as<std::string>(),
             vm["estimator"].as<std::string>(),
@@ -368,6 +368,8 @@ int main(int argc, char** argv)
         sampler->estimate(
             data.burnin_iterations, std::wcout, vm["eval-interval"].as<uint>(),
             1, vm["eval-maximize"].as<uint>(), true);
+
+        std::wcerr << "training done" << std::endl;
 
         // evaluates test set at the end of training
         if (eval_file == "none")

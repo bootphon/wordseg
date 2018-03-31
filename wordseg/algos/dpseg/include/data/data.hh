@@ -15,12 +15,13 @@ typedef std::vector<S_U> S_Us;
 typedef std::pair<substring, substring> SS;
 typedef std::vector<SS> TestPairs;
 
+
 namespace data
 {
-    template<typename String>
-    inline void error(const String& s)
+    template<typename T>
+    inline void error(const T& message)
     {
-        std::cerr << "error: " << s << std::endl;
+        std::cerr << "error: " << message << std::endl;
         abort();
         exit(1);
     }

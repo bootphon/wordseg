@@ -53,7 +53,7 @@ namespace sampler
     class base
     {
     public:
-        base(data::data* constants);
+        base(const data::data& constants);
         virtual ~base();
 
         virtual bool sanity_check() const;
@@ -74,13 +74,13 @@ namespace sampler
         virtual void print_eval_segmented(std::wostream& os) const;
         virtual void print_lexicon(std::wostream& os) const = 0;
 
-        //recomputes and prints precision, recall, etc. on training and eval data
+        // recomputes and prints precision, recall, etc. on training and eval data
         void print_scores(std::wostream& os);
         void print_eval_scores(std::wostream& os);
 
     protected:
         P0 _base_dist;
-        data::data* _constants;
+        const data::data& _constants;
         Sentences _sentences;
         Sentences _eval_sentences;
         U _nsentences_seen;

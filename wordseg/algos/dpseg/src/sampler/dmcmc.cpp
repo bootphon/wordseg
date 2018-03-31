@@ -249,7 +249,7 @@ void sampler::dmcmc::replace_sampled_sentence(Sentence s, Sentences &sentences_s
 
 
 sampler::online_unigram_dmcmc::online_unigram_dmcmc(
-    data::data* constants, F forget_rate, F decay_rate, U samples_per_utt)
+    const data::data& constants, F forget_rate, F decay_rate, U samples_per_utt)
     : online_unigram(constants, forget_rate), dmcmc(decay_rate, samples_per_utt)
 {
     if(debug_level >= 10000)
@@ -338,7 +338,7 @@ void sampler::online_unigram_dmcmc::estimate_sentence(Sentence& s, F temperature
 
 
 sampler::online_bigram_dmcmc::online_bigram_dmcmc(
-    data::data* constants, F forget_rate, F decay_rate, U samples_per_utt)
+    const data::data& constants, F forget_rate, F decay_rate, U samples_per_utt)
     : online_bigram(constants, forget_rate), dmcmc(decay_rate, samples_per_utt)
 {
     if(debug_level >= 10000)
@@ -360,6 +360,8 @@ void sampler::online_bigram_dmcmc::estimate_sentence(Sentence& s, F temperature)
 
     for(U num_samples = 0; num_samples < _samples_per_utt; num_samples++)
     {
+        // std::wcerr << "dmcmc::online_bigram::estimate_sentence sample=" << num_samples+1 << std::endl;
+
         if(num_samples == 0)
         { // only do this the first time
             calc_new_cum_prob(s, num_boundaries);

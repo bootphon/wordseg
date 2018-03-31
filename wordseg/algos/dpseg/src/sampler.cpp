@@ -9,7 +9,7 @@
 
 
 std::shared_ptr<sampler::base> sampler::get_sampler(
-    data::corpus_data* data,
+    const data::corpus_data& data,
     const uint ngram,
     const std::string& mode,
     const std::string& estimator,
@@ -49,10 +49,10 @@ std::shared_ptr<sampler::base> sampler::get_sampler(
     {
         if(estimator == "F")
         {
-            TRACE(data->nsentences());
-            TRACE(data->get_sentences());
-            TRACE(data->get_eval_sentences());
-            // TRACE(data->nchartypes());
+            TRACE(data.nsentences());
+            TRACE(data.get_sentences());
+            TRACE(data.get_eval_sentences());
+            // TRACE(data.nchartypes());
 
             sampler = model_ptr(new sampler::batch_bigram_flip(data));
         }

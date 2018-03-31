@@ -1,10 +1,10 @@
 #include "sampler/bigram.hh"
 
 
-sampler::bigram::bigram(data::data* constants)
+sampler::bigram::bigram(const data::data& constants)
     : sampler::base(constants),
-      _ulex(_base_dist, unif01, constants->a1, constants->b1),
-      _lex(_ulex, unif01, constants->a2, constants->b2)
+      _ulex(_base_dist, unif01, constants.a1, constants.b1),
+      _lex(_ulex, unif01, constants.a2, constants.b2)
 {}
 
 
@@ -18,8 +18,8 @@ bool sampler::bigram::sanity_check() const
     bool sane = sampler::base::sanity_check();
     sane = sane && _ulex.sanity_check();
     sane = sane && _lex.sanity_check();
-    //    sane = sane && _lex.get_a() ==  _constants->a2;
-    //    sane = sane && _lex.get_b() ==  _constants->b2;
+    //    sane = sane && _lex.get_a() ==  _constants.a2;
+    //    sane = sane && _lex.get_b() ==  _constants.b2;
     return sane;
 }
 
@@ -72,16 +72,16 @@ void sampler::bigram::estimate_eval_sentence(Sentence& s, F temperature, bool ma
 {
     if (maximize)
     {
-        s.maximize(_lex, _constants->nsentences()-1, temperature);
+        s.maximize(_lex, _constants.nsentences()-1, temperature);
     }
     else
     {
-        s.sample_tree(_lex, _constants->nsentences()-1, temperature);
+        s.sample_tree(_lex, _constants.nsentences()-1, temperature);
     }
 }
 
 
-sampler::batch_bigram::batch_bigram(data::data* constants)
+sampler::batch_bigram::batch_bigram(const data::data& constants)
     : bigram(constants)
 {
     for(const auto& item: _sentences)
@@ -104,7 +104,7 @@ void sampler::batch_bigram::estimate(
     if(debug_level >= 10000)
         std::wcout << "Inside BatchBigram estimate " << std::endl;
 
-    if (_constants->trace_every > 0)
+    if (_constants.trace_every > 0)
     {
         print_statistics(os, 0, 0, true);
     }
@@ -118,7 +118,7 @@ void sampler::batch_bigram::estimate(
     for (U i=1; i <= iters; i++)
     {
         //U nchanged = 0; if need to print out, un-comment
-        F temperature = _constants->anneal_temperature(i);
+        F temperature = _constants.anneal_temperature(i);
 
         // if (i % 10 == 0) wcerr << ".";
 	if (eval_iters && (i % eval_iters == 0))
@@ -137,7 +137,7 @@ void sampler::batch_bigram::estimate(
             if (debug_level >= 9000) std::wcerr << _lex << std::endl;
         }
 
-        if (_constants->hypersampling_ratio)
+        if (_constants.hypersampling_ratio)
         {
             if (temperature > 1)
             {
@@ -151,7 +151,7 @@ void sampler::batch_bigram::estimate(
             }
         }
 
-        if (_constants->trace_every > 0 and i%_constants->trace_every == 0)
+        if (_constants.trace_every > 0 and i%_constants.trace_every == 0)
         {
             print_statistics(os, i, temperature);
         }
@@ -164,7 +164,7 @@ void sampler::batch_bigram::estimate(
 }
 
 
-sampler::online_bigram::online_bigram(data::data* constants, F forget_rate)
+sampler::online_bigram::online_bigram(const data::data& constants, F forget_rate)
     : bigram(constants)
 {
     base::_nsentences_seen = 0;
@@ -181,7 +181,7 @@ void sampler::online_bigram::estimate(
     if(debug_level >= 10000)
         std::wcout << "Inside OnlineBigram estimate " << std::endl;
 
-    if (_constants->trace_every > 0)
+    if (_constants.trace_every > 0)
     {
         print_statistics(os, 0, 0, true);
     }
@@ -189,7 +189,8 @@ void sampler::online_bigram::estimate(
     _nsentences_seen = 0;
     for (U i=1; i <= iters; i++)
     {
-        F temperature = _constants->anneal_temperature(i);
+        std::wcerr << "bigram::online_bigram::estimate iteration " << i << "/" << iters << std::endl;
+        F temperature = _constants.anneal_temperature(i);
 	if(!is_decayed)
         {
             // if (i % 10 == 0) wcerr << ".";
@@ -229,7 +230,7 @@ void sampler::online_bigram::estimate(
             _nsentences_seen++;
         }
 
-        if (_constants->trace_every > 0 and i%_constants->trace_every == 0)
+        if (_constants.trace_every > 0 and i%_constants.trace_every == 0)
         {
             print_statistics(os, i, temperature);
         }
@@ -251,7 +252,7 @@ void sampler::online_bigram::forget_items(Sentences::iterator iter)
             _nsentences_seen--;
         }
     }
-    else if (_constants->type_memory || _constants->token_memory)
+    else if (_constants.type_memory || _constants.token_memory)
     {
         error("bigram forgetting scheme not yet implemented");
     }
