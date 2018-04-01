@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <string>
+
 #include "sampler/base.hh"
 #include "data/corpus_data.hh"
 
@@ -10,7 +11,9 @@
 namespace sampler
 {
     std::shared_ptr<sampler::base> get_sampler(
+        const parameters& params,
         const data::corpus_data& data,
+        const annealing& anneal,
         const uint ngram,
         const std::string& mode,
         const std::string& estimator,

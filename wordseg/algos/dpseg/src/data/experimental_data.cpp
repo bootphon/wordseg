@@ -8,22 +8,22 @@ data::experimental_data::experimental_data()
 data::experimental_data::~experimental_data()
 {}
 
-void data::experimental_data::read(std::wistream& is, uint start, uint ns)
+void data::experimental_data::read(std::wistream& is, std::size_t start, std::size_t ns)
 {
     substring::data.clear();
-    sentenceboundaries.clear();
+    m_sentenceboundaries.clear();
 
     //where in the file are we?
     //bool lexicon = true;
     bool training = false;
     bool testing = false;
 
-    uint buffer_max = 1000;
+    std::size_t buffer_max = 1000;
     wchar_t buffer[buffer_max];
     wchar_t c;
     while (is)
     {
-        uint index = 0;
+        std::size_t index = 0;
         // ignore empty lines
         while (is.get(c) && c  == L'\n') {}
 
@@ -56,26 +56,26 @@ void data::experimental_data::read(std::wistream& is, uint start, uint ns)
         {
             if (training)
             {
-                for (uint i = 0; i < utterance.size(); i++)
+                for (std::size_t i = 0; i < utterance.size(); i++)
                 {
                     substring::data.push_back(utterance[i]);
                 }
                 substring::data.push_back(L'\n');
-                sentenceboundaries.push_back(substring::data.size());
+                m_sentenceboundaries.push_back(substring::data.size());
             }
 
             if (testing && !utterance.empty())
             {
-                uint breakpt = utterance.find('\t');
+                std::size_t breakpt = utterance.find('\t');
                 assert(breakpt != utterance.npos);
-                for (uint i = 0; i < breakpt; i++)
+                for (std::size_t i = 0; i < breakpt; i++)
                 {
                     substring::data.push_back(utterance[i]);
                 }
 
                 substring::data.push_back('\t');
                 _testboundaries.push_back(substring::data.size());
-                for (uint i = breakpt+1; i < utterance.size(); i++)
+                for (std::size_t i = breakpt+1; i < utterance.size(); i++)
                 {
                     substring::data.push_back(utterance[i]);
                 }
@@ -98,44 +98,45 @@ void data::experimental_data::read(std::wistream& is, uint start, uint ns)
 }
 
 
-const TestPairs& data::experimental_data::get_test_pairs() const
+const std::vector<std::pair<substring, substring> >& data::experimental_data::get_test_pairs() const
 {
     return _test_pairs;
 }
 
 
-void data::experimental_data::initialize(uint ns)
+void data::experimental_data::initialize(std::size_t ns)
 {
-    ntrainsentences = ns;
-    if (ntrainsentences == 0)
-        ntrainsentences = sentenceboundaries.size()-1;
+    m_ntrainsentences = ns;
+    if (m_ntrainsentences == 0)
+        m_ntrainsentences = m_sentenceboundaries.size()-1;
 
-    if (ntrainsentences >= sentenceboundaries.size())
+    if (m_ntrainsentences >= m_sentenceboundaries.size())
     {
         error("Error: number of training sentences must be less than training data size\n");
     }
-    ntrain = sentenceboundaries[ntrainsentences];
+    m_ntrain = m_sentenceboundaries[m_ntrainsentences];
 
-    _possible_boundaries.resize(ntrain,false);
+    m_possible_boundaries.resize(m_ntrain,false);
 
     //assume any non-s boundary can be a word boundary
-    for (uint j = 2; j <= ntrain; ++j)
+    for (std::size_t j = 2; j <= m_ntrain; ++j)
         if (substring::data[j-1] != L'\n' && substring::data[j] != L'\n')
-            _possible_boundaries[j] = true;
+            m_possible_boundaries[j] = true;
 
     // _true_boundaries[i] is true iff there really is a boundary at i
-    _true_boundaries.resize(ntrain);
+    m_true_boundaries.resize(m_ntrain);
 
-    for (uint i = 0; i < ntrain; ++i)
+    for (std::size_t i = 0; i < m_ntrain; ++i)
         if (substring::data[i] == L'\n' || substring::data[i-1] == L'\n')
             // insert sentence boundaries into _true_boundaries[]
-            _true_boundaries[i] = true;
+            m_true_boundaries[i] = true;
 
     assert(_testboundaries.size() % 2 == 1);
-    for (uint i = 0; i < _testboundaries.size()-2; i+=2)
+    for (std::size_t i = 0; i < _testboundaries.size()-2; i+=2)
     {
         _test_pairs.push_back(
-            SS(substring(_testboundaries[i],_testboundaries[i+1]-1),
-               substring(_testboundaries[i+1],_testboundaries[i+2]-1)));
+            std::pair<substring, substring>(
+                substring(_testboundaries[i],_testboundaries[i+1]-1),
+                substring(_testboundaries[i+1],_testboundaries[i+2]-1)));
     }
 }

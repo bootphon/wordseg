@@ -13,7 +13,9 @@
 #define BOOST_UTF8_DECL
 #include <boost/detail/utf8_codecvt_facet.ipp>
 
+
 #include "data/corpus_data.hh"
+#include "sampler/parameters.hh"
 #include "sampler.hh"
 #include "random-mt19937ar.hpp"
 
@@ -22,7 +24,7 @@
 // code (with 'extern' declarations). This is bad (source of bugs,
 // hard to read/debug). Use parameters instead.
 uniform01_type unif01; // random number generator
-uint debug_level;      // higher -> mode debug messages on stdout
+std::size_t debug_level;      // higher -> mode debug messages on stdout
 std::wstring sep;      // separator used to separate fields during printing of results
 
 
@@ -49,6 +51,7 @@ int main(int argc, char** argv)
     std::ios_base::sync_with_stdio(false);
     std::cin.tie(0);
 
+    sampler::parameters params;
     data::corpus_data data;
     std::string csep;
 
@@ -62,16 +65,16 @@ int main(int argc, char** argv)
         ("config-file,C", po::value<std::string>(),
          "read options from this file")
 
-        ("debug-level,d", po::value<uint>(&debug_level)->default_value(0),
+        ("debug-level,d", po::value<std::size_t>(&debug_level)->default_value(0),
          "debugging level")
 
         ("data-file", po::value<std::string>(),
          "training data file (default is stdin)")
 
-        ("data-start-index", po::value<uint>()->default_value(0),
+        ("data-start-index", po::value<std::size_t>()->default_value(0),
          "sentence index to start reading training data file")
 
-        ("data-num-sents", po::value<uint>()->default_value(0),
+        ("data-num-sents", po::value<std::size_t>()->default_value(0),
          "number of training sentences to use (0 = all)")
 
         ("eval-file", po::value<std::string>(),
@@ -81,16 +84,16 @@ int main(int argc, char** argv)
          "different functionality than not listing a test file, due to the way "
          "that the test file is segmented.")
 
-        ("eval-start-index", po::value<uint>()->default_value(0),
+        ("eval-start-index", po::value<std::size_t>()->default_value(0),
          "sentence index to start reading eval data file")
 
-        ("eval-num-sents", po::value<uint>()->default_value(0),
+        ("eval-num-sents", po::value<std::size_t>()->default_value(0),
          "number of testing sentences to use (0 = all)")
 
-        ("eval-maximize", po::value<uint>()->default_value(0),
+        ("eval-maximize", po::value<std::size_t>()->default_value(0),
          "1 = choose max prob segmentation of test sentences, 0 (default) = sample instead")
 
-        ("eval-interval", po::value<uint>()->default_value(0),
+        ("eval-interval", po::value<std::size_t>()->default_value(0),
          "how many iterations are run before the test set is evaluated, 0 "
          "(default) means to only evaluate the test set after all iterations "
          "are complete.w")
@@ -106,107 +109,107 @@ int main(int argc, char** argv)
         ("decay-rate", po::value<double>()->default_value(1.0),
          "decay rate for D(ecayed Flip), default = 1.0")
 
-        ("samples-per-utt", po::value<uint>()->default_value(1000),
+        ("samples-per-utt", po::value<std::size_t>()->default_value(1000),
          "samples per utterance for D(ecayed Flip), default = 1000")
 
         ("mode", po::value<std::string>()->default_value("batch"),
          "possible values are: online, batch")
 
-        ("ngram", po::value<uint>()->default_value(2),
+        ("ngram", po::value<std::size_t>()->default_value(2),
          "possible values are: 1 (unigram), 2 (bigram)")
 
-        ("do-mbdp", po::value<bool>(&data.do_mbdp)->default_value(false),
+        ("do-mbdp", po::value<bool>(&params.do_mbdp)->default_value(false),
          "maximize using Brent ngram instead of DP")
 
-        ("a1", po::value<double>(&data.a1)->default_value(0),
+        ("a1", po::value<double>(&params.a1)->default_value(0),
          "Unigram Pitman-Yor a parameter")
 
-        ("b1", po::value<double>(&data.b1)->default_value(1),
+        ("b1", po::value<double>(&params.b1)->default_value(1),
          "Unigram Pitman-Yor b parameter")
 
-        ("a2", po::value<double>(&data.a2)->default_value(0),
+        ("a2", po::value<double>(&params.a2)->default_value(0),
          "Bigram Pitman-Yor a parameter")
 
-        ("b2", po::value<double>(&data.b2)->default_value(1),
+        ("b2", po::value<double>(&params.b2)->default_value(1),
          "Bigram Pitman-Yor b parameter")
 
-        ("Pstop", po::value<double>(&data.Pstop)->default_value(0.5),
+        ("Pstop", po::value<double>(&params.pstop)->default_value(0.5),
          "Monkey model stop probability")
 
         // not completely sure that hyper parameter sampling is
         // working correctly yet. However it does yield pretty good
         // results when using all four PY parameters.
-        ("hypersamp-ratio", po::value<double>(&data.hypersampling_ratio)->default_value(0.1),
+        ("hypersamp-ratio", po::value<double>(&params.hypersampling_ratio)->default_value(0.1),
          "Standard deviation for new hyperparm proposals (0 turns off hyperp sampling)")
 
-        ("nchartypes", po::value<uint>(&data.nchartypes)->default_value(0),
-         "Number of characters assumed in P_0 (default = 0 will compute from input)")
+        // ("nchartypes", po::value<std::size_t>(&data.m_nchartypes)->default_value(0),
+        //  "Number of characters assumed in P_0 (default = 0 will compute from input)")
 
         // ("p_nl", po::value<double>(&data.p_nl)->default_value(0.5),
         // "End of sentence prob")
 
-        ("aeos", po::value<double>(&data.aeos)->default_value(2),
+        ("aeos", po::value<double>(&params.aeos)->default_value(2),
          "Beta prior on end of sentence prob")
 
-        ("init-pboundary", po::value<double>(&data.init_pboundary)->default_value(0),
+        ("init-pboundary", po::value<double>(&params.init_pboundary)->default_value(0),
          "Initial segmentation boundary probability (-1 = gold)")
 
-        ("pya-beta-a", po::value<double>(&data.pya_beta_a)->default_value(1),
+        ("pya-beta-a", po::value<double>(&params.pya_beta_a)->default_value(1),
          "if non-zero, a parameter of Beta prior on pya")
 
-        ("pya-beta-b", po::value<double>(&data.pya_beta_b)->default_value(1),
+        ("pya-beta-b", po::value<double>(&params.pya_beta_b)->default_value(1),
          "if non-zero, b parameter of Beta prior on pya")
 
-        ("pya-gamma-s", po::value<double>(&data.pyb_gamma_s)->default_value(10),
+        ("pya-gamma-s", po::value<double>(&params.pyb_gamma_s)->default_value(10),
          "if non-zero, parameter of Gamma prior on pyb")
 
-        ("pya-gamma-c", po::value<double>(&data.pyb_gamma_c)->default_value(0.1),
+        ("pya-gamma-c", po::value<double>(&params.pyb_gamma_c)->default_value(0.1),
          "if non-zero, parameter of Gamma prior on pyb")
 
-        ("randseed", po::value<uint>()->default_value(
+        ("randseed", po::value<std::size_t>()->default_value(
             // this is the current time as integer
             std::chrono::system_clock::now().time_since_epoch().count()),
          "Random number seed, default is based on current time")
 
-        ("trace-every", po::value<uint>(&data.trace_every)->default_value(100),
+        ("trace-every", po::value<std::size_t>(&params.trace_every)->default_value(100),
          "Epochs between printing out trace information (0 = don't trace)")
 
-        ("nsubjects,s", po::value<uint>()->default_value(1),
+        ("nsubjects,s", po::value<std::size_t>()->default_value(1),
          "Number of subjects to simulate")
 
         ("forget-rate,f", po::value<double>()->default_value(0),
          "Number of utterances whose words can be remembered")
 
-        ("burnin-iterations,i", po::value<uint>()->default_value(2000),
+        ("burnin-iterations,i", po::value<std::size_t>()->default_value(2000),
          "Number of burn-in epochs. This is actually the total number of "
          "iterations through the training data.")
 
-        ("anneal-iterations", po::value<uint>(&data.anneal_iterations)->default_value(0),
+        ("anneal-iterations", po::value<std::size_t>()->default_value(0),
          "Number of epochs to anneal for. So e.g. burn-in = 100 and anneal = 90 "
          "would leave 10 iters at the end at the final annealing temp.")
 
-        ("anneal-start-temperature", po::value<double>(&data.anneal_start_temperature)->default_value(1),
+        ("anneal-start-temperature", po::value<double>()->default_value(1),
          "Start annealing at this temperature")
 
-        ("anneal-stop-temperature", po::value<double>(&data.anneal_stop_temperature)->default_value(1),
+        ("anneal-stop-temperature", po::value<double>()->default_value(1),
          "Stop annealing at this temperature")
 
-        ("anneal-a", po::value<double>(&data.anneal_a)->default_value(0),
+        ("anneal-a", po::value<double>()->default_value(0),
          "Parameter in annealing temperature sigmoid function (0 = use ACL06 schedule)")
 
-        ("anneal-b", po::value<double>(&data.anneal_b)->default_value(0.2),
+        ("anneal-b", po::value<double>()->default_value(0.2),
          "Parameter in annealing temperature sigmoid function")
 
         ("result-field-separator", po::value<std::string>(&csep)->default_value("\t"),
          "Field separator used to print results")
 
-        ("forget-method", po::value< std::string>(&data.forget_method)->default_value("U"),
+        ("forget-method", po::value< std::string>(&params.forget_method)->default_value("U"),
          "Method of deleting lexical items: U(niformly), P(roportional)")
 
-        ("token-memory,N", po::value<uint>(&data.token_memory)->default_value(0),
+        ("token-memory,N", po::value<std::size_t>(&params.token_memory)->default_value(0),
          "Number of tokens that can be remembered (0 = no limit)")
 
-        ("type-memory,L", po::value<uint>(&data.type_memory)->default_value(0),
+        ("type-memory,L", po::value<std::size_t>(&params.type_memory)->default_value(0),
          "Number of types that can be remembered (0 = no limit)")
         ;
 
@@ -247,49 +250,48 @@ int main(int argc, char** argv)
     {
         // display detailed input arguments
         std::wcout
-            << "# particle" << ", " << std::chrono::system_clock::now().time_since_epoch().count()
             << "# debug-level=" << debug_level << std::endl
             << "# data-file=" << data_file.c_str() << std::endl
-            << "# data-start-index=" << vm["data-start-index"].as<uint>() << std::endl
-            << "# data-num-sents=" << vm["data-num-sents"].as<uint>() << std::endl
+            << "# data-start-index=" << vm["data-start-index"].as<std::size_t>() << std::endl
+            << "# data-num-sents=" << vm["data-num-sents"].as<std::size_t>() << std::endl
             << "# eval-file=" << eval_file.c_str() << std::endl
-            << "# eval-start-index=" << vm["eval-start-index"].as<uint>() << std::endl
-            << "# eval-num-sents=" << vm["eval-num-sents"].as<uint>() << std::endl
-            << "# eval-maximize=" << vm["eval-maximize"].as<uint>() << std::endl
-            << "# eval-interval=" <<vm["eval-interval"].as<uint>() << std::endl
+            << "# eval-start-index=" << vm["eval-start-index"].as<std::size_t>() << std::endl
+            << "# eval-num-sents=" << vm["eval-num-sents"].as<std::size_t>() << std::endl
+            << "# eval-maximize=" << vm["eval-maximize"].as<std::size_t>() << std::endl
+            << "# eval-interval=" <<vm["eval-interval"].as<std::size_t>() << std::endl
             << "# output-file=" << str2wstr(vm["output-file"].as<std::string>()) << std::endl
             << "# estimator=" << str2wstr(vm["estimator"].as<std::string>()) << std::endl
             << "# decay_rate=" << vm["decay-rate"].as<double>() << std::endl
-            << "# samples_per_utt=" << vm["samples-per-utt"].as<uint>() << std::endl
+            << "# samples_per_utt=" << vm["samples-per-utt"].as<std::size_t>() << std::endl
             << "# mode=" << str2wstr(vm["mode"].as<std::string>()) << std::endl
-            << "# ngram=" << vm["ngram"].as<uint>() << std::endl
+            << "# ngram=" << vm["ngram"].as<std::size_t>() << std::endl
             << "# do_mbdp=" << vm["do-mbdp"].as<bool>() << std::endl
             << "# a1=" << vm["a1"].as<double>() << std::endl
             << "# b1=" << vm["b1"].as<double>() << std::endl
             << "# a2=" << vm["a2"].as<double>() << std::endl
             << "# b2=" << vm["b2"].as<double>() << std::endl
-            << "# Pstop=" << data.Pstop << std::endl
-            << "# hypersamp-ratio=" << data.hypersampling_ratio << std::endl
-            << "# aeos=" << data.aeos << std::endl
+            << "# Pstop=" << params.pstop << std::endl
+            << "# hypersamp-ratio=" << params.hypersampling_ratio << std::endl
+            << "# aeos=" << params.aeos << std::endl
             << "# init_pboundary=" << vm["init-pboundary"].as<double>() << std::endl
-            << "# pya-beta-a="  << data.pya_beta_a << std::endl
-            << "# pya-beta-b="  << data.pya_beta_b << std::endl
-            << "# pyb-gamma-s="  << data.pyb_gamma_s << std::endl
-            << "# pyb-gamma-c="  << data.pyb_gamma_c << std::endl
-            << "# randseed=" << vm["randseed"].as<uint>() << std::endl
-            << "# trace-every=" << data.trace_every << std::endl
-            << "# nsubjects=" << vm["nsubjects"].as<uint>() << std::endl
+            << "# pya-beta-a="  << params.pya_beta_a << std::endl
+            << "# pya-beta-b="  << params.pya_beta_b << std::endl
+            << "# pyb-gamma-s="  << params.pyb_gamma_s << std::endl
+            << "# pyb-gamma-c="  << params.pyb_gamma_c << std::endl
+            << "# randseed=" << vm["randseed"].as<std::size_t>() << std::endl
+            << "# trace-every=" << params.trace_every << std::endl
+            << "# nsubjects=" << vm["nsubjects"].as<std::size_t>() << std::endl
             << "# forget-rate=" << vm["forget-rate"].as<double>() << std::endl
-            << "# burnin-iterations=" << vm["burnin-iterations"].as<uint>() << std::endl
-            << "# anneal-iterations=" << data.anneal_iterations << std::endl
-            << "# anneal-start-temperature=" << data.anneal_start_temperature << std::endl
-            << "# anneal-stop-temperature=" << data.anneal_stop_temperature << std::endl
-            << "# anneal-a=" << data.anneal_a << std::endl
-            << "# anneal-b=" << data.anneal_b << std::endl
+            << "# burnin-iterations=" << vm["burnin-iterations"].as<std::size_t>() << std::endl
+            << "# anneal-iterations=" << vm["anneal-iterations"].as<std::size_t>() << std::endl
+            << "# anneal-start-temperature=" << vm["anneal-start-temperature"].as<double>() << std::endl
+            << "# anneal-stop-temperature=" << vm["anneal-stop-temperature"].as<double>() << std::endl
+            << "# anneal-a=" << vm["anneal_a"].as<double>() << std::endl
+            << "# anneal-b=" << vm["anneal-b"].as<double>() << std::endl
             << "# result-field-separator=" << sep << std::endl;
     }
 
-    unif01.seed(vm["randseed"].as<uint>());
+    unif01.seed(vm["randseed"].as<std::size_t>());
 
     // read training data
     if (data_file != "stdin")
@@ -302,11 +304,11 @@ int main(int argc, char** argv)
         }
         // is.imbue(std::locale(std::locale(), new utf8_codecvt_facet()));
 
-        data.read(is, vm["data-start-index"].as<uint>(), vm["data-num-sents"].as<uint>());
+        data.read(is, vm["data-start-index"].as<std::size_t>(), vm["data-num-sents"].as<std::size_t>());
     }
     else
     {
-        data.read(std::wcin, vm["data-start-index"].as<uint>(), vm["data-num-sents"].as<uint>());
+        data.read(std::wcin, vm["data-start-index"].as<std::size_t>(), vm["data-num-sents"].as<std::size_t>());
     }
 
     // read evaluation data
@@ -319,7 +321,7 @@ int main(int argc, char** argv)
             exit(1);
         }
         // is.imbue(std::locale(std::locale(), new utf8_codecvt_facet()));
-        data.read_eval(is,vm["eval-start-index"].as<uint>(),vm["eval-num-sents"].as<uint>());
+        data.read_eval(is,vm["eval-start-index"].as<std::size_t>(),vm["eval-num-sents"].as<std::size_t>());
     }
 
     if (debug_level >= 98000)
@@ -334,7 +336,7 @@ int main(int argc, char** argv)
 
     if (debug_level >= 100)
     {
-        std::wcout << "# nchartypes=" << data.nchartypes << std::endl
+        std::wcout << "# nchartypes=" << data.nchartypes() << std::endl
                    << "# nsentences=" << data.nsentences() << std::endl;
     }
 
@@ -349,16 +351,23 @@ int main(int argc, char** argv)
     }
     // os.imbue(utf8_locale);
 
-    for(uint subject = 0; subject < vm["nsubjects"].as<uint>(); subject++)
+    annealing anneal(
+        vm["anneal-iterations"].as<std::size_t>(),
+        vm["anneal-start-temperature"].as<double>(),
+        vm["anneal-stop-temperature"].as<double>(),
+        vm["anneal-a"].as<double>(),
+        vm["anneal-b"].as<double>());
+
+    for(std::size_t subject = 0; subject < vm["nsubjects"].as<std::size_t>(); subject++)
     {
         auto sampler = sampler::get_sampler(
-            data,
-            vm["ngram"].as<uint>(),
+            params, data, anneal,
+            vm["ngram"].as<std::size_t>(),
             vm["mode"].as<std::string>(),
             vm["estimator"].as<std::string>(),
             vm["forget-rate"].as<double>(),
             vm["decay-rate"].as<double>(),
-            vm["samples-per-utt"].as<uint>());
+            vm["samples-per-utt"].as<std::size_t>());
 
         std::wcout << "initial probability = " << sampler->log_posterior() << std::endl;
         assert(sampler->sanity_check());
@@ -366,8 +375,8 @@ int main(int argc, char** argv)
         // Train the sampler. If want to evaluate test set during
         // training intervals, need to add that into estimate function
         sampler->estimate(
-            vm["burnin-iterations"].as<uint>(), std::wcout, vm["eval-interval"].as<uint>(),
-            1, vm["eval-maximize"].as<uint>(), true);
+            vm["burnin-iterations"].as<std::size_t>(), std::wcout, vm["eval-interval"].as<std::size_t>(),
+            1, vm["eval-maximize"].as<std::size_t>(), true);
 
         std::wcerr << "training done" << std::endl;
 
@@ -390,7 +399,7 @@ int main(int argc, char** argv)
             }
 
             std::wcout << "Test set at end of training " << std::endl;
-            sampler->run_eval(os,1,vm["eval-maximize"].as<uint>());
+            sampler->run_eval(os,1,vm["eval-maximize"].as<std::size_t>());
 
             std::wcout << "testing final posterior = " << sampler->log_posterior() << std::endl;
             sampler->print_eval_segmented(os);

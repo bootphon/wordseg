@@ -3,6 +3,7 @@
 #ifndef SLICE_SAMPLER_HPP
 #define SLICE_SAMPLER_HPP
 
+#include <cassert>
 #include <cmath>
 #include <limits>
 
@@ -31,8 +32,7 @@ namespace sampler
                     assert(++nfeval <= max_nfeval);
 
                     Scalar fx = f(x);
-
-                    assert(finite(fx));
+                    assert(std::isfinite(fx));
                     return fx;
                 }
                 else

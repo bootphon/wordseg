@@ -9,7 +9,9 @@
 
 
 std::shared_ptr<sampler::base> sampler::get_sampler(
+    const sampler::parameters& params,
     const data::corpus_data& data,
+    const annealing& anneal,
     const uint ngram,
     const std::string& mode,
     const std::string& estimator,
@@ -17,7 +19,7 @@ std::shared_ptr<sampler::base> sampler::get_sampler(
     const double decay_rate,
     const uint samples_per_utt)
 {
-    std::cout << "Init sampler with ngram=" << ngram << ", " << mode << ", " << estimator << std::endl;
+    std::cerr << "Init sampler with ngram=" << ngram << ", " << mode << ", " << estimator << std::endl;
 
     using model_ptr = std::shared_ptr<sampler::base>;
     model_ptr sampler;
@@ -49,19 +51,19 @@ std::shared_ptr<sampler::base> sampler::get_sampler(
     {
         if(estimator == "F")
         {
-            TRACE(data.nsentences());
-            TRACE(data.get_sentences());
-            TRACE(data.get_eval_sentences());
+            // TRACE(data.nsentences());
+            // TRACE(data.get_sentences());
+            // TRACE(data.get_eval_sentences());
             // TRACE(data.nchartypes());
 
-            sampler = model_ptr(new sampler::batch_bigram_flip(data));
+            sampler = model_ptr(new sampler::batch_bigram_flip(params, data, anneal));
         }
         else if(estimator == "V")
         {
-            sampler = model_ptr(new sampler::batch_bigram_viterbi(data));
+            sampler = model_ptr(new sampler::batch_bigram_viterbi(params, data, anneal));
         }
         else if(estimator == "T")
-            sampler = model_ptr(new sampler::batch_bigram_tree(data));
+            sampler = model_ptr(new sampler::batch_bigram_tree(params, data, anneal));
         else if(estimator == "D")
             std::cerr
                 << "D(ecayed Flip) estimator cannot be used in batch mode."
@@ -76,9 +78,9 @@ std::shared_ptr<sampler::base> sampler::get_sampler(
                 << "Error: F(lip) estimator cannot be used in online mode."
                 << std::endl;
         else if(estimator == "V")
-            sampler = model_ptr(new sampler::online_bigram_viterbi(data));
+            sampler = model_ptr(new sampler::online_bigram_viterbi(params, data, anneal));
         else if(estimator == "T")
-            sampler = model_ptr(new sampler::online_bigram_tree(data));
+            sampler = model_ptr(new sampler::online_bigram_tree(params, data, anneal));
         else if(estimator == "D")
         {
             if(debug_level >= 1000)
@@ -87,17 +89,17 @@ std::shared_ptr<sampler::base> sampler::get_sampler(
                     << " and samples per utterance " << samples_per_utt << std::endl;
 
             sampler = model_ptr(
-                new sampler::online_bigram_dmcmc(data, forget_rate, decay_rate, samples_per_utt));
+                new sampler::online_bigram_dmcmc(params, data, anneal, forget_rate, decay_rate, samples_per_utt));
         }
     }
     else if(ngram == 1 and mode == "batch")
     {
         if(estimator == "F")
-            sampler = model_ptr(new sampler::batch_unigram_flip(data));
+            sampler = model_ptr(new sampler::batch_unigram_flip(params, data, anneal));
         else if(estimator == "V")
-            sampler = model_ptr(new sampler::batch_unigram_viterbi(data));
+            sampler = model_ptr(new sampler::batch_unigram_viterbi(params, data, anneal));
         else if(estimator == "T")
-            sampler = model_ptr(new sampler::batch_unigram_tree(data));
+            sampler = model_ptr(new sampler::batch_unigram_tree(params, data, anneal));
         else if(estimator == "D")
             std::cerr << "D(ecayed Flip) estimator cannot be used in batch mode." << std::endl;
     }
@@ -109,9 +111,9 @@ std::shared_ptr<sampler::base> sampler::get_sampler(
                 << "Error: F(lip) estimator cannot be used in online mode."
                 << std::endl;
         else if(estimator == "V")
-            sampler = model_ptr(new sampler::online_unigram_viterbi(data, forget_rate));
+            sampler = model_ptr(new sampler::online_unigram_viterbi(params, data, anneal, forget_rate));
         else if(estimator == "T")
-            sampler = model_ptr(new sampler::online_unigram_tree(data, forget_rate));
+            sampler = model_ptr(new sampler::online_unigram_tree(params, data, anneal, forget_rate));
         else if(estimator == "D")
         {
             if(debug_level >= 1000)
@@ -121,7 +123,7 @@ std::shared_ptr<sampler::base> sampler::get_sampler(
                     << std::endl;
 
             sampler = model_ptr(
-                new sampler::online_unigram_dmcmc(data, forget_rate, decay_rate, samples_per_utt));
+                new sampler::online_unigram_dmcmc(params, data, anneal, forget_rate, decay_rate, samples_per_utt));
         }
     }
 

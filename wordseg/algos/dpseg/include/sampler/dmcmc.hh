@@ -35,7 +35,8 @@ namespace sampler
     {
     public:
         online_unigram_dmcmc(
-            const data::data& constants, double forget_rate = 0, double decay_rate = 1.0, uint samples_per_utt = 1000);
+            const parameters& params, const data::data& constants, const annealing& anneal,
+            double forget_rate = 0, double decay_rate = 1.0, uint samples_per_utt = 1000);
 
         virtual ~online_unigram_dmcmc()
             {}
@@ -49,7 +50,8 @@ namespace sampler
     {
     public:
         online_bigram_dmcmc(
-            const data::data& constants, double forget_rate = 0, double decay_rate = 1.0, uint samples_per_utt = 1000);
+            const parameters& params, const data::data& constants, const annealing& anneal,
+            double forget_rate = 0, double decay_rate = 1.0, uint samples_per_utt = 1000);
 
         virtual ~online_bigram_dmcmc()
             {}

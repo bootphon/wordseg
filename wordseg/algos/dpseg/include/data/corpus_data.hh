@@ -11,19 +11,19 @@ namespace data
         corpus_data();
         virtual ~corpus_data();
 
-        virtual void read(std::wistream& is, uint start, uint ns);
+        virtual void read(std::wistream& is, std::size_t start, std::size_t ns);
 
         // read additional data for evaluation
-        void read_eval(std::wistream& is, uint start, uint ns);
+        void read_eval(std::wistream& is, std::size_t start, std::size_t ns);
 
-        virtual std::vector<Sentence> get_eval_sentences() const;
+        virtual std::vector<Sentence> get_eval_sentences(double init_pboundary, double aeos) const;
 
-        void initialize(uint ns);
+        void initialize(std::size_t ns);
 
     private:
-        uint _evalsent_start;  // sentence # of first eval sentence
+        std::size_t _evalsent_start;  // sentence # of first eval sentence
 
-        void read_data(std::wistream& is, uint start, uint ns);
+        void read_data(std::wistream& is, std::size_t start, std::size_t ns);
     };
 }
 

@@ -22,13 +22,12 @@ public:
     typedef std::vector<substring> Words;
     typedef Words::const_iterator Words_iterator;
 
-    Sentence()
-        {}
-
     Sentence(std::size_t start, std::size_t end,
              std::vector<bool>& possible_boundaries,
              std::vector<bool>& true_boundaries,
-             const data::data* d);
+             std::size_t nsentences,
+             double init_pboundary,
+             double aeos);
 
     Words get_segmented_words() const
         {
@@ -82,7 +81,10 @@ private:
     std::vector<unsigned int> _possible_boundaries;
     std::vector<unsigned int> _padded_possible;  // for use with dynamic programming
     std::vector<bool> _true_boundaries;
-    const data::data* _constants;
+
+    double m_aeos;
+    double m_init_pboundary;
+    std::size_t m_nsentences;
 
     substring word_at(uint left, uint right) const
         {

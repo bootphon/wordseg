@@ -89,9 +89,16 @@ std::wostream& Sentence::print(std::wostream& os) const
 
 
 //initializes possible boundaries and actual boundaries.
-Sentence::Sentence(std::size_t start, std::size_t end, std::vector<bool>& possible_boundaries,
-		   std::vector<bool>& true_boundaries, const data::data* d)
-    : substring(start, end), _true_boundaries(true_boundaries), _constants(d)
+Sentence::Sentence(std::size_t start, std::size_t end,
+                   std::vector<bool>& possible_boundaries,
+		   std::vector<bool>& true_boundaries,
+                   std::size_t nsentences,
+                   double init_pboundary,
+                   double aeos)
+    : substring(start, end), _true_boundaries(true_boundaries),
+      m_nsentences(nsentences),
+      m_init_pboundary(init_pboundary),
+      m_aeos(aeos)
 {
     _true_boundaries.push_back(1);
     _padded_possible.push_back(1);
@@ -111,13 +118,13 @@ Sentence::Sentence(std::size_t start, std::size_t end, std::vector<bool>& possib
 
     for (uint i = 2; i < n; ++i)
     {
-        if (_constants->init_pboundary == -1)
+        if (m_init_pboundary == -1)
         {  // initialize with gold boundaries
             _boundaries[i] = _true_boundaries[i];
         }
         else
         { //initialize with random boundaries
-            if (unif01() < _constants->init_pboundary)
+            if (unif01() < m_init_pboundary)
                 _boundaries[i] = true;
         }
     }
@@ -404,8 +411,8 @@ void
 Sentence::maximize(Unigrams& lex, uint nsentences, double temperature, bool do_mbdp){
     // cache some useful constants
     int N_branch = lex.ntokens() - nsentences;
-    double p_continue = pow((N_branch +  _constants->aeos/2.0) /
-                            (lex.ntokens() +  _constants->aeos), 1/temperature);
+    double p_continue = pow((N_branch +  m_aeos/2.0) /
+                            (lex.ntokens() +  m_aeos), 1/temperature);
     if (debug_level >=90000) TRACE(p_continue);
     // create chart for dynamic program
     typedef pair<double, uint> Cell; //best prob, index of best prob
@@ -534,8 +541,8 @@ Sentence::sample_tree(Unigrams& lex, uint nsentences, double temperature, bool d
     // cache some useful constants
     int N_branch = lex.ntokens() - nsentences;
     assert(N_branch >= 0);
-    double p_continue = pow((N_branch +  _constants->aeos/2.0) /
-                            (lex.ntokens() +  _constants->aeos), 1/temperature);
+    double p_continue = pow((N_branch +  m_aeos/2.0) /
+                            (lex.ntokens() +  m_aeos), 1/temperature);
     if (debug_level >=90000) TRACE(p_continue);
     // create chart for dynamic program
     typedef pair<double, uint>  Transition; // prob, index from whence prob
@@ -772,8 +779,8 @@ void Sentence::erase(uint i0, uint i1, uint i2, Bigrams& lex) const {
 // doesn't account for repetitions
 double Sentence::prob_boundary(uint i1, uint i, uint i2, const Unigrams& lex, double temperature) const {
     if (debug_level >= 100000) TRACE3(i1, i, i2);
-    double p_continue = (lex.ntokens() - _constants->nsentences() + 1 + _constants->aeos/2)/
-        (lex.ntokens() + 1 +_constants->aeos);
+    double p_continue = (lex.ntokens() - m_nsentences + 1 + m_aeos/2)/
+        (lex.ntokens() + 1 +m_aeos);
     double p_boundary = lex(word_at(i1,i)) * lex(word_at(i,i2)) * p_continue;
     double p_noboundary = lex(word_at(i1,i2));
     if (debug_level >= 50000) TRACE3(p_continue, p_boundary, p_noboundary);

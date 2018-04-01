@@ -22,12 +22,14 @@ inline double normal_density (double val, double mean=0, double std=1)
 }
 
 
-sampler::base::base(const data::data& constants):
-    _constants(constants),
-    _sentences(constants.get_sentences()),
-    _eval_sentences(constants.get_eval_sentences()),
-    _nsentences_seen(constants.nsentences()),
-    _base_dist(constants.Pstop, constants.nchartypes)
+sampler::base::base(const parameters& params, const data::data& constants, const annealing& anneal):
+    m_params(params),
+    m_constants(constants),
+    m_sentences(constants.get_sentences(m_params.init_pboundary, m_params.aeos)),
+    m_eval_sentences(constants.get_eval_sentences()),
+    m_nsentences_seen(constants.nsentences()),
+    m_base_dist(m_params.pstop, constants.nchartypes()),
+    m_annealing(anneal)
 {}
 
 
@@ -37,9 +39,9 @@ sampler::base::~base()
 
 bool sampler::base::sanity_check() const
 {
-    assert(_base_dist.nchartypes() ==_constants.nchartypes);
-    assert(_base_dist.p_stop() < 0 || // if we're learning this parm.
-           _base_dist.p_stop() ==_constants.Pstop);
+    assert(m_base_dist.nchartypes() == m_constants.nchartypes());
+    assert(m_base_dist.p_stop() < 0 || // if we're learning this parm.
+           m_base_dist.p_stop() == m_constants.Pstop);
     return true;
 }
 
@@ -50,8 +52,8 @@ double sampler::base::log_posterior(const Unigrams& lex) const
     double lp1 = lex.base_dist().logprob(); // word Probs
     if (debug_level >= 110000) TRACE(lp1);
 
-    double tau = _constants.aeos/2.0;
-    double ns = _nsentences_seen;
+    double tau = m_params.aeos/2.0;
+    double ns = m_nsentences_seen;
 
     // sentence length probs: 1st wd of each sent is free.
     double lp2 = lgamma(ns + tau) + lgamma(lex.ntokens()-ns + tau) + lgamma(2*tau)
@@ -90,7 +92,7 @@ void sampler::base::resample_pyb(Unigrams& lex)
 {
     // number of resampling iterations
     uint niterations = 20;
-    resample_pyb_type<Unigrams, double> pyb_logP(lex, _constants.pyb_gamma_c, _constants.pyb_gamma_s);
+    resample_pyb_type<Unigrams, double> pyb_logP(lex, m_params.pyb_gamma_c, m_params.pyb_gamma_s);
     lex.pyb() = slice_sampler1d(
         pyb_logP, lex.pyb(), unif01, 0.0, std::numeric_limits<double>::infinity(),
         0.0, niterations, 100 * niterations);
@@ -101,7 +103,7 @@ void sampler::base::resample_pya(Unigrams& lex)
 {
     // number of resampling iterations
     uint niterations = 20;
-    resample_pya_type<Unigrams, double> pya_logP(lex, _constants.pya_beta_a, _constants.pya_beta_b);
+    resample_pya_type<Unigrams, double> pya_logP(lex, m_params.pya_beta_a, m_params.pya_beta_b);
     lex.pya() = slice_sampler1d(
         pya_logP, lex.pya(), unif01, std::numeric_limits<double>::min(),
         1.0, 0.0, niterations, 100*niterations);
@@ -194,7 +196,7 @@ std::vector<bool> sampler::base::hypersample(Unigrams& ulex, Bigrams& lex, doubl
 // changed.
 bool sampler::base::sample_hyperparm(double& beta, bool is_prob, double temp)
 {
-    double std_ratio = _constants.hypersampling_ratio;
+    double std_ratio = m_params.hypersampling_ratio;
     if (std_ratio <= 0)
         return false;
 
@@ -238,7 +240,8 @@ bool sampler::base::sample_hyperparm(double& beta, bool is_prob, double temp)
 }
 
 
-std::vector<double> sampler::base::predict_pairs(const TestPairs& test_pairs, const Unigrams& lex) const
+std::vector<double> sampler::base::predict_pairs(
+    const std::vector<std::pair<substring, substring> >& test_pairs, const Unigrams& lex) const
 {
     std::vector<double> probs;
     for(const auto& tp: test_pairs)
@@ -253,7 +256,8 @@ std::vector<double> sampler::base::predict_pairs(const TestPairs& test_pairs, co
 }
 
 
-std::vector<double> sampler::base::predict_pairs(const TestPairs& test_pairs, const Bigrams& lex) const
+std::vector<double> sampler::base::predict_pairs(
+    const std::vector<std::pair<substring, substring> >& test_pairs, const Bigrams& lex) const
 {
     std::vector<double> probs;
     error("sampler::base::predict_pairs is not implemented for bigram models\n");
@@ -270,10 +274,10 @@ void sampler::base::print_segmented_sentences(std::wostream& os, const Sentences
 
 void sampler::base::print_scores_sentences(std::wostream& os, const Sentences& sentences)
 {
-    _scoring.reset();
+    m_scoring.reset();
     for(const auto& item: sentences)
-        item.score(_scoring);
-    _scoring.print_results(os);
+        item.score(m_scoring);
+    m_scoring.print_results(os);
 }
 
 
@@ -282,7 +286,7 @@ void sampler::base::print_scores_sentences(std::wostream& os, const Sentences& s
 // only (i.e. no new counts are added)
 void sampler::base::run_eval(std::wostream& os, double temp, bool maximize)
 {
-    for(auto& sent: _eval_sentences)
+    for(auto& sent: m_eval_sentences)
     {
         if (debug_level >= 10000) sent.print(std::wcerr);
         estimate_eval_sentence(sent, temp, maximize);
@@ -294,22 +298,22 @@ void sampler::base::run_eval(std::wostream& os, double temp, bool maximize)
 
 void sampler::base::print_segmented(std::wostream& os) const
 {
-    print_segmented_sentences(os, _sentences);
+    print_segmented_sentences(os, m_sentences);
 }
 
 
 void sampler::base::print_eval_segmented(std::wostream& os) const
 {
-    print_segmented_sentences(os, _eval_sentences);
+    print_segmented_sentences(os, m_eval_sentences);
 }
 
 
 void sampler::base::print_scores(std::wostream& os)
 {
-    print_scores_sentences(os, _sentences);
+    print_scores_sentences(os, m_sentences);
 }
 
 void sampler::base::print_eval_scores(std::wostream& os)
 {
-    print_scores_sentences(os, _eval_sentences);
+    print_scores_sentences(os, m_eval_sentences);
 }

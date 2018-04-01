@@ -249,13 +249,15 @@ void sampler::dmcmc::replace_sampled_sentence(Sentence s, Sentences &sentences_s
 
 
 sampler::online_unigram_dmcmc::online_unigram_dmcmc(
-    const data::data& constants, double forget_rate, double decay_rate, uint samples_per_utt)
-    : online_unigram(constants, forget_rate), dmcmc(decay_rate, samples_per_utt)
+const parameters& params, const data::data& constants,
+    const annealing& anneal, double forget_rate, double decay_rate, uint samples_per_utt)
+    : online_unigram(params, constants, anneal, forget_rate),
+      dmcmc(decay_rate, samples_per_utt)
 {
     if(debug_level >= 10000)
-        std::wcout << "Printing current _lex:" << std::endl << _lex << std::endl;
+        std::wcout << "Printing current _lex:" << std::endl << m_lex << std::endl;
 
-    decayed_initialization(_sentences);
+    decayed_initialization(m_sentences);
 }
 
 
@@ -277,7 +279,7 @@ void sampler::online_unigram_dmcmc::estimate_sentence(Sentence& s, double temper
     }
 
     // add current words in sentence to lexicon
-    s.insert_words(_lex);
+    s.insert_words(m_lex);
 
     for(uint num_samples = 0; num_samples < _samples_per_utt; num_samples++)
     {
@@ -315,7 +317,7 @@ void sampler::online_unigram_dmcmc::estimate_sentence(Sentence& s, double temper
 
         // +1 for boundary to account for beginning and end of
         // sentence in lex
-        sent_to_sample.sample_one_flip(_lex, temperature, _boundary_within_sentence+1);
+        sent_to_sample.sample_one_flip(m_lex, temperature, _boundary_within_sentence+1);
         if(debug_level >=10000)
             std::wcout << "After sampling this sentence: " << sent_to_sample << std::endl;
 
@@ -333,18 +335,20 @@ void sampler::online_unigram_dmcmc::estimate_sentence(Sentence& s, double temper
     }
 
     if(debug_level >= 10000)
-        std::wcout << "_lex is now: " << std::endl << _lex << std::endl;
+        std::wcout << "_lex is now: " << std::endl << m_lex << std::endl;
 }
 
 
 sampler::online_bigram_dmcmc::online_bigram_dmcmc(
-    const data::data& constants, double forget_rate, double decay_rate, uint samples_per_utt)
-    : online_bigram(constants, forget_rate), dmcmc(decay_rate, samples_per_utt)
+    const parameters& params, const data::data& constants,
+    const annealing& anneal, double forget_rate, double decay_rate, uint samples_per_utt)
+    : online_bigram(params, constants, anneal, forget_rate),
+      dmcmc(decay_rate, samples_per_utt)
 {
     if(debug_level >= 10000)
-        std::wcout << "Printing current _lex:" << std::endl << _lex << std::endl;
+        std::wcout << "Printing current _lex:" << std::endl << m_lex << std::endl;
 
-    decayed_initialization(_sentences);
+    decayed_initialization(m_sentences);
 }
 
 
@@ -356,7 +360,7 @@ void sampler::online_bigram_dmcmc::estimate_sentence(Sentence& s, double tempera
     _num_curr_pot_boundaries += num_boundaries;
 
     // add current words in sentence to lexicon
-    s.insert_words(_lex);
+    s.insert_words(m_lex);
 
     for(uint num_samples = 0; num_samples < _samples_per_utt; num_samples++)
     {
@@ -378,18 +382,18 @@ void sampler::online_bigram_dmcmc::estimate_sentence(Sentence& s, double tempera
         // dummy utterance to be filled by actual utterance - most
         // often will be curr_utt, though
         Sentence sent_to_sample = s;
-        find_sent_to_sample(boundary_to_sample, sent_to_sample, _sentences_seen);
+        find_sent_to_sample(boundary_to_sample, sent_to_sample, m_sentences_seen);
 
         // sample _boundary_within_sentence within sent_to_sample use
         // modified form of sample_by_flips
 
         // +1 for boundary to account for beginning and end of sentence in lex
-        sent_to_sample.sample_one_flip(_lex, temperature, _boundary_within_sentence+1);
+        sent_to_sample.sample_one_flip(m_lex, temperature, _boundary_within_sentence+1);
 
         // need to insert updated sentence into _sentences
-        replace_sampled_sentence(sent_to_sample, _sentences_seen);
+        replace_sampled_sentence(sent_to_sample, m_sentences_seen);
     }
 
     if(debug_level >= 10000)
-        std::wcout << "_lex is now: " << std::endl << _lex << std::endl;
+        std::wcout << "_lex is now: " << std::endl << m_lex << std::endl;
 }

@@ -26,15 +26,15 @@ namespace data
         experimental_data();
         virtual ~experimental_data();
 
-        virtual void read(std::wistream& is, uint start, uint ns);
+        virtual void read(std::wistream& is, std::size_t start, std::size_t ns);
 
-        void initialize(uint ns);
+        void initialize(std::size_t ns);
 
-        const TestPairs& get_test_pairs() const;
+        const std::vector<std::pair<substring, substring> >& get_test_pairs() const;
 
     private:
         std::vector<unsigned int> _testboundaries;  // positions of beg/end of test pairs.
-        TestPairs _test_pairs;
+        std::vector<std::pair<substring, substring> > _test_pairs;
     };
 }
 

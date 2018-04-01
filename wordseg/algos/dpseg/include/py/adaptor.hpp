@@ -31,7 +31,7 @@
 #include "util.hpp"
 
 
-extern uint debug_level;
+extern std::size_t debug_level;
 
 
 namespace py

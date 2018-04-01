@@ -10,7 +10,7 @@ namespace sampler
     class batch_unigram_flip: public batch_unigram
     {
     public:
-        batch_unigram_flip(const data::data& constants);
+        batch_unigram_flip(const parameters& params, const data::data& constants, const annealing& anneal);
         virtual ~batch_unigram_flip();
 
     protected:
@@ -20,7 +20,7 @@ namespace sampler
     class batch_bigram_flip: public batch_bigram
     {
     public:
-        batch_bigram_flip(const data::data& constants);
+        batch_bigram_flip(const parameters& params, const data::data& constants, const annealing& anneal);
         virtual ~batch_bigram_flip();
 
     protected:

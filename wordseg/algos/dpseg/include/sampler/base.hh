@@ -5,7 +5,9 @@
 #include <iostream>
 
 #include "data/data.hh"
+#include "annealing.hh"
 #include "scoring.hh"
+#include "sampler/parameters.hh"
 
 
 template<typename T>
@@ -29,6 +31,7 @@ inline std::vector<T>& operator+= (std::vector<T>& a, const std::vector<T>& b)
 
     return a;
 }
+
 
 template<>
 inline std::vector<bool>& operator+= (std::vector<bool>& a, const std::vector<bool>& b)
@@ -66,7 +69,7 @@ namespace sampler
     class base
     {
     public:
-        base(const data::data& constants);
+        base(const parameters& params, const data::data& constants, const annealing& anneal);
         virtual ~base();
 
         virtual bool sanity_check() const;
@@ -81,7 +84,8 @@ namespace sampler
         // or maximization of each utt, using current counts from training
         // data only (i.e. no new counts are added)
         virtual void run_eval(std::wostream& os, double temperature = 1, bool maximize = false);
-        virtual std::vector<double> predict_pairs(const TestPairs& test_pairs) const = 0;
+        virtual std::vector<double> predict_pairs(
+            const std::vector<std::pair<substring, substring> >& test_pairs) const = 0;
 
         virtual void print_segmented(std::wostream& os) const;
         virtual void print_eval_segmented(std::wostream& os) const;
@@ -92,12 +96,15 @@ namespace sampler
         void print_eval_scores(std::wostream& os);
 
     protected:
-        P0 _base_dist;
-        const data::data& _constants;
-        Sentences _sentences;
-        Sentences _eval_sentences;
-        uint _nsentences_seen;
-        Scoring _scoring;
+        sampler::parameters m_params;
+        const data::data& m_constants;
+        annealing m_annealing;
+
+        P0 m_base_dist;
+        Sentences m_sentences;
+        Sentences m_eval_sentences;
+        uint m_nsentences_seen;
+        Scoring m_scoring;
 
         void resample_pya(Unigrams& lex);
         void resample_pyb(Unigrams& lex);
@@ -109,8 +116,10 @@ namespace sampler
         double log_posterior(const Unigrams& lex) const;
         double log_posterior(const Unigrams& ulex, const Bigrams& lex) const;
 
-        std::vector<double> predict_pairs(const TestPairs& test_pairs, const Unigrams& lex) const;
-        std::vector<double> predict_pairs(const TestPairs& test_pairs, const Bigrams& lex) const;
+        std::vector<double> predict_pairs(
+            const std::vector<std::pair<substring, substring> >& test_pairs, const Unigrams& lex) const;
+        std::vector<double> predict_pairs(
+            const std::vector<std::pair<substring, substring> >& test_pairs, const Bigrams& lex) const;
 
         void print_segmented_sentences(std::wostream& os, const Sentences& sentences) const;
         void print_scores_sentences(std::wostream& os, const Sentences& sentences);
