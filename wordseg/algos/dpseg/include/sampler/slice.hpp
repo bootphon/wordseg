@@ -62,8 +62,8 @@ namespace sampler
         // set w to a default width
         if (w <= 0.0)
         {
-            if (min_x > -std::numeric_limits<F>::infinity()
-                and max_x < std::numeric_limits<F>::infinity())
+            if (min_x > -std::numeric_limits<double>::infinity()
+                and max_x < std::numeric_limits<double>::infinity())
                 w = (max_x - min_x)/4;
             else
                 w = std::max(((x < 0.0) ? -x : x)/4, 0.1);

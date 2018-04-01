@@ -8,7 +8,7 @@ sampler::batch_unigram_viterbi::batch_unigram_viterbi(const data::data& constant
 sampler::batch_unigram_viterbi::~batch_unigram_viterbi()
 {}
 
-void sampler::batch_unigram_viterbi::estimate_sentence(Sentence& s, F temperature)
+void sampler::batch_unigram_viterbi::estimate_sentence(Sentence& s, double temperature)
 {
     s.erase_words(_lex);
     s.maximize(_lex, _constants.nsentences()-1, temperature, _constants.do_mbdp);
@@ -23,7 +23,7 @@ sampler::batch_bigram_viterbi::batch_bigram_viterbi(const data::data& constants)
 sampler::batch_bigram_viterbi::~batch_bigram_viterbi()
 {}
 
-void sampler::batch_bigram_viterbi::estimate_sentence(Sentence& s, F temperature)
+void sampler::batch_bigram_viterbi::estimate_sentence(Sentence& s, double temperature)
 {
     s.erase_words(_lex);
     s.maximize(_lex, _constants.nsentences()-1, temperature);
@@ -33,14 +33,14 @@ void sampler::batch_bigram_viterbi::estimate_sentence(Sentence& s, F temperature
 
 
 
-sampler::online_unigram_viterbi::online_unigram_viterbi(const data::data& constants, F forget_rate)
+sampler::online_unigram_viterbi::online_unigram_viterbi(const data::data& constants, double forget_rate)
     : online_unigram(constants, forget_rate)
 {}
 
 sampler::online_unigram_viterbi::~online_unigram_viterbi()
 {}
 
-void sampler::online_unigram_viterbi::estimate_sentence(Sentence& s, F temperature)
+void sampler::online_unigram_viterbi::estimate_sentence(Sentence& s, double temperature)
 {
     s.maximize(_lex, _nsentences_seen, temperature,_constants.do_mbdp);
     s.insert_words(_lex);
@@ -54,7 +54,7 @@ sampler::online_bigram_viterbi::online_bigram_viterbi(const data::data& constant
 sampler::online_bigram_viterbi::~online_bigram_viterbi()
 {}
 
-void sampler::online_bigram_viterbi::estimate_sentence(Sentence& s, F temperature)
+void sampler::online_bigram_viterbi::estimate_sentence(Sentence& s, double temperature)
 {
     s.maximize(_lex, _nsentences_seen, temperature);
     s.insert_words(_lex);

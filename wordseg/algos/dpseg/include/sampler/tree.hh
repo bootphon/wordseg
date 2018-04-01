@@ -14,18 +14,18 @@ namespace sampler
         virtual ~batch_unigram_tree();
 
     protected:
-        virtual void estimate_sentence(Sentence& s, F temperature);
+        virtual void estimate_sentence(Sentence& s, double temperature);
     };
 
 
     class online_unigram_tree: public online_unigram
     {
     public:
-        online_unigram_tree(const data::data& constants, F forget_rate = 0);
+        online_unigram_tree(const data::data& constants, double forget_rate = 0);
         virtual ~online_unigram_tree();
 
     protected:
-        virtual void estimate_sentence(Sentence& s, F temperature);
+        virtual void estimate_sentence(Sentence& s, double temperature);
     };
 
     class batch_bigram_tree: public batch_bigram
@@ -35,7 +35,7 @@ namespace sampler
         virtual ~batch_bigram_tree();
 
     protected:
-        virtual void estimate_sentence(Sentence& s, F temperature);
+        virtual void estimate_sentence(Sentence& s, double temperature);
     };
 
     class online_bigram_tree: public online_bigram
@@ -45,7 +45,7 @@ namespace sampler
         virtual ~online_bigram_tree();
 
     protected:
-        virtual void estimate_sentence(Sentence& s, F temperature);
+        virtual void estimate_sentence(Sentence& s, double temperature);
     };
 }
 

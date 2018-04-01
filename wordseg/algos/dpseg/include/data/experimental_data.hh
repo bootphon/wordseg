@@ -26,14 +26,14 @@ namespace data
         experimental_data();
         virtual ~experimental_data();
 
-        virtual void read(std::wistream& is, U start, U ns);
+        virtual void read(std::wistream& is, uint start, uint ns);
 
-        void initialize(U ns);
+        void initialize(uint ns);
 
         const TestPairs& get_test_pairs() const;
 
     private:
-        Us _testboundaries;  // positions of beg/end of test pairs.
+        std::vector<unsigned int> _testboundaries;  // positions of beg/end of test pairs.
         TestPairs _test_pairs;
     };
 }

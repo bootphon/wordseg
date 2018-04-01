@@ -177,7 +177,7 @@ int main(int argc, char** argv)
         ("forget-rate,f", po::value<double>()->default_value(0),
          "Number of utterances whose words can be remembered")
 
-        ("burnin-iterations,i", po::value<uint>(&data.burnin_iterations)->default_value(2000),
+        ("burnin-iterations,i", po::value<uint>()->default_value(2000),
          "Number of burn-in epochs. This is actually the total number of "
          "iterations through the training data.")
 
@@ -280,7 +280,7 @@ int main(int argc, char** argv)
             << "# trace-every=" << data.trace_every << std::endl
             << "# nsubjects=" << vm["nsubjects"].as<uint>() << std::endl
             << "# forget-rate=" << vm["forget-rate"].as<double>() << std::endl
-            << "# burnin-iterations=" << data.burnin_iterations << std::endl
+            << "# burnin-iterations=" << vm["burnin-iterations"].as<uint>() << std::endl
             << "# anneal-iterations=" << data.anneal_iterations << std::endl
             << "# anneal-start-temperature=" << data.anneal_start_temperature << std::endl
             << "# anneal-stop-temperature=" << data.anneal_stop_temperature << std::endl
@@ -366,7 +366,7 @@ int main(int argc, char** argv)
         // Train the sampler. If want to evaluate test set during
         // training intervals, need to add that into estimate function
         sampler->estimate(
-            data.burnin_iterations, std::wcout, vm["eval-interval"].as<uint>(),
+            vm["burnin-iterations"].as<uint>(), std::wcout, vm["eval-interval"].as<uint>(),
             1, vm["eval-maximize"].as<uint>(), true);
 
         std::wcerr << "training done" << std::endl;

@@ -20,13 +20,13 @@ bool sampler::unigram::sanity_check() const
 }
 
 
-F sampler::unigram::log_posterior() const
+double sampler::unigram::log_posterior() const
 {
     return base::log_posterior(_lex);
 }
 
 
-Fs sampler::unigram::predict_pairs(const TestPairs& test_pairs) const
+std::vector<double> sampler::unigram::predict_pairs(const TestPairs& test_pairs) const
 {
     return base::predict_pairs(test_pairs, _lex);
 }
@@ -38,13 +38,13 @@ void sampler::unigram::print_lexicon(std::wostream& os) const
 }
 
 
-Bs sampler::unigram::hypersample(F temperature)
+std::vector<bool> sampler::unigram::hypersample(double temperature)
 {
     return base::hypersample(_lex, temperature);
 }
 
 
-void sampler::unigram::print_statistics(std::wostream& os, U iter, F temp, bool header)
+void sampler::unigram::print_statistics(std::wostream& os, uint iter, double temp, bool header)
 {
     if (header)
     {
@@ -63,7 +63,7 @@ void sampler::unigram::print_statistics(std::wostream& os, U iter, F temp, bool 
 }
 
 
-void sampler::unigram::estimate_eval_sentence(Sentence& s, F temperature, bool maximize)
+void sampler::unigram::estimate_eval_sentence(Sentence& s, double temperature, bool maximize)
 {
     if (maximize)
         s.maximize(
@@ -92,7 +92,7 @@ sampler::batch_unigram::~batch_unigram()
 
 
 void sampler::batch_unigram::estimate(
-    U iters, std::wostream& os, U eval_iters, F temp, bool maximize, bool is_decayed)
+    uint iters, std::wostream& os, uint eval_iters, double temp, bool maximize, bool is_decayed)
 {
     if(debug_level >= 10000)
     {
@@ -105,14 +105,14 @@ void sampler::batch_unigram::estimate(
     }
 
     //number of accepts in hyperparm resampling. Init to correct length.
-    Bs accepted_anneal(hypersample(1).size());
-    Bs accepted(hypersample(1).size());
-    U nanneal = 0;
-    U n = 0;
-    for (U i=1; i <= iters; i++)
+    std::vector<bool> accepted_anneal(hypersample(1).size());
+    std::vector<bool> accepted(hypersample(1).size());
+    uint nanneal = 0;
+    uint n = 0;
+    for (uint i=1; i <= iters; i++)
     {
-        //U nchanged = 0; // if need to print out, use later
-        F temperature = _constants.anneal_temperature(i);
+        //uint nchanged = 0; // if need to print out, use later
+        double temperature = _constants.anneal_temperature(i);
         // if (i % 10 == 0) wcerr << ".";
 	if (eval_iters && (i % eval_iters == 0))
         {
@@ -160,7 +160,7 @@ void sampler::batch_unigram::estimate(
 }
 
 
-sampler::online_unigram::online_unigram(const data::data& constants, F forget_rate)
+sampler::online_unigram::online_unigram(const data::data& constants, double forget_rate)
     : unigram(constants), _forget_rate(forget_rate)
 {
     base::_nsentences_seen = 0;
@@ -172,7 +172,7 @@ sampler::online_unigram::~online_unigram()
 
 
 void sampler::online_unigram::estimate(
-    U iters, std::wostream& os, U eval_iters, F temp, bool maximize, bool is_decayed)
+    uint iters, std::wostream& os, uint eval_iters, double temp, bool maximize, bool is_decayed)
 {
     if(debug_level >= 10000)
         std::wcout << "Inside OnlineUnigram estimate " << std::endl;
@@ -182,9 +182,9 @@ void sampler::online_unigram::estimate(
         print_statistics(os, 0, 0, true);
     }
     _nsentences_seen = 0;
-    for (U i=1; i <= iters; i++)
+    for (uint i=1; i <= iters; i++)
     {
-        F temperature = _constants.anneal_temperature(i);
+        double temperature = _constants.anneal_temperature(i);
 	if(!is_decayed)
         {
             // if (i % 10 == 0) wcerr << ".";

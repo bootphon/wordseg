@@ -17,7 +17,7 @@ namespace py
     public:
         typedef std::unordered_map<V, chinese_restaurant> WordTypes;
 
-        unigrams(Base& base, uniform01_type& u01, F a=0, F b=1)
+        unigrams(Base& base, uniform01_type& u01, double a=0, double b=1)
             : parent(base, u01, a, b)
             {}
 

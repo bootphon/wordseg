@@ -17,7 +17,7 @@ namespace py
         typedef adaptor<Base> BigramR;  // single bigram restaurant
         typedef typename Base::argument_type argument_type;
 
-        bigrams(Base& u, uniform01_type& u01, F a=0, F b=1)
+        bigrams(Base& u, uniform01_type& u01, double a=0, double b=1)
             : _base(u), _empty_bigram(_base, u01, a, b)
             {}
 
@@ -26,21 +26,21 @@ namespace py
                 return _base;
             }
 
-        F& pya()
+        double& pya()
             {
                 return _empty_bigram.pya();
             }
 
-        F& pyb()
+        double& pyb()
             {
                 return _empty_bigram.pyb();
             }
 
-        F operator() (const V& w1, const V& w2) const
+        double operator() (const V& w1, const V& w2) const
             {
                 // if (debug_level >= 1000000) TRACE1(v);
                 typename bigrams::const_iterator it = this->find(w1);
-                F prob;
+                double prob;
                 if (it == parent::end())
                 {
                     prob = _base(w2);
@@ -55,7 +55,7 @@ namespace py
                 return prob;
             }
 
-        F insert(const V& w1, const V& w2)
+        double insert(const V& w1, const V& w2)
             {
                 assert(_empty_bigram.empty());
 

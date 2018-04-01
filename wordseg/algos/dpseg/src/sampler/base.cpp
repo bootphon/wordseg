@@ -45,20 +45,20 @@ bool sampler::base::sanity_check() const
 
 
 //returns the log probability of the current unigram configuration
-F sampler::base::log_posterior(const Unigrams& lex) const
+double sampler::base::log_posterior(const Unigrams& lex) const
 {
-    F lp1 = lex.base_dist().logprob(); // word Probs
+    double lp1 = lex.base_dist().logprob(); // word Probs
     if (debug_level >= 110000) TRACE(lp1);
 
-    F tau = _constants.aeos/2.0;
-    F ns = _nsentences_seen;
+    double tau = _constants.aeos/2.0;
+    double ns = _nsentences_seen;
 
     // sentence length probs: 1st wd of each sent is free.
-    F lp2 = lgamma(ns + tau) + lgamma(lex.ntokens()-ns + tau) + lgamma(2*tau)
+    double lp2 = lgamma(ns + tau) + lgamma(lex.ntokens()-ns + tau) + lgamma(2*tau)
         - 2*lgamma(tau) - lgamma(lex.ntokens() + 2*tau);
     if (debug_level >= 110000) TRACE(lp2);
 
-    F lp3 = lex.logprob(); // table probs
+    double lp3 = lex.logprob(); // table probs
     if (debug_level >= 110000) TRACE(lp3);
 
     return lp1 + lp2 + lp3;
@@ -66,15 +66,15 @@ F sampler::base::log_posterior(const Unigrams& lex) const
 
 
 // returns the log probability of the current bigram configuration
-F sampler::base::log_posterior(const Unigrams& ulex, const Bigrams& lex) const
+double sampler::base::log_posterior(const Unigrams& ulex, const Bigrams& lex) const
 {
-    F lp1 = ulex.base_dist().logprob(); // word probabilities
+    double lp1 = ulex.base_dist().logprob(); // word probabilities
     if (debug_level >= 110000) TRACE(lp1);
 
-    F lp2 = ulex.logprob(); // unigram table probabilities
+    double lp2 = ulex.logprob(); // unigram table probabilities
     if (debug_level >= 110000) TRACE(lp2);
 
-    F lp3 = 0;
+    double lp3 = 0;
     for(const auto& item: lex)
     {
         lp3 += item.second.logprob();  // bigram table probabilities
@@ -89,10 +89,10 @@ F sampler::base::log_posterior(const Unigrams& ulex, const Bigrams& lex) const
 void sampler::base::resample_pyb(Unigrams& lex)
 {
     // number of resampling iterations
-    U niterations = 20;
-    resample_pyb_type<Unigrams, F> pyb_logP(lex, _constants.pyb_gamma_c, _constants.pyb_gamma_s);
+    uint niterations = 20;
+    resample_pyb_type<Unigrams, double> pyb_logP(lex, _constants.pyb_gamma_c, _constants.pyb_gamma_s);
     lex.pyb() = slice_sampler1d(
-        pyb_logP, lex.pyb(), unif01, 0.0, std::numeric_limits<F>::infinity(),
+        pyb_logP, lex.pyb(), unif01, 0.0, std::numeric_limits<double>::infinity(),
         0.0, niterations, 100 * niterations);
 }
 
@@ -100,10 +100,10 @@ void sampler::base::resample_pyb(Unigrams& lex)
 void sampler::base::resample_pya(Unigrams& lex)
 {
     // number of resampling iterations
-    U niterations = 20;
-    resample_pya_type<Unigrams, F> pya_logP(lex, _constants.pya_beta_a, _constants.pya_beta_b);
+    uint niterations = 20;
+    resample_pya_type<Unigrams, double> pya_logP(lex, _constants.pya_beta_a, _constants.pya_beta_b);
     lex.pya() = slice_sampler1d(
-        pya_logP, lex.pya(), unif01, std::numeric_limits<F>::min(),
+        pya_logP, lex.pya(), unif01, std::numeric_limits<double>::min(),
         1.0, 0.0, niterations, 100*niterations);
 }
 
@@ -112,10 +112,10 @@ void sampler::base::resample_pya(Unigrams& lex)
 //slice sample hyperparameters for unigram model
 // NOTE: the slice sampling isn't working yet.
 Bs
-sampler::base::hypersample(Unigrams& lex, F temp){
+sampler::base::hypersample(Unigrams& lex, double temp){
 Bs changed;
-const U nits = 5;  //!< number of alternating samples of pya and pyb
-for (U i=0; i<nits; ++i) {
+const uint nits = 5;  //!< number of alternating samples of pya and pyb
+for (uint i=0; i<nits; ++i) {
 if (lex.pya() > 0) {
 resample_pya(lex);
 }
@@ -133,9 +133,9 @@ return changed;
 */
 
 //sample hyperparameters for unigram model using my MH method
-Bs sampler::base::hypersample(Unigrams& lex, F temp)
+std::vector<bool> sampler::base::hypersample(Unigrams& lex, double temp)
 {
-    Bs changed;
+    std::vector<bool> changed;
     if (lex.pya() > 0)
     {
         changed.push_back(sample_hyperparm(lex.pya(), true, temp));
@@ -164,9 +164,9 @@ Bs sampler::base::hypersample(Unigrams& lex, F temp)
 
 
 //sample hyperparameters for bigram model
-Bs sampler::base::hypersample(Unigrams& ulex, Bigrams& lex, F temp)
+std::vector<bool> sampler::base::hypersample(Unigrams& ulex, Bigrams& lex, double temp)
 {
-    Bs changed = hypersample(ulex, temp);
+    std::vector<bool> changed = hypersample(ulex, temp);
     if (lex.pya() > 0)
     {
         changed.push_back(sample_hyperparm(lex.pya(), true, temp));
@@ -192,14 +192,14 @@ Bs sampler::base::hypersample(Unigrams& ulex, Bigrams& lex, F temp)
 // beta is the hyperparameter to be sampled. Assume beta must be > 0.
 // If beta must also be < 1, set flag.  returns true if value of beta
 // changed.
-bool sampler::base::sample_hyperparm(F& beta, bool is_prob, F temp)
+bool sampler::base::sample_hyperparm(double& beta, bool is_prob, double temp)
 {
-    F std_ratio = _constants.hypersampling_ratio;
+    double std_ratio = _constants.hypersampling_ratio;
     if (std_ratio <= 0)
         return false;
 
-    F old_beta = beta;
-    F new_beta;
+    double old_beta = beta;
+    double new_beta;
     if (is_prob and old_beta > 0.5)
     {
         new_beta = rand_normal(old_beta, std_ratio*(1-old_beta));
@@ -215,11 +215,11 @@ bool sampler::base::sample_hyperparm(F& beta, bool is_prob, F temp)
         error("beta out of range\n");
     }
 
-    F old_p = log_posterior();
+    double old_p = log_posterior();
     beta = new_beta;
-    F new_p = log_posterior();
+    double new_p = log_posterior();
 
-    F r = exp(new_p-old_p)*
+    double r = exp(new_p-old_p)*
         normal_density(old_beta, new_beta, std_ratio * new_beta) /
         normal_density(new_beta, old_beta, std_ratio * old_beta);
     r = pow(r,1/temp);
@@ -238,13 +238,13 @@ bool sampler::base::sample_hyperparm(F& beta, bool is_prob, F temp)
 }
 
 
-Fs sampler::base::predict_pairs(const TestPairs& test_pairs, const Unigrams& lex) const
+std::vector<double> sampler::base::predict_pairs(const TestPairs& test_pairs, const Unigrams& lex) const
 {
-    Fs probs;
+    std::vector<double> probs;
     for(const auto& tp: test_pairs)
     {
-        F p1 = lex(tp.first);
-        F p2 = lex(tp.second);
+        double p1 = lex(tp.first);
+        double p2 = lex(tp.second);
         if (debug_level >= 10000) TRACE2(p1, p2);
         probs.push_back(p1 / (p1 + p2));
     }
@@ -253,9 +253,9 @@ Fs sampler::base::predict_pairs(const TestPairs& test_pairs, const Unigrams& lex
 }
 
 
-Fs sampler::base::predict_pairs(const TestPairs& test_pairs, const Bigrams& lex) const
+std::vector<double> sampler::base::predict_pairs(const TestPairs& test_pairs, const Bigrams& lex) const
 {
-    Fs probs;
+    std::vector<double> probs;
     error("sampler::base::predict_pairs is not implemented for bigram models\n");
     return probs;
 }
@@ -280,7 +280,7 @@ void sampler::base::print_scores_sentences(std::wostream& os, const Sentences& s
 // make single pass through test data, segmenting based on sampling or
 // maximization of each utt, using current counts from training data
 // only (i.e. no new counts are added)
-void sampler::base::run_eval(std::wostream& os, F temp, bool maximize)
+void sampler::base::run_eval(std::wostream& os, double temp, bool maximize)
 {
     for(auto& sent: _eval_sentences)
     {

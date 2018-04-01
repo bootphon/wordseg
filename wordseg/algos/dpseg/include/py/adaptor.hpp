@@ -26,14 +26,12 @@
 #include <unordered_map>
 #include <utility>
 
-
-#include "typedefs.hh"
 #include "random-mt19937ar.hpp"
 #include "py/chinese_restaurant.hh"
 #include "util.hpp"
 
 
-extern U debug_level;
+extern uint debug_level;
 
 
 namespace py
@@ -50,7 +48,7 @@ namespace py
     {
     public:
         typedef typename Base::argument_type argument_type;
-        typedef F result_type;
+        typedef double result_type;
 
         //public functions are defined after defining private table class
         //below.
@@ -58,19 +56,19 @@ namespace py
     protected:
         Base& base;           //!< base distribution
         uniform01_type& u01;  //!< shared random number generator
-        F a;                  //!< Pitman-Yor b parameter
-        F b;                  //!< Pitman-Yor b parameter
-        U m;                  //!< number of occupied tables
-        U n;                  //!< number of customers in restaurant
+        double a;                  //!< Pitman-Yor b parameter
+        double b;                  //!< Pitman-Yor b parameter
+        uint m;                  //!< number of occupied tables
+        uint n;                  //!< number of customers in restaurant
 
         typedef argument_type V;
-        typedef std::map<U,U> U_U;
+        typedef std::map<uint,uint> U_U;
         typedef std::unordered_map<V, py::chinese_restaurant> V_T;
 
         V_T label_tables;
 
     public:
-        adaptor(Base& base, uniform01_type& u01, F a, F b)
+        adaptor(Base& base, uniform01_type& u01, double a, double b)
             : base(base), u01(u01), a(a), b(b), m(), n()
             {}
 
@@ -104,32 +102,32 @@ namespace py
 // 	return *this;}
 
     public:
-        F& pya()
+        double& pya()
             {
                 return a;
             }
 
-        F& pyb()
+        double& pyb()
             {
                 return b;
             }
 
-        U ntypes() const
+        uint ntypes() const
             {
                 return label_tables.size();
             }
 
-        U ntables() const
+        uint ntables() const
             {
                 return m;
             }
 
-        U ntokens() const
+        uint ntokens() const
             {
                 return n;
             }
 
-        U ntokens(const V& v) const
+        uint ntokens(const V& v) const
             {
                 typename V_T::const_iterator tit = label_tables.find(v);
                 return (tit == label_tables.end()) ? 0 : tit->second.get_n();
@@ -147,33 +145,33 @@ namespace py
 
         //! operator() returns the approximate probability for inserting
         //! v, with context
-        F operator() (const V& v) const
+        double operator() (const V& v) const
             {
                 if (debug_level >= 1000000)
                     TRACE1(v);
                 const auto tit = label_tables.find(v);
-                F p_old = (tit == label_tables.end()) ? 0 : (tit->second.get_n() - tit->second.get_m()*a) / (n + b);
-                F p_new = base(v) * (m*a + b) / (n + b);
+                double p_old = (tit == label_tables.end()) ? 0 : (tit->second.get_n() - tit->second.get_m()*a) / (n + b);
+                double p_new = base(v) * (m*a + b) / (n + b);
 
                 assert(p_new > 0);
 
-                F sum_p = p_old + p_new;
+                double sum_p = p_old + p_new;
                 return sum_p;
             }
 
         //! insert() adds a customer to a table, and returns its
         // (predictive) probability
-        F insert(const V& v)
+        double insert(const V& v)
             {
                 typename V_T::iterator tit = label_tables.find(v);
 
                 // note: ignores (n - b) factor
-                F p_old = (tit == label_tables.end()) ? 0 : (tit->second.get_n() - tit->second.get_m()*a);
-                F p_new = base(v) * (m*a + b);
-                F p = p_old + p_new;  //sgwater: unnormalized prob
+                double p_old = (tit == label_tables.end()) ? 0 : (tit->second.get_n() - tit->second.get_m()*a);
+                double p_new = base(v) * (m*a + b);
+                double p = p_old + p_new;  //sgwater: unnormalized prob
 
                 assert(p > 0);
-                F r = p*u01();
+                double r = p*u01();
                 if (r <= p_old && tit != label_tables.end())
                 {
                     // insert at an old table
@@ -195,12 +193,12 @@ namespace py
             }
 
         //! erase() removes a customer at random from a restaurant
-        U erase(const V& v)
+        uint erase(const V& v)
             {
                 typename V_T::iterator tit = label_tables.find(v);
                 assert(tit != label_tables.end());  // we should have tables with this label
 
-                I r = (I) tit->second.get_n() * u01();
+                int r = (int) tit->second.get_n() * u01();
                 --n;  // one less customer
 
                 if (tit->second.erase(r) == 0)
@@ -217,7 +215,7 @@ namespace py
         // Removes a token chosen uniformly at random
         void erase_token_uniform()
             {
-                F r = ntokens()*u01();
+                double r = ntokens()*u01();
                 for(const auto& item: label_tables)
                 {
                     r -= item.second.get_n();
@@ -235,18 +233,18 @@ namespace py
         // implementation?)
         void erase_type_uniform()
             {
-                I r = (I)  ntypes()*u01();
+                int r = (int)  ntypes()*u01();
                 typename V_T::iterator iter = label_tables.begin();
-                for (I j = 0; j <r; j++)
+                for (int j = 0; j <r; j++)
                 {
                     iter++;
                     assert(iter != label_tables.end());
                 }
 
-                U tokens = ntokens(iter->first);
+                auto tokens = ntokens(iter->first);
                 if (debug_level >= 15000) TRACE3(r, iter->first, tokens);
 
-                for (U j = 0; j <tokens; j++)
+                for (uint j = 0; j <tokens; j++)
                 {
                     erase(iter->first);
                 }
@@ -257,21 +255,21 @@ namespace py
         void erase_type_proportional()
             {
                 //find max table
-                F max = 0;
+                double max = 0;
                 for(const auto& item: label_tables)
                 {
                     if (item.second.get_n() > max) max = item.second.get_n();
                 }
 
                 //compute partition func
-                F tot = 0;
+                double tot = 0;
                 for(const auto& item: label_tables)
                 {
                     tot += max / item.second.get_n();
                 }
 
                 // I r = (I)  ntypes()*(ntokens()-1)*u01();
-                F r = tot * u01();
+                double r = tot * u01();
                 for(const auto& item: label_tables)
                 {
                     // r -= ntokens() - it->second.n;
@@ -304,9 +302,9 @@ namespace py
         //! logprob() returns the log probability of the table assignment in
         //! the adaptor.  You'll need to compute the base probability
         //! yourself
-        F logprob() const
+        double logprob() const
             {
-                F logp = 0;
+                double logp = 0;
                 for(const auto& it0: label_tables)
                 {
                     for(const auto& it1: it0.second.get_n_m())
@@ -331,7 +329,7 @@ namespace py
                 os << "n=" << n << ", m=" << m << ", label_tables=";
 
                 char sep = '(';
-                U i=0;
+                uint i=0;
                 for(const auto& item: label_tables)
                 {
                     os << sep << i << ": " << item.first << '=';
@@ -351,7 +349,7 @@ namespace py
                 assert(a <= 1 && a >= 0);
                 assert(m <= n);
 
-                U nn = 0, mm = 0;
+                uint nn = 0, mm = 0;
                 bool sane_tables = true;
                 for(const auto& item: label_tables)
                 {

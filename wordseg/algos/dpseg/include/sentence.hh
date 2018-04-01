@@ -7,8 +7,6 @@
 #include "py/unigrams.hpp"
 #include "base.hpp"
 
-#include "typedefs.hh"
-
 
 namespace data{class data;}
 class Scoring;
@@ -27,8 +25,10 @@ public:
     Sentence()
         {}
 
-    Sentence(U start, U end, Bs possible_boundaries,
-             Bs true_boundaries, const data::data* d);
+    Sentence(std::size_t start, std::size_t end,
+             std::vector<bool>& possible_boundaries,
+             std::vector<bool>& true_boundaries,
+             const data::data* d);
 
     Words get_segmented_words() const
         {
@@ -54,51 +54,51 @@ public:
     // remove counts of whole sentence
     void erase_words(Bigrams& lex);
 
-    U sample_by_flips(Unigrams& lex, F temperature);
-    U sample_by_flips(Bigrams& lex, F temperature);
+    uint sample_by_flips(Unigrams& lex, double temperature);
+    uint sample_by_flips(Bigrams& lex, double temperature);
 
     // for DecayedMCMC
-    void sample_one_flip(Unigrams& lex, F temperature, U boundary_within_sentence);
-    void sample_one_flip(Bigrams& lex, F temperature, U boundary_within_sentence);
+    void sample_one_flip(Unigrams& lex, double temperature, uint boundary_within_sentence);
+    void sample_one_flip(Bigrams& lex, double temperature, uint boundary_within_sentence);
 
-    void maximize(Unigrams& lex, U nsentences, F temperature, bool do_mbdp = 0);
-    void maximize(Bigrams& lex, U nsentences, F temperature);
+    void maximize(Unigrams& lex, uint nsentences, double temperature, bool do_mbdp = 0);
+    void maximize(Bigrams& lex, uint nsentences, double temperature);
 
-    void sample_tree(Unigrams& lex, U nsentences, F temperature, bool do_mbdp = 0);
-    void sample_tree(Bigrams& lex, U nsentences, F temperature);
+    void sample_tree(Unigrams& lex, uint nsentences, double temperature, bool do_mbdp = 0);
+    void sample_tree(Bigrams& lex, uint nsentences, double temperature);
 
     void score(Scoring& scoring) const;
 
     friend std::wostream& operator<< (std::wostream& os, const Sentence& s);
 
-    Us get_possible_boundaries()
+    std::vector<unsigned int> get_possible_boundaries()
         {
             return _possible_boundaries;
         };
 
-    Bs _boundaries;
+    std::vector<bool> _boundaries;
 
 private:
-    Us _possible_boundaries;
-    Us _padded_possible;  // for use with dynamic programming
-    Bs _true_boundaries;
+    std::vector<unsigned int> _possible_boundaries;
+    std::vector<unsigned int> _padded_possible;  // for use with dynamic programming
+    std::vector<bool> _true_boundaries;
     const data::data* _constants;
 
-    substring word_at(U left, U right) const
+    substring word_at(uint left, uint right) const
         {
             return substring(left + begin_index(), right + begin_index());
         }
 
-    Words get_words(const Bs& boundaries) const;
-    void insert(U left, U right, Unigrams& lex) const;
-    void erase(U left, U right, Unigrams& lex) const;
-    void insert(U i0, U i1, U i2, Bigrams& lex) const;
-    void erase(U i0, U i1, U i2, Bigrams& lex) const;
-    F prob_boundary(U i1, U i, U i2, const Unigrams& lex, F temperature) const;
-    F p_bigram(U i1, U i, U i2, const Bigrams& lex) const;
-    F prob_boundary(U i0, U i1, U i, U i2, U i3, const Bigrams& lex, F temperature) const;
-    void surrounding_boundaries(U i, U& i0, U& i1, U& i2, U& i3) const;
-    F mbdp_prob(Unigrams& lex, const substring& word, U nsentences) const;
+    Words get_words(const std::vector<bool>& boundaries) const;
+    void insert(uint left, uint right, Unigrams& lex) const;
+    void erase(uint left, uint right, Unigrams& lex) const;
+    void insert(uint i0, uint i1, uint i2, Bigrams& lex) const;
+    void erase(uint i0, uint i1, uint i2, Bigrams& lex) const;
+    double prob_boundary(uint i1, uint i, uint i2, const Unigrams& lex, double temperature) const;
+    double p_bigram(uint i1, uint i, uint i2, const Bigrams& lex) const;
+    double prob_boundary(uint i0, uint i1, uint i, uint i2, uint i3, const Bigrams& lex, double temperature) const;
+    void surrounding_boundaries(uint i, uint& i0, uint& i1, uint& i2, uint& i3) const;
+    double mbdp_prob(Unigrams& lex, const substring& word, uint nsentences) const;
 };
 
 

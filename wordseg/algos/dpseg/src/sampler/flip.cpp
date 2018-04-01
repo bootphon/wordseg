@@ -14,7 +14,7 @@ sampler::batch_unigram_flip::~batch_unigram_flip()
 {}
 
 
-void sampler::batch_unigram_flip::estimate_sentence(Sentence& s, F temperature)
+void sampler::batch_unigram_flip::estimate_sentence(Sentence& s, double temperature)
 {
     s.sample_by_flips(_lex, temperature);
 }
@@ -29,7 +29,7 @@ sampler::batch_bigram_flip::~batch_bigram_flip()
 {}
 
 
-void sampler::batch_bigram_flip::estimate_sentence(Sentence& s, F temperature)
+void sampler::batch_bigram_flip::estimate_sentence(Sentence& s, double temperature)
 {
     s.sample_by_flips(_lex, temperature);
 }

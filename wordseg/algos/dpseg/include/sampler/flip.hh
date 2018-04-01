@@ -14,7 +14,7 @@ namespace sampler
         virtual ~batch_unigram_flip();
 
     protected:
-        virtual void estimate_sentence(Sentence& s, F temperature);
+        virtual void estimate_sentence(Sentence& s, double temperature);
     };
 
     class batch_bigram_flip: public batch_bigram
@@ -24,7 +24,7 @@ namespace sampler
         virtual ~batch_bigram_flip();
 
     protected:
-        virtual void estimate_sentence(Sentence& s, F temperature);
+        virtual void estimate_sentence(Sentence& s, double temperature);
     };
 }
 

@@ -1,7 +1,7 @@
 #include "sampler/dmcmc.hh"
 
 
-sampler::dmcmc::dmcmc(F decay_rate, U samples_per_utt)
+sampler::dmcmc::dmcmc(double decay_rate, uint samples_per_utt)
     : _decay_rate(decay_rate), _samples_per_utt(samples_per_utt)
 {}
 
@@ -16,7 +16,7 @@ void sampler::dmcmc::decayed_initialization(Sentences _sentences)
     // this is needed for calculating the cumulative decay
     // probabilities cycle through _sentences
     _num_total_pot_boundaries = 0;
-    Us possible_boundaries;
+    std::vector<unsigned int> possible_boundaries;
     for(auto& sent: _sentences)
     {
         _num_total_pot_boundaries += sent.get_possible_boundaries().size();
@@ -37,7 +37,7 @@ void sampler::dmcmc::decayed_initialization(Sentences _sentences)
     // store values in _decay_offset_probs go to one beyond total
     // potential boundaries
     _decay_offset_probs.resize(_num_total_pot_boundaries+2);
-    for(U index = 0; index < _num_total_pot_boundaries + 1; index++)
+    for(uint index = 0; index < _num_total_pot_boundaries + 1; index++)
     {
         // add 1 so that current boundary (index 0) is possible
         _decay_offset_probs[index] = pow((index+1), (-1)*_decay_rate);
@@ -56,9 +56,9 @@ void sampler::dmcmc::decayed_initialization(Sentences _sentences)
 }
 
 
-void sampler::dmcmc::calc_new_cum_prob(Sentence& s, U num_boundaries)
+void sampler::dmcmc::calc_new_cum_prob(Sentence& s, uint num_boundaries)
 {
-    for(U index = (_num_curr_pot_boundaries - num_boundaries);
+    for(uint index = (_num_curr_pot_boundaries - num_boundaries);
         index < _num_curr_pot_boundaries; index++)
     {
         _cum_decay_prob = _cum_decay_prob + _decay_offset_probs[index];
@@ -71,7 +71,7 @@ void sampler::dmcmc::calc_new_cum_prob(Sentence& s, U num_boundaries)
 uint sampler::dmcmc::find_boundary_to_sample()
 {
     // default: the last boundary
-    U to_sample = _num_curr_pot_boundaries;
+    uint to_sample = _num_curr_pot_boundaries;
 
     // find which boundary to sample use probability decay function to
     // determine offset from current _npotboundaries decay function:
@@ -107,13 +107,13 @@ uint sampler::dmcmc::find_boundary_to_sample()
     // = 0.25.  1 <= 1.2 < 1.25, so the offset chosen from the current
     // boundary should be 1.
 
-    F rand_num = unif01() * _cum_decay_prob;
+    double rand_num = unif01() * _cum_decay_prob;
     if(debug_level >= 10000)
         std::wcout << "random number chosen is " << rand_num << std::endl;
 
-    F curr_cum_sum = 0.0;
+    double curr_cum_sum = 0.0;
     bool found_bin = false;
-    U index = 0;
+    uint index = 0;
 
     // loop through until we find the right bin, summing as we go
     while(!found_bin and (index < _num_curr_pot_boundaries))
@@ -152,7 +152,7 @@ uint sampler::dmcmc::find_boundary_to_sample()
     return to_sample;
 }
 
-void sampler::dmcmc::find_sent_to_sample(U boundary_to_sample, Sentence &s, Sentences& sentences_seen)
+void sampler::dmcmc::find_sent_to_sample(uint boundary_to_sample, Sentence &s, Sentences& sentences_seen)
 {
     Sentences::iterator si = sentences_seen.end();
 
@@ -165,7 +165,7 @@ void sampler::dmcmc::find_sent_to_sample(U boundary_to_sample, Sentence &s, Sent
     s = *si;
 
     // current number boundaries, start with _num_curr_pot_boundaries
-    U num_boundaries = _num_curr_pot_boundaries;
+    uint num_boundaries = _num_curr_pot_boundaries;
     bool sent_found = false;
 
     // to access boundary x, search from back (most current) to find
@@ -179,7 +179,7 @@ void sampler::dmcmc::find_sent_to_sample(U boundary_to_sample, Sentence &s, Sent
         // 7 > (8-5)?  Yes. Search this utterance. Which one?  7-
         // (8-5) = 4th one.
         //this_sent_boundaries = 0;
-        U this_sent_boundaries = s.get_possible_boundaries().size();
+        uint this_sent_boundaries = s.get_possible_boundaries().size();
 
         if(debug_level >= 20000)
             std::wcout << "Seeing if boundary " << boundary_to_sample << " is greater than "
@@ -249,7 +249,7 @@ void sampler::dmcmc::replace_sampled_sentence(Sentence s, Sentences &sentences_s
 
 
 sampler::online_unigram_dmcmc::online_unigram_dmcmc(
-    const data::data& constants, F forget_rate, F decay_rate, U samples_per_utt)
+    const data::data& constants, double forget_rate, double decay_rate, uint samples_per_utt)
     : online_unigram(constants, forget_rate), dmcmc(decay_rate, samples_per_utt)
 {
     if(debug_level >= 10000)
@@ -259,11 +259,11 @@ sampler::online_unigram_dmcmc::online_unigram_dmcmc(
 }
 
 
-void sampler::online_unigram_dmcmc::estimate_sentence(Sentence& s, F temperature)
+void sampler::online_unigram_dmcmc::estimate_sentence(Sentence& s, double temperature)
 {
     // update current total potential boundaries
-    Us possible_boundaries = s.get_possible_boundaries();
-    U num_boundaries = possible_boundaries.size();
+    std::vector<unsigned int> possible_boundaries = s.get_possible_boundaries();
+    uint num_boundaries = possible_boundaries.size();
 
     if(debug_level >= 10000)
     {
@@ -279,7 +279,7 @@ void sampler::online_unigram_dmcmc::estimate_sentence(Sentence& s, F temperature
     // add current words in sentence to lexicon
     s.insert_words(_lex);
 
-    for(U num_samples = 0; num_samples < _samples_per_utt; num_samples++)
+    for(uint num_samples = 0; num_samples < _samples_per_utt; num_samples++)
     {
         if(num_samples == 0)
         { // only do this the first time
@@ -287,7 +287,7 @@ void sampler::online_unigram_dmcmc::estimate_sentence(Sentence& s, F temperature
         }
 
         // find boundary to sample
-        U boundary_to_sample = find_boundary_to_sample();
+        uint boundary_to_sample = find_boundary_to_sample();
 
         if(debug_level >= 10000)
             std::wcout << "Boundary to sample is " << boundary_to_sample << std::endl;
@@ -338,7 +338,7 @@ void sampler::online_unigram_dmcmc::estimate_sentence(Sentence& s, F temperature
 
 
 sampler::online_bigram_dmcmc::online_bigram_dmcmc(
-    const data::data& constants, F forget_rate, F decay_rate, U samples_per_utt)
+    const data::data& constants, double forget_rate, double decay_rate, uint samples_per_utt)
     : online_bigram(constants, forget_rate), dmcmc(decay_rate, samples_per_utt)
 {
     if(debug_level >= 10000)
@@ -348,17 +348,17 @@ sampler::online_bigram_dmcmc::online_bigram_dmcmc(
 }
 
 
-void sampler::online_bigram_dmcmc::estimate_sentence(Sentence& s, F temperature)
+void sampler::online_bigram_dmcmc::estimate_sentence(Sentence& s, double temperature)
 {
     // update current total potential boundaries
-    Us possible_boundaries = s.get_possible_boundaries();
-    U num_boundaries = possible_boundaries.size();
+    std::vector<unsigned int> possible_boundaries = s.get_possible_boundaries();
+    uint num_boundaries = possible_boundaries.size();
     _num_curr_pot_boundaries += num_boundaries;
 
     // add current words in sentence to lexicon
     s.insert_words(_lex);
 
-    for(U num_samples = 0; num_samples < _samples_per_utt; num_samples++)
+    for(uint num_samples = 0; num_samples < _samples_per_utt; num_samples++)
     {
         // std::wcerr << "dmcmc::online_bigram::estimate_sentence sample=" << num_samples+1 << std::endl;
 
@@ -368,7 +368,7 @@ void sampler::online_bigram_dmcmc::estimate_sentence(Sentence& s, F temperature)
         }
 
         // find boundary to sample
-        U boundary_to_sample = find_boundary_to_sample();
+        uint boundary_to_sample = find_boundary_to_sample();
 
         // to keep track of which boundaries have been sampled, use boundary_samples
         _boundaries_num_sampled[boundary_to_sample]++;

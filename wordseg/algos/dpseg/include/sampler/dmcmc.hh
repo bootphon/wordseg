@@ -10,23 +10,23 @@ namespace sampler
     class dmcmc  // short for decayed MCMC
     {
     public:
-        dmcmc(F decay_rate = 0, uint samples_per_utt = 100);
+        dmcmc(double decay_rate = 0, uint samples_per_utt = 100);
         virtual ~dmcmc();
 
     protected:
-        F _decay_rate;
-        U _samples_per_utt;
-        Fs _decay_offset_probs;
-        F _cum_decay_prob;
-        U _num_total_pot_boundaries;
-        U _num_curr_pot_boundaries;
-        Us _boundaries_num_sampled;
-        U _boundary_within_sentence;
+        double _decay_rate;
+        uint _samples_per_utt;
+        std::vector<double> _decay_offset_probs;
+        double _cum_decay_prob;
+        uint _num_total_pot_boundaries;
+        uint _num_curr_pot_boundaries;
+        std::vector<unsigned int> _boundaries_num_sampled;
+        uint _boundary_within_sentence;
         Sentences::iterator _sentence_sampled;
         virtual void decayed_initialization(Sentences _sentences);
-        virtual void calc_new_cum_prob(Sentence& s, U num_boundaries);
-        virtual U find_boundary_to_sample();
-        virtual void find_sent_to_sample(U b_to_sample, Sentence& to_sample, Sentences& sentences_seen);
+        virtual void calc_new_cum_prob(Sentence& s, uint num_boundaries);
+        virtual uint find_boundary_to_sample();
+        virtual void find_sent_to_sample(uint b_to_sample, Sentence& to_sample, Sentences& sentences_seen);
         void replace_sampled_sentence(Sentence s, Sentences& sentences_seen);
     };
 
@@ -35,13 +35,13 @@ namespace sampler
     {
     public:
         online_unigram_dmcmc(
-            const data::data& constants, F forget_rate = 0, F decay_rate = 1.0, U samples_per_utt = 1000);
+            const data::data& constants, double forget_rate = 0, double decay_rate = 1.0, uint samples_per_utt = 1000);
 
         virtual ~online_unigram_dmcmc()
             {}
 
     protected:
-        virtual void estimate_sentence(Sentence& s, F temperature);
+        virtual void estimate_sentence(Sentence& s, double temperature);
     };
 
 
@@ -49,13 +49,13 @@ namespace sampler
     {
     public:
         online_bigram_dmcmc(
-            const data::data& constants, F forget_rate = 0, F decay_rate = 1.0, U samples_per_utt = 1000);
+            const data::data& constants, double forget_rate = 0, double decay_rate = 1.0, uint samples_per_utt = 1000);
 
         virtual ~online_bigram_dmcmc()
             {}
 
     protected:
-        virtual void estimate_sentence(Sentence& s, F temperature);
+        virtual void estimate_sentence(Sentence& s, double temperature);
     };
 }
 

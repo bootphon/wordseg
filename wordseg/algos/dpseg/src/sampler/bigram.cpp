@@ -23,13 +23,13 @@ bool sampler::bigram::sanity_check() const
     return sane;
 }
 
-F sampler::bigram::log_posterior() const
+double sampler::bigram::log_posterior() const
 {
     return sampler::base::log_posterior(_ulex, _lex);
 }
 
 
-Fs sampler::bigram::predict_pairs(const TestPairs& test_pairs) const
+std::vector<double> sampler::bigram::predict_pairs(const TestPairs& test_pairs) const
 {
     return sampler::base::predict_pairs(test_pairs, _lex);
 }
@@ -42,13 +42,13 @@ void sampler::bigram::print_lexicon(std::wostream& os) const
 }
 
 
-Bs sampler::bigram::hypersample(F temperature)
+std::vector<bool> sampler::bigram::hypersample(double temperature)
 {
     return sampler::base::hypersample(_ulex, _lex, temperature);
 }
 
 
-void sampler::bigram::print_statistics(std::wostream& os, U iter, F temp, bool header)
+void sampler::bigram::print_statistics(std::wostream& os, uint iter, double temp, bool header)
 {
     if (header)
     {
@@ -68,7 +68,7 @@ void sampler::bigram::print_statistics(std::wostream& os, U iter, F temp, bool h
     print_scores(os);
 }
 
-void sampler::bigram::estimate_eval_sentence(Sentence& s, F temperature, bool maximize)
+void sampler::bigram::estimate_eval_sentence(Sentence& s, double temperature, bool maximize)
 {
     if (maximize)
     {
@@ -99,7 +99,7 @@ sampler::batch_bigram::~batch_bigram()
 
 
 void sampler::batch_bigram::estimate(
-    U iters, std::wostream& os, U eval_iters, F temp, bool maximize, bool is_decayed)
+    uint iters, std::wostream& os, uint eval_iters, double temp, bool maximize, bool is_decayed)
 {
     if(debug_level >= 10000)
         std::wcout << "Inside BatchBigram estimate " << std::endl;
@@ -111,14 +111,14 @@ void sampler::batch_bigram::estimate(
 
     // number of accepts in hyperparm resampling. Initialize to the
     // correct length
-    Bs accepted_anneal(hypersample(1).size());
-    Bs accepted(hypersample(1).size());
-    U nanneal = 0;
-    U n = 0;
-    for (U i=1; i <= iters; i++)
+    std::vector<bool> accepted_anneal(hypersample(1).size());
+    std::vector<bool> accepted(hypersample(1).size());
+    uint nanneal = 0;
+    uint n = 0;
+    for (uint i=1; i <= iters; i++)
     {
-        //U nchanged = 0; if need to print out, un-comment
-        F temperature = _constants.anneal_temperature(i);
+        //uint nchanged = 0; if need to print out, un-comment
+        double temperature = _constants.anneal_temperature(i);
 
         // if (i % 10 == 0) wcerr << ".";
 	if (eval_iters && (i % eval_iters == 0))
@@ -164,7 +164,7 @@ void sampler::batch_bigram::estimate(
 }
 
 
-sampler::online_bigram::online_bigram(const data::data& constants, F forget_rate)
+sampler::online_bigram::online_bigram(const data::data& constants, double forget_rate)
     : bigram(constants)
 {
     base::_nsentences_seen = 0;
@@ -176,7 +176,7 @@ sampler::online_bigram::~online_bigram()
 
 
 void sampler::online_bigram::estimate(
-    U iters, std::wostream& os, U eval_iters, F temp, bool maximize, bool is_decayed)
+    uint iters, std::wostream& os, uint eval_iters, double temp, bool maximize, bool is_decayed)
 {
     if(debug_level >= 10000)
         std::wcout << "Inside OnlineBigram estimate " << std::endl;
@@ -187,10 +187,10 @@ void sampler::online_bigram::estimate(
     }
 
     _nsentences_seen = 0;
-    for (U i=1; i <= iters; i++)
+    for (uint i=1; i <= iters; i++)
     {
         std::wcerr << "bigram::online_bigram::estimate iteration " << i << "/" << iters << std::endl;
-        F temperature = _constants.anneal_temperature(i);
+        double temperature = _constants.anneal_temperature(i);
 	if(!is_decayed)
         {
             // if (i % 10 == 0) wcerr << ".";

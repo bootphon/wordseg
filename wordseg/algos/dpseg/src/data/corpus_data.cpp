@@ -8,26 +8,24 @@ data::corpus_data::~corpus_data() {}
 Sentences data::corpus_data::get_eval_sentences() const
 {
     Sentences s;
-    Bs possible_bs;
-    Bs true_bs;
-    for (U i = _evalsent_start; i < sentenceboundaries.size()-1; ++i)
+    std::vector<bool> possible_bs;
+    std::vector<bool> true_bs;
+    for (uint i = _evalsent_start; i < sentenceboundaries.size()-1; ++i)
     {
-        U start = sentenceboundaries[i] - 1;  // include preceding \n
-        U end = sentenceboundaries[i + 1];    // this is the ending \n
+        uint start = sentenceboundaries[i] - 1;  // include preceding \n
+        uint end = sentenceboundaries[i + 1];    // this is the ending \n
         initialize_boundaries(start, end, possible_bs, true_bs);
         s.push_back(Sentence(start, end, possible_bs, true_bs, this));
     }
     return s;
 }
 
-void data::corpus_data::read(std::wistream& is, U start, U ns)
+void data::corpus_data::read(std::wistream& is, uint start, uint ns)
 {
     substring::data.clear();
     sentenceboundaries.clear();
     _true_boundaries.clear();
     _possible_boundaries.clear();
-
-    if (debug_level >= 99000) TRACE2(_true_boundaries, _possible_boundaries);
 
     substring::data.push_back(L'\n');
     _true_boundaries.push_back(true);
@@ -54,20 +52,20 @@ void data::corpus_data::read(std::wistream& is, U start, U ns)
 
 // read additional data for evaluation. This will go into the same
 // S::data as the training data.
-void data::corpus_data::read_eval(std::wistream& is, U start, U ns)
+void data::corpus_data::read_eval(std::wistream& is, uint start, uint ns)
 {
     _evalsent_start = sentenceboundaries.size()-1;
     read_data(is, start, ns);
 }
 
-void data::corpus_data::read_data(std::wistream& is, U start, U ns)
+void data::corpus_data::read_data(std::wistream& is, uint start, uint ns)
 {
     assert(substring::data.size() >0);
     assert(*(substring::data.end()-1) == L'\n');
     assert(*(sentenceboundaries.end()-1) == substring::data.size());
 
-    U i = sentenceboundaries.size()-1;
-    U offset = i;
+    uint i = sentenceboundaries.size()-1;
+    uint offset = i;
     wchar_t c;
     while (start > i- offset && is.get(c))
     {
@@ -132,7 +130,7 @@ void data::corpus_data::read_data(std::wistream& is, U start, U ns)
     assert(substring::data.size() == _possible_boundaries.size());
 }
 
-void data::corpus_data::initialize(U ns)
+void data::corpus_data::initialize(uint ns)
 {
     ntrainsentences = ns;
     if (ntrainsentences == 0)

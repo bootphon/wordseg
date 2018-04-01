@@ -22,9 +22,9 @@ class UniformMultinomial
 {
 public:
     typedef X argument_type;
-    typedef F result_type;
+    typedef double result_type;
 
-    UniformMultinomial(F dimensions)
+    UniformMultinomial(double dimensions)
         : _dimensions(dimensions),
           _prob(1.0/_dimensions),
           _nitems(0)
@@ -32,13 +32,13 @@ public:
             assert(_dimensions > 0);
         }
 
-    U dimensions() const
+    uint dimensions() const
         {
             return _dimensions;
         }
 
     //! operator() returns the probability of an item
-    F operator()(const X& v) const
+    double operator()(const X& v) const
         {
             return _prob;
         }
@@ -63,15 +63,15 @@ public:
             _nitems = 0;
         }
 
-    F logprob() const
+    double logprob() const
         {
             return _nitems * log(_prob);
         }
 
 private:
-    F _dimensions;  // dimensions of multinomial distribution
-    F _prob;        // probability of each item (= 1/_dimensions)
-    U _nitems;      // total number of items generated
+    double _dimensions;  // dimensions of multinomial distribution
+    double _prob;        // probability of each item (= 1/_dimensions)
+    uint _nitems;      // total number of items generated
 };
 
 
@@ -81,16 +81,16 @@ private:
 template <typename Xs>
 struct CharSeq {
 private:
-    F p_nl;              //!< probability of end of word
-    U nc;                //!< number of distinct characters
-    U nchars;            //!< total number of characters generated
-    U nstrings;          //!< total number of strings (words) generated
+    double p_nl;              //!< probability of end of word
+    uint nc;                //!< number of distinct characters
+    uint nchars;            //!< total number of characters generated
+    uint nstrings;          //!< total number of strings (words) generated
 
 public:
     typedef Xs argument_type;
-    typedef F  result_type;
+    typedef double  result_type;
 
-    CharSeq(F p_nl, U nc)
+    CharSeq(double p_nl, uint nc)
         : p_nl(p_nl), nc(nc), nchars(), nstrings()
         {
             assert(p_nl > 0);
@@ -98,27 +98,27 @@ public:
             assert(nc > 0);
         }
 
-    F p_stop() const
+    double p_stop() const
         {
             return p_nl;
         }
 
-    F& p_stop()
+    double& p_stop()
         {
             return p_nl;
         }
 
-    U nchartypes() const
+    uint nchartypes() const
         {
             return nc;
         }
 
-    U get_nchars()
+    uint get_nchars()
         {
             return nchars;
         }
 
-    U get_nstrings()
+    uint get_nstrings()
         {
             return nstrings;
         }
@@ -126,7 +126,7 @@ public:
     //! operator() returns the probability of a substring.  We
     //! special-case the situation where the initial substring is the
     //! end marker (assumed to be the character in position 0).
-    F operator()(const Xs& v) const
+    double operator()(const Xs& v) const
         {
             return v == Xs(0,1) ? p_nl : pow((1.0 - p_nl) / nc, v.size()) * p_nl;
         }
@@ -156,7 +156,7 @@ public:
         }
 
     //! logprob() returns the log probability of the corpus
-    F logprob() const
+    double logprob() const
         {
             return nstrings * log(p_nl)          // probability of stopping
                 + nchars * log((1.0-p_nl)/nc);   // probability of characters
@@ -169,16 +169,16 @@ template <typename Xs>
 class CharSeq0
 {
 private:
-    F p_nl;              //!< probability of end of word
-    U nc;                //!< number of distinct characters
-    U nchars;            //!< total number of characters generated
-    U nstrings;          //!< # of words generated (# tables)
+    double p_nl;              //!< probability of end of word
+    uint nc;                //!< number of distinct characters
+    uint nchars;            //!< total number of characters generated
+    uint nstrings;          //!< # of words generated (# tables)
 
 public:
     typedef Xs argument_type;
-    typedef F  result_type;
+    typedef double  result_type;
 
-    CharSeq0(F p_nl, U nc)
+    CharSeq0(double p_nl, uint nc)
         : p_nl(p_nl), nc(nc), nchars(), nstrings()
         {
             assert(p_nl > 0);
@@ -186,33 +186,33 @@ public:
             assert(nc > 0);
         }
 
-    F p_stop() const
+    double p_stop() const
         {
             return p_nl;
         }
 
-    F& p_stop()
+    double& p_stop()
         {
             return p_nl;
         }
 
-    U nchartypes() const
+    uint nchartypes() const
         {
             return nc;
         }
 
-    U get_nchars()
+    uint get_nchars()
         {
             return nchars;
         }
 
-    U get_nstrings()
+    uint get_nstrings()
         {
             return nstrings;
         }
 
     //! operator() returns the probability of a substring.
-    F operator()(const Xs& v) const
+    double operator()(const Xs& v) const
         {
             assert(v.size() > 0);
             assert(*v.begin() != '\n');
@@ -245,7 +245,7 @@ public:
         }
 
     //! logprob() returns the log probability of the corpus
-    F logprob() const
+    double logprob() const
         {
             return nstrings * log(p_nl)                     // probability of stopping
                 + nstrings * log(1.0/nc)                    // probability of first chars
@@ -263,55 +263,55 @@ private:
     typedef UniformMultinomial<wchar_t> Char;
     typedef py::adaptor<Char> CharProbs;
 
-    F p_nl;      // dummy, for compatibility w/ CharSeq
-    U nc;        //!< number of distinct characters
-    U nstrings;  //!< # of words generated (# tables)
-    F _a;        // PY parm for chars
-    F _b;        // PY parm for chars
-    F _logprob;
+    double p_nl;      // dummy, for compatibility w/ CharSeq
+    uint nc;        //!< number of distinct characters
+    uint nstrings;  //!< # of words generated (# tables)
+    double _a;        // PY parm for chars
+    double _b;        // PY parm for chars
+    double _logprob;
     Char _base;
     CharProbs _char_probs;
 
 public:
     typedef Xs argument_type;
-    typedef F  result_type;
+    typedef double  result_type;
 
     // number of characters in base includes end-of-word marker
-    CharSeqLearned(F p_nl, U nc)
+    CharSeqLearned(double p_nl, uint nc)
         : p_nl(-1), nc(nc), nstrings(), _a(0), _b(1.0), _logprob(0),
           _base(nc + 1), _char_probs(_base, unif01, _a, _b)
         {}
 
     // dummy, for compatibility w/ CharSeq
-    F p_stop() const
+    double p_stop() const
         {
             return p_nl;
         }
 
     // dummy, for compatibility w/ CharSeq
-    F& p_stop()
+    double& p_stop()
         {
             return p_nl;
         }
 
-    U nchartypes() const
+    uint nchartypes() const
         {
             return nc;
         }
 
-    U get_nstrings() {
+    uint get_nstrings() {
         return nstrings;
     }
 
     //! operator() returns the probability of a substring.  TODO
     // sgwater: need to modify this to more correctly deal with
     // utterance boundaries in bigram model. (Also insert/delete)
-    F operator()(const Xs& v) const
+    double operator()(const Xs& v) const
         {
             assert(v.size() > 0);
             // assert(*v.begin() != '\n'); //only holds for unigram model
 
-            F prob = 1;
+            double prob = 1;
             for(const auto& i: v)
             {
                 prob *= _char_probs(i);
@@ -372,7 +372,7 @@ public:
             _char_probs.clear();
         }
 
-    F logprob() const
+    double logprob() const
         {
             return _logprob;
         }
@@ -390,39 +390,39 @@ private:
     typedef py::bigrams<UnigramChars> CharProbs;
 
 private:
-    F p_nl;  // dummy, for compatibility w/ CharSeq
-    U nc;    // number of distinct characters
-    F _a;    // PY parm for chars
-    F _b;    // PY parm for chars
-    F _logprob;
+    double p_nl;  // dummy, for compatibility w/ CharSeq
+    uint nc;    // number of distinct characters
+    double _a;    // PY parm for chars
+    double _b;    // PY parm for chars
+    double _logprob;
     Char _base;
     UnigramChars _unigrams;
     CharProbs _char_probs;
 
 public:
     typedef Xs argument_type;
-    typedef F  result_type;
+    typedef double  result_type;
 
     // number of characters in base includes end-of-word marker
-    BigramChars(F p_nl, U nc)
+    BigramChars(double p_nl, uint nc)
         : p_nl(-1), nc(nc),  _a(0), _b(1.0), _logprob(0),
           _base(nc + 1),  _unigrams(_base, unif01, _a, _b),
           _char_probs(_unigrams, unif01, 0.0, 1.0)
         {}
 
     // dummy, for compatibility w/ CharSeq
-    F p_stop() const
+    double p_stop() const
         {
             return p_nl;
         }
 
     // dummy, for compatibility w/ CharSeq
-    F& p_stop()
+    double& p_stop()
         {
             return p_nl;
         }
 
-    U nchartypes() const
+    uint nchartypes() const
         {
             return nc;
         }
@@ -430,10 +430,10 @@ public:
     //! operator() returns the probability of a substring.  sgwater:
     // need to modify this to more correctly deal with utterance
     // boundaries in bigram model.  (Also insert/delete)
-    F operator()(const Xs& v) const
+    double operator()(const Xs& v) const
         {
             assert(v.size() > 0);
-            F prob = 1;
+            double prob = 1;
 
             if (*v.begin() == '\n')
             {
@@ -512,7 +512,7 @@ public:
             _char_probs.clear();
         }
 
-    F logprob() const
+    double logprob() const
         {
             return _logprob;
         }

@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include <map>
-#include "typedefs.hh"
+// #include "typedefs.hh"
 
 
 namespace py
@@ -11,13 +11,13 @@ namespace py
     class chinese_restaurant
     {
         // total number of customers at tables with this label
-        U n;
+        uint n;
 
         // number of tables with this label
-        U m;
+        uint m;
 
         // number of customers at table -> number of tables
-        std::map<U, U> n_m;
+        std::map<uint, uint> n_m;
 
     public:
         chinese_restaurant();
@@ -26,19 +26,19 @@ namespace py
 
         // inserts a customer at a random old table using PY sampling
         // distribution
-        void insert_old(F r, const F& a);
+        void insert_old(double r, const double& a);
 
         // inserts a customer at a new table
         void insert_new();
 
         // removes a customer from a randomly chosen table, returns number
         // of customers left at table
-        U erase(I r);
+        uint erase(int r);
 
         // getters
-        const std::map<U, U>& get_n_m() const;
-        const U& get_n() const;
-        const U& get_m() const;
+        const std::map<uint, uint>& get_n_m() const;
+        const uint& get_n() const;
+        const uint& get_m() const;
 
         // true if there are no customers left with this label
         bool is_empty() const;

@@ -14,18 +14,18 @@ namespace sampler
         virtual ~batch_unigram_viterbi();
 
     protected:
-        virtual void estimate_sentence(Sentence& s, F temperature);
+        virtual void estimate_sentence(Sentence& s, double temperature);
     };
 
 
     class online_unigram_viterbi: public online_unigram
     {
     public:
-        online_unigram_viterbi(const data::data& constants, F forget_rate = 0);
+        online_unigram_viterbi(const data::data& constants, double forget_rate = 0);
         virtual ~online_unigram_viterbi();
 
     protected:
-        virtual void estimate_sentence(Sentence& s, F temperature);
+        virtual void estimate_sentence(Sentence& s, double temperature);
     };
 
 
@@ -36,7 +36,7 @@ namespace sampler
         virtual ~batch_bigram_viterbi();
 
     protected:
-        virtual void estimate_sentence(Sentence& s, F temperature);
+        virtual void estimate_sentence(Sentence& s, double temperature);
     };
 
 
@@ -47,7 +47,7 @@ namespace sampler
         virtual ~online_bigram_viterbi();
 
     protected:
-        virtual void estimate_sentence(Sentence& s, F temperature);
+        virtual void estimate_sentence(Sentence& s, double temperature);
     };
 }
 

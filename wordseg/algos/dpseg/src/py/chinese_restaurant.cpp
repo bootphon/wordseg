@@ -17,7 +17,7 @@ py::chinese_restaurant::~chinese_restaurant()
 {}
 
 
-void py::chinese_restaurant::insert_old(F r, const F& a)
+void py::chinese_restaurant::insert_old(double r, const double& a)
 {
     // when r is not positive, we have reached our table
     for (auto it = n_m.begin(); it != n_m.end(); ++it)
@@ -28,7 +28,7 @@ void py::chinese_restaurant::insert_old(F r, const F& a)
         if (r <= 0)
         {
             // new table size
-            U n1 = it->first+1;
+            uint n1 = it->first+1;
 
             if (--it->second == 0)
                 n_m.erase(it);
@@ -56,7 +56,7 @@ void py::chinese_restaurant::insert_new()
 }
 
 
-U py::chinese_restaurant::erase(I r)
+uint py::chinese_restaurant::erase(int r)
 {
     --n;
     for (auto it = n_m.begin(); it != n_m.end(); ++it)
@@ -64,7 +64,7 @@ U py::chinese_restaurant::erase(I r)
         if ((r -= it->first * it->second) <= 0)
         {
             // new table size
-            U n1 = it->first - 1;
+            uint n1 = it->first - 1;
             if (--it->second == 0)
                 n_m.erase(it);
             if (n1 == 0)
@@ -82,19 +82,19 @@ U py::chinese_restaurant::erase(I r)
 }
 
 
-const std::map<U, U>& py::chinese_restaurant::get_n_m() const
+const std::map<uint, uint>& py::chinese_restaurant::get_n_m() const
 {
     return n_m;
 }
 
 
-const U& py::chinese_restaurant::get_n() const
+const uint& py::chinese_restaurant::get_n() const
 {
     return n;
 }
 
 
-const U& py::chinese_restaurant::get_m() const
+const uint& py::chinese_restaurant::get_m() const
 {
     return m;
 }
@@ -113,7 +113,7 @@ bool py::chinese_restaurant::sanity_check() const
     assert(n > 0);
     assert(m <= n);
 
-    U mm = 0, nn = 0;
+    uint mm = 0, nn = 0;
     for(const auto& item: n_m)
     {
         mm += item.second;
