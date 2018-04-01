@@ -1,5 +1,5 @@
-#ifndef _PY_CHINESE_RESTAURANT_H
-#define _PY_CHINESE_RESTAURANT_H
+#ifndef _PY_RESTAURANT_H
+#define _PY_RESTAURANT_H
 
 #include <iostream>
 #include <map>
@@ -8,7 +8,7 @@
 
 namespace py
 {
-    class chinese_restaurant
+    class restaurant
     {
         // total number of customers at tables with this label
         uint n;
@@ -20,9 +20,9 @@ namespace py
         std::map<uint, uint> n_m;
 
     public:
-        chinese_restaurant();
-        chinese_restaurant(const chinese_restaurant& other);
-        ~chinese_restaurant();
+        restaurant();
+        restaurant(const restaurant& other);
+        ~restaurant();
 
         // inserts a customer at a random old table using PY sampling
         // distribution
@@ -52,4 +52,4 @@ namespace py
 }
 
 
-#endif  // _PY_CHINESE_RESTAURANT_H
+#endif  // _PY_RESTAURANT_H

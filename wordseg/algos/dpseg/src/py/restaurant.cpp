@@ -1,23 +1,23 @@
-#include "py/chinese_restaurant.hh"
+#include "py/restaurant.hh"
 #include "util.hpp"
 #include <cassert>
 
 
-py::chinese_restaurant::chinese_restaurant()
+py::restaurant::restaurant()
     : n(), m(), n_m()
 {}
 
 
-py::chinese_restaurant::chinese_restaurant(const chinese_restaurant& other)
+py::restaurant::restaurant(const restaurant& other)
     : n(other.n), m(other.m), n_m(other.n_m)
 {}
 
 
-py::chinese_restaurant::~chinese_restaurant()
+py::restaurant::~restaurant()
 {}
 
 
-void py::chinese_restaurant::insert_old(double r, const double& a)
+void py::restaurant::insert_old(double r, const double& a)
 {
     // when r is not positive, we have reached our table
     for (auto it = n_m.begin(); it != n_m.end(); ++it)
@@ -48,7 +48,7 @@ void py::chinese_restaurant::insert_old(double r, const double& a)
 }
 
 
-void py::chinese_restaurant::insert_new()
+void py::restaurant::insert_new()
 {
     ++n;
     ++m;
@@ -56,7 +56,7 @@ void py::chinese_restaurant::insert_new()
 }
 
 
-uint py::chinese_restaurant::erase(int r)
+uint py::restaurant::erase(int r)
 {
     --n;
     for (auto it = n_m.begin(); it != n_m.end(); ++it)
@@ -82,32 +82,32 @@ uint py::chinese_restaurant::erase(int r)
 }
 
 
-const std::map<uint, uint>& py::chinese_restaurant::get_n_m() const
+const std::map<uint, uint>& py::restaurant::get_n_m() const
 {
     return n_m;
 }
 
 
-const uint& py::chinese_restaurant::get_n() const
+const uint& py::restaurant::get_n() const
 {
     return n;
 }
 
 
-const uint& py::chinese_restaurant::get_m() const
+const uint& py::restaurant::get_m() const
 {
     return m;
 }
 
 
-bool py::chinese_restaurant::is_empty() const
+bool py::restaurant::is_empty() const
 {
     assert(m <= n);
     return n == 0;
 }
 
 
-bool py::chinese_restaurant::sanity_check() const
+bool py::restaurant::sanity_check() const
 {
     assert(m > 0);
     assert(n > 0);
@@ -129,7 +129,7 @@ bool py::chinese_restaurant::sanity_check() const
 }
 
 
-std::wostream& py::chinese_restaurant::print(std::wostream& os) const
+std::wostream& py::restaurant::print(std::wostream& os) const
 {
     return os << "(n=" << n << ", m=" << m << ", n_m=" << n_m << ")";
 }

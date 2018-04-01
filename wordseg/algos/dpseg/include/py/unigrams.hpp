@@ -2,8 +2,8 @@
 #define _UNIGRAMS_H_
 
 #include <iostream>
-
 #include "py/adaptor.hpp"
+
 
 namespace py
 {
@@ -12,16 +12,13 @@ namespace py
     {
     private:
         typedef adaptor<Base> parent;
-        typedef typename Base::argument_type V;
 
     public:
-        typedef std::unordered_map<V, chinese_restaurant> WordTypes;
-
         unigrams(Base& base, uniform01_type& u01, double a=0, double b=1)
             : parent(base, u01, a, b)
             {}
 
-        const WordTypes& types()
+        const std::unordered_map<typename Base::argument_type, restaurant>& types()
             {
                 return parent::label_tables;
             }

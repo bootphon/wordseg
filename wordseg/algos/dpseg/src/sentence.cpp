@@ -860,8 +860,8 @@ double Sentence::mbdp_prob(Unigrams& lex, const substring& word, uint nsentences
         const double pi = 4.0*atan(1.0);
         double l_frac = (types - 1)/types;
         double total_base = base(word);
-        Unigrams::WordTypes items = lex.types();
-        for(const auto& item: items)
+
+        for(const auto& item: lex.types())
         {
             total_base += base(item.first);
         }

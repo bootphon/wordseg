@@ -27,7 +27,7 @@
 #include <utility>
 
 #include "random-mt19937ar.hpp"
-#include "py/chinese_restaurant.hh"
+#include "py/restaurant.hh"
 #include "util.hpp"
 
 
@@ -63,7 +63,7 @@ namespace py
 
         typedef argument_type V;
         typedef std::map<uint,uint> U_U;
-        typedef std::unordered_map<V, py::chinese_restaurant> V_T;
+        typedef std::unordered_map<V, py::restaurant> V_T;
 
         V_T label_tables;
 
@@ -181,7 +181,7 @@ namespace py
                 else
                 {
                     // insert customer at a new table
-                    chinese_restaurant& t = (tit == label_tables.end()) ? label_tables[v] : tit->second;
+                    restaurant& t = (tit == label_tables.end()) ? label_tables[v] : tit->second;
                     t.insert_new();
                     ++m;    // one more table
                     base.insert(v);
