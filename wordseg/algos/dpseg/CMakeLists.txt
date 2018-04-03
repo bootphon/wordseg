@@ -24,7 +24,9 @@ find_package(Boost REQUIRED COMPONENTS program_options)
 set(CMAKE_CXX_FLAGS "-std=c++11 -DNDEBUG")
 
 # the source files to compile
-file(GLOB SOURCES src/* src/sampler/* src/data/* src/py/* include/* include/sampler/* include/py/* include/data/*)
+file(GLOB SOURCES
+  src/* src/estimator/* src/text/* src/pitman_yor/*
+  include/* include/estimator/* include/pitman_yor/* include/text/*)
 
 add_executable(dpseg ${SOURCES})
 include_directories(include ${Boost_INCLUDE_DIRS})

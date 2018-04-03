@@ -1,7 +1,5 @@
-#include <string>
 #include "scoring.hh"
-
-using namespace std;
+#include <string>
 
 
 Scoring::Scoring()
@@ -78,7 +76,7 @@ void Scoring::reset()
     _segmented_lex.clear();
 }
 
-void Scoring::add_words_to_lexicon(const Sentence::Words& words, Lexicon& lex)
+void Scoring::add_words_to_lexicon(const std::vector<substring>& words, Lexicon& lex)
 {
     for(const auto& word: words)
     {
@@ -86,7 +84,7 @@ void Scoring::add_words_to_lexicon(const Sentence::Words& words, Lexicon& lex)
     }
 }
 
-void Scoring::print_results(wostream& os) const
+void Scoring::print_results(std::wostream& os) const
 {
     os.precision(4);
     os << "P " << 100*precision()
@@ -98,7 +96,7 @@ void Scoring::print_results(wostream& os) const
        << " LP " << 100*lexicon_precision()
        << " LR " << 100*lexicon_recall()
        << " LF " << 100*lexicon_fmeas()
-       << endl;
+       << std::endl;
     os.precision(6);
 }
 
@@ -130,22 +128,22 @@ int Scoring::lexicon_correct() const
     return correct;
 }
 
-void Scoring::print_segmented_lexicon(wostream& os) const
+void Scoring::print_segmented_lexicon(std::wostream& os) const
 {
     // os << "Segmented lexicon:" << endl;
     // print_lexicon(_segmented_lex);
     // os << endl;
-    os << "Total segmented lexicon types: " << _segmented_lex.ntypes() << endl;
-    os << "Total segmented lexicon tokens: " << _segmented_words << endl;
+    os << "Total segmented lexicon types: " << _segmented_lex.ntypes() << std::endl;
+    os << "Total segmented lexicon tokens: " << _segmented_words << std::endl;
 }
 
-void Scoring::print_reference_lexicon(wostream& os) const
+void Scoring::print_reference_lexicon(std::wostream& os) const
 {
     // os << "Reference lexicon:" << endl;
     // print_lexicon(_reference_lex);
     // os << endl;
-    os << "Total reference lexicon types: " << _reference_lex.ntypes() << endl;
-    os << "Total reference lexicon tokens: " << _reference_words << endl;
+    os << "Total reference lexicon types: " << _reference_lex.ntypes() << std::endl;
+    os << "Total reference lexicon tokens: " << _reference_words << std::endl;
 }
 
 // void Scoring::print_lexicon(const Lexicon& lexicon, wostream& os) const

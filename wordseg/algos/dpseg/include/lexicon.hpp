@@ -7,6 +7,7 @@
 #include <utility>  // for std::pair
 #include <vector>
 
+#include "util.hpp"
 
 #ifdef NDEBUG
 #define my_assert(X,Y) /* do nothing */
@@ -31,14 +32,31 @@ public:
     typedef typename std::vector<value_type>::iterator LexVectorIter;
     typedef typename std::vector<value_type>::const_iterator LexVectorCIter;
 
-    lexicon_base() : _ntokens(0) {}
+    lexicon_base() : _ntokens(0)
+        {}
 
-    virtual ~lexicon_base() {}
+    virtual ~lexicon_base()
+        {}
 
-    virtual iterator begin() {return parent_t::begin();}
-    virtual const_iterator begin() const {return parent_t::begin();}
-    virtual iterator end() {return parent_t::end();}
-    virtual const_iterator end() const {return parent_t::end();}
+    virtual iterator begin()
+        {
+            return parent_t::begin();
+        }
+
+    virtual const_iterator begin() const
+        {
+            return parent_t::begin();
+        }
+
+    virtual iterator end()
+        {
+            return parent_t::end();
+        }
+
+    virtual const_iterator end() const
+        {
+            return parent_t::end();
+        }
 
     virtual void check_invariant() const
         {
@@ -189,7 +207,8 @@ protected:
             }
     };
 
-    struct second_lessthan {
+    struct second_lessthan
+    {
         template <typename T1, typename T2>
         bool operator() (const T1& e1, const T2& e2)
             {

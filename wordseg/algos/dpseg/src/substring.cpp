@@ -79,8 +79,9 @@ bool substring::operator< (const substring& s) const
 
 size_t substring::hash() const
 {
-    size_t h = 0;
-    size_t g;
+    std::size_t h = 0;
+    std::size_t g;
+
     substring::const_iterator p = begin();
     substring::const_iterator end = p + _length;
 

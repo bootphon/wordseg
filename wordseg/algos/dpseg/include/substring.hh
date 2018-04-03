@@ -4,7 +4,6 @@
 
 #include <iostream>
 
-
 // Class substring can be thought of as a string, but avoids copying
 // characters all over by simply storing pointers to begin/end indices
 // in the global string storing the entire data set.
@@ -39,12 +38,13 @@ public:
     bool operator< (const substring& s) const;
 
     friend std::wostream& operator<< (std::wostream& os, const substring& s);
-    size_t hash() const;
+    std::size_t hash() const;
 
 private:
     std::size_t _start;
     std::size_t _length;
 };
+
 
 namespace std
 {

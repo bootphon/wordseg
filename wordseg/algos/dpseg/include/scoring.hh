@@ -4,8 +4,8 @@
 #include <iostream>
 
 #include "substring.hh"
-#include "sentence.hh"
 #include "lexicon.hpp"
+
 
 /*
   Scoring class calculates number of words correct
@@ -40,7 +40,7 @@ public:
     // void print_lexicon_summary(const Lexicon& lexicon,wostream& os=std::wcout) const;
 
     int lexicon_correct() const;
-    void add_words_to_lexicon(const Sentence::Words& words, Lexicon& lex);
+    void add_words_to_lexicon(const std::vector<substring>& words, Lexicon& lex);
 
     int _sentences;      // number of sentences so far in block
     int _words_correct;  // tokens

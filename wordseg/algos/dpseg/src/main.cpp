@@ -13,19 +13,18 @@
 #define BOOST_UTF8_DECL
 #include <boost/detail/utf8_codecvt_facet.ipp>
 
-
-#include "data/corpus_data.hh"
-#include "sampler/parameters.hh"
-#include "sampler.hh"
+#include "text/corpus_data.hh"
+#include "estimator/parameters.hh"
+#include "estimator/factory.hh"
 #include "random-mt19937ar.hpp"
 
 
 // TODO The following are global variables accessed across the whole
 // code (with 'extern' declarations). This is bad (source of bugs,
 // hard to read/debug). Use parameters instead.
-uniform01_type unif01; // random number generator
-std::size_t debug_level;      // higher -> mode debug messages on stdout
-std::wstring sep;      // separator used to separate fields during printing of results
+uniform01_type unif01;    // random number generator
+std::size_t debug_level;  // higher -> mode debug messages on stdout
+std::wstring sep;         // separator used to separate fields during printing of results
 
 
 std::wstring str2wstr(std::string str)
@@ -51,8 +50,8 @@ int main(int argc, char** argv)
     std::ios_base::sync_with_stdio(false);
     std::cin.tie(0);
 
-    sampler::parameters params;
-    data::corpus_data data;
+    estimator::parameters params;
+    text::corpus_data corpus;
     std::string csep;
 
     // define the command line arguments
@@ -304,11 +303,11 @@ int main(int argc, char** argv)
         }
         // is.imbue(std::locale(std::locale(), new utf8_codecvt_facet()));
 
-        data.read(is, vm["data-start-index"].as<std::size_t>(), vm["data-num-sents"].as<std::size_t>());
+        corpus.read(is, vm["data-start-index"].as<std::size_t>(), vm["data-num-sents"].as<std::size_t>());
     }
     else
     {
-        data.read(std::wcin, vm["data-start-index"].as<std::size_t>(), vm["data-num-sents"].as<std::size_t>());
+        corpus.read(std::wcin, vm["data-start-index"].as<std::size_t>(), vm["data-num-sents"].as<std::size_t>());
     }
 
     // read evaluation data
@@ -321,23 +320,23 @@ int main(int argc, char** argv)
             exit(1);
         }
         // is.imbue(std::locale(std::locale(), new utf8_codecvt_facet()));
-        data.read_eval(is,vm["eval-start-index"].as<std::size_t>(),vm["eval-num-sents"].as<std::size_t>());
+        corpus.read_eval(is,vm["eval-start-index"].as<std::size_t>(),vm["eval-num-sents"].as<std::size_t>());
     }
 
     if (debug_level >= 98000)
     {
         TRACE(substring::data.size());
         TRACE(substring::data);
-        TRACE(data.sentence_boundary_list());
-        TRACE(data.nchars());
-        TRACE(data.possible_boundaries());
-        TRACE(data.true_boundaries());
+        TRACE(corpus.sentence_boundary_list());
+        TRACE(corpus.nchars());
+        TRACE(corpus.possible_boundaries());
+        TRACE(corpus.true_boundaries());
     }
 
     if (debug_level >= 100)
     {
-        std::wcout << "# nchartypes=" << data.nchartypes() << std::endl
-                   << "# nsentences=" << data.nsentences() << std::endl;
+        std::wcout << "# nchartypes=" << corpus.nchartypes() << std::endl
+                   << "# nsentences=" << corpus.nsentences() << std::endl;
     }
 
     // open the output file, handle UTF8
@@ -360,8 +359,8 @@ int main(int argc, char** argv)
 
     for(std::size_t subject = 0; subject < vm["nsubjects"].as<std::size_t>(); subject++)
     {
-        auto sampler = sampler::get_sampler(
-            params, data, anneal,
+        auto sampler = estimator::get_estimator(
+            params, corpus, anneal,
             vm["ngram"].as<std::size_t>(),
             vm["mode"].as<std::string>(),
             vm["estimator"].as<std::string>(),

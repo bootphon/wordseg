@@ -41,14 +41,27 @@ std::wostream& operator<< (std::wostream& os, const std::map<Key,Value>& k_v)
 }
 
 
+// std::wostream& operator<< (std::wostream& os, const std::vector<std::pair<double, std::size_t> >& vs)
+// {
+//     os << L'(';
+//     const wchar_t* sep = L"";
+//     for(const auto& item: vs)
+//     {
+//         os << sep << item;
+//         sep = L" ";
+//     }
+//     return os << L')';
+// }
+
+
 template <typename Value>
 std::wostream& operator<< (std::wostream& os, const std::vector<Value>& vs)
 {
     os << L'(';
     const wchar_t* sep = L"";
-    for(const auto& item: vs)
+    for(typename std::vector<Value>::const_iterator it = vs.begin(); it != vs.end(); ++it)
     {
-        os << sep << item;
+        os << sep << *it;
         sep = L" ";
     }
     return os << L')';
