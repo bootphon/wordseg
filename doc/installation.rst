@@ -98,9 +98,12 @@ System-wide installation
 
 Installation in a virtual environment
 -------------------------------------
+
 .. note::
-  If you have already followed the instructions under ``System-wide installation``
-  skip this section to go directly to ``Run tests to check your installation``.
+
+   If you have already followed the instructions under ``System-wide installation``
+   skip this section to go directly to ``Run tests to check your installation``.
+
 
 This installation process is based on the conda_ python package
 manager and can be performed on any Linux, Mac OS or Windows system
@@ -191,7 +194,6 @@ first install some dependencies.
   - install macports: https://www.macports.org/install.php
   - install sphinx: http://www.sphinx-doc.org/en/stable/install.html
   - install matplotlib: https://matplotlib.org/users/installing.html
-
 
 On **both**::
 

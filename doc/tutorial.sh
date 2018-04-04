@@ -48,4 +48,4 @@ echo
         awk -v i=$i 'NR==i {printf $2}; END {printf " "}' eval.ag.txt
         awk -v i=$i 'NR==i {print $2}' eval.dibs.txt
     done
-    ) | column -t
+) | column -t

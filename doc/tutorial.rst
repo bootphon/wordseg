@@ -94,7 +94,7 @@ The bash and python give the same result, it should be something like::
   }
   }
 
-  * Evaluation
+  * Evaluation NEEDS TO BE UPDATED
 
   score                      baseline  tp        puddle    dpseg     ag        dibs
   -------------------------- --------- --------- --------- --------- --------- ---------
