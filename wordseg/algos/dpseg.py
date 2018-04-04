@@ -394,7 +394,7 @@ def _dpseg_bugfix(text, boundaries, log=utils.null_logger()):
             'this will cause wordseg-dpseg to bug. '
             'Please re-arrange your text manually and try again.')
 
-    need_to_fix = [i for i, len in enumerate(first_len) if len == 1]
+    need_to_fix = [i for i, length in enumerate(first_len) if length == 1]
     log.debug(
         'dpseg bugfix: need to fix folds {}'
         .format([i+1 for i in need_to_fix]))
