@@ -6,7 +6,7 @@ using namespace std;
 
 
 // using the random number generator defined in dpseg.cc
-extern uniform01_type<F> unif01;
+extern uniform01_type unif01;
 
 
 // returns a random double between 0 and n, inclusive

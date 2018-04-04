@@ -18,22 +18,29 @@ def test_permute():
 def test_flatten():
     assert folding._flatten([[0], [1], [2, 3]]) == [0, 1, 2, 3]
 
+def test_cumsum():
+    c = folding._cumsum
+    assert c([]) == []
+    assert c([2, 3]) == [2, 5]
+    assert c([1, 2, 3]) == [1, 3, 6]
+    assert c([2, 2, 3]) == [2, 4, 7]
+
 
 def test_boundaries():
     with pytest.raises(ValueError):
-        folding._fold_boundaries([], 1)
+        folding.boundaries([], 1)
 
     with pytest.raises(ValueError):
-        folding._fold_boundaries(['a'], 0)
+        folding.boundaries(['a'], 0)
 
     with pytest.raises(ValueError):
-        folding._fold_boundaries(['a'], 2)
+        folding.boundaries(['a'], 2)
 
-    assert folding._fold_boundaries(['a'], 1) == [0]
-    assert folding._fold_boundaries(['a', 'b'], 1) == [0]
-    assert folding._fold_boundaries(['a', 'b'], 2) == [0, 1]
-    assert folding._fold_boundaries(['a', 'b', 'c'], 2) == [0, 1]
-    assert folding._fold_boundaries(['a', 'b', 'c', 'd'], 2) == [0, 2]
+    assert folding.boundaries(['a'], 1) == [0]
+    assert folding.boundaries(['a', 'b'], 1) == [0]
+    assert folding.boundaries(['a', 'b'], 2) == [0, 1]
+    assert folding.boundaries(['a', 'b', 'c'], 2) == [0, 1]
+    assert folding.boundaries(['a', 'b', 'c', 'd'], 2) == [0, 2]
 
 
 def test_fold():

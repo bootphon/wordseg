@@ -6,7 +6,7 @@ A DiBS model assigns, for each phrase-medial diphone, a value between
 there is a word-boundary there).
 
 For details, see Daland, R., Pierrehumbert, J.B., "Learning
-diphone-based segmentation". Cognitive science 35(1), 119–155 (2011).
+diphone-based segmentation". Cognitive science 35(1), 119-155 (2011).
 
 """
 
@@ -64,6 +64,8 @@ class CorpusSummary(object):
         (syllables boundaries are ignored if any)
     separator : Separator, optional
         Token separation in the input text
+    level : 'phone' or 'syllable', optional
+        The token level to train the model on. Default to 'phone'.
     log : logging.Logger, optional
         Where to send log messages
 
@@ -84,8 +86,18 @@ class CorpusSummary(object):
     diphones : Counter
         The count of all diphones, sum of internal and spanning diphones.
 
+    Raises
+    ------
+    ValueError if a line in the `text` does not contain a word separator.
+
     """
-    def __init__(self, text, separator=Separator(), log=utils.null_logger()):
+    def __init__(self, text, separator=Separator(), level='phone',
+                 log=utils.null_logger()):
+        if level not in ('phone', 'syllable'):
+            raise ValueError(
+                'Unknown level {}, must be hone or syllable'.format(level))
+        log.info('reading data at %s level', level)
+
         self.separator = separator
         self.summary = Counter()
         self.lexicon = Counter()
@@ -94,8 +106,13 @@ class CorpusSummary(object):
         self.internal_diphones = Counter()
         self.spanning_diphones = Counter()
 
-        for utt in text:
-            self._read_utterance(utt)
+        for index, utt in enumerate(text):
+            if separator.word not in utt:
+                raise ValueError(
+                    'word separator ("{}") not found in train text: line {}'
+                    .format(separator.word, index + 1))
+
+            self._read_utterance(utt, level)
 
         self.diphones = Counter(self.internal_diphones)
         for k, v in self.spanning_diphones.items():
@@ -103,7 +120,7 @@ class CorpusSummary(object):
 
         log.info('train data summary: %s', self.summary)
 
-    def _read_utterance(self, utterance):
+    def _read_utterance(self, utterance, level):
         # no stats on empty text
         if not utterance:
             return
@@ -111,8 +128,8 @@ class CorpusSummary(object):
         # list of words in the utterance
         words = self.separator.tokenize(utterance, 'word')
 
-        # nested list of phones (per word)
-        phones = [self.separator.tokenize(word, 'phone') for word in words]
+        # nested list of phones or syllables (per word)
+        phones = [self.separator.tokenize(word, level) for word in words]
 
         self.summary.increment('nlines')
         self.summary.increment('nwords', len(words))
@@ -208,7 +225,7 @@ class AbstractSegmenter(object):
         ----------
         utterance : str
             The utterance to segment must be a suite of phones
-            separated by spaces.
+            or syllables separated by spaces.
 
         Returns
         -------
@@ -358,7 +375,8 @@ def _add_arguments(parser):
 
     group.add_argument(
         'train_file', metavar='<train-file>', type=str,
-        help='Dibs requires a little train corpus to compute some statistics')
+        help='Dibs requires a little train corpus to compute some statistics, '
+        'must be in phonologized from (NOT in prepared form)')
 
     group.add_argument(
         '-p', '--phone-separator', metavar='<str>',
@@ -374,6 +392,11 @@ def _add_arguments(parser):
         '-w', '--word-separator', metavar='<str>',
         default=separator.word,
         help='word separator in training, default is "%(default)s"')
+
+    group.add_argument(
+        '-u', '--unit', choices=['phone', 'syllable'], default='phone', help='''
+        token level to train on, must be "phone" or "syllable",
+        default is %(default)s''')
 
     group = parser.add_argument_group('testing parameters')
     group.add_argument(
@@ -418,7 +441,8 @@ def main():
     test_text = (line for line in streamin if line)
 
     # train the model (learn diphone statistics)
-    dibs_summary = CorpusSummary(train_text, separator=separator, log=log)
+    dibs_summary = CorpusSummary(
+        train_text, separator=separator, level=args.unit, log=log)
 
     # segment the test text on the trained model
     output = segment(

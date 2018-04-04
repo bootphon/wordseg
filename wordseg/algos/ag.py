@@ -232,7 +232,7 @@ def build_colloc0_grammar(phones):
         "1 1 Phonemes --> Phoneme",
         "1 1 Phonemes --> Phoneme Phonemes"]) + '\n'
 
-    for p in sorted(phones):
+    for p in sorted(set(phones)):
         g += '1 1 Phoneme -->' + p + '\n'
 
     return g
