@@ -9,6 +9,6 @@
 ### Please see the online documentation at https://wordseg.readthedocs.io ###
 
 The wordseg package provides **a collection of tools for text based
-word segmentation** covering both text preprocessing, segmentation
+word segmentation** covering text preprocessing, segmentation
 algorithms, evaluation and statistics relevant for word segmentation
 studies. It can be used from **bash** and **python**.
