@@ -399,7 +399,12 @@ int main(int argc, char** argv)
         vm["samples-per-utt"].as<std::size_t>());
 
     std::wcout << "initial probability = " << sampler->log_posterior() << std::endl;
-    assert(sampler->sanity_check());
+
+    if (! sampler->sanity_check())
+    {
+        std::wcerr << "Error: sampler is not sane, exiting" << std::endl;
+        exit(1);
+    }
 
     // Train the sampler. If want to evaluate test set during
     // training intervals, need to add that into estimate function

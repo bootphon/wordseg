@@ -14,12 +14,10 @@ estimator::bigram::~bigram()
 
 bool estimator::bigram::sanity_check() const
 {
-    bool sane = estimator::base::sanity_check();
-    sane = sane && m_ulex.sanity_check();
-    sane = sane && m_lex.sanity_check();
-    //    sane = sane && _lex.get_a() ==  _constants.a2;
-    //    sane = sane && _lex.get_b() ==  _constants.b2;
-    return sane;
+    bool a = estimator::base::sanity_check();
+    bool b = m_ulex.sanity_check();
+    bool c = m_lex.sanity_check();
+    return a and b and c;
 }
 
 double estimator::bigram::log_posterior() const

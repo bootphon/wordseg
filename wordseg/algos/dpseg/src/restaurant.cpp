@@ -109,9 +109,10 @@ bool pitman_yor::restaurant::is_empty() const
 
 bool pitman_yor::restaurant::sanity_check() const
 {
-    assert(m > 0);
-    assert(n > 0);
-    assert(m <= n);
+    std::vector<bool> sane;
+    sane.push_back(m > 0);
+    sane.push_back(n > 0);
+    sane.push_back(m <= n);
 
     std::size_t mm = 0, nn = 0;
     for(const auto& item: n_m)
@@ -120,13 +121,10 @@ bool pitman_yor::restaurant::sanity_check() const
         nn += item.first * item.second;
     }
 
-    bool sane_n = (n == nn);
-    bool sane_m = (m == mm);
+    sane.push_back(n == nn);
+    sane.push_back(m == mm);
 
-    assert(sane_n);
-    assert(sane_m);
-
-    return sane_n && sane_m;
+    return std::all_of(sane.begin(), sane.end(), [](bool b){return b;});
 }
 
 

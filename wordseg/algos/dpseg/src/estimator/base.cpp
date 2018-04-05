@@ -39,10 +39,10 @@ estimator::base::~base()
 
 bool estimator::base::sanity_check() const
 {
-    assert(m_base_dist.nchartypes() == m_corpus.nchartypes());
-    assert(m_base_dist.p_stop() < 0 || // if we're learning this parm.
-           m_base_dist.p_stop() == m_corpus.Pstop);
-    return true;
+    bool a = (m_base_dist.nchartypes() == m_corpus.nchartypes());
+    bool b = (m_base_dist.p_stop() < 0 || // if we're learning this parm.
+              m_base_dist.p_stop() == m_params.pstop());
+    return a and b;
 }
 
 

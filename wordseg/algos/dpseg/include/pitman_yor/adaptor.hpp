@@ -16,6 +16,7 @@
 // F erase(const V& v, S& s)             -- removes (v,s), returns exact prob of insert(v,s)
 
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <functional>
@@ -341,28 +342,26 @@ namespace pitman_yor
                 return os << "))";
             }
 
-        //! sanity_check() ensures that all of the numbers in the adaptor
-        //! add up
+        // ensures that all of the numbers in the adaptor add up
         bool sanity_check() const
             {
-                assert(b >= 0);
-                assert(a <= 1 && a >= 0);
-                assert(m <= n);
+                std::vector<bool> sane;
+                sane.push_back(b >= 0);
+                sane.push_back(a <= 1 && a >= 0);
+                sane.push_back(m <= n);
 
                 std::size_t nn = 0, mm = 0;
-                bool sane_tables = true;
                 for(const auto& item: label_tables)
                 {
                     nn += item.second.get_n();
                     mm += item.second.get_m();
-                    sane_tables = (sane_tables && item.second.sanity_check());
+                    sane.push_back(item.second.sanity_check());
                 }
 
-                bool sane_n = (n == nn);
-                bool sane_m = (m == mm);
-                assert(sane_n);
-                assert(sane_m);
-                return sane_n && sane_m;
+                sane.push_back(n == nn);
+                sane.push_back(m == mm);
+
+                return std::all_of(sane.begin(), sane.end(), [](bool b){return b;});
             }
     };
 

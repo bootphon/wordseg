@@ -13,10 +13,10 @@ estimator::unigram::~unigram()
 
 bool estimator::unigram::sanity_check() const
 {
-    bool sane = base::sanity_check();
-    assert(_lex.ntokens() >= _nsentences_seen);
-    sane = sane && m_lex.sanity_check();
-    return sane;
+    bool a = base::sanity_check();
+    bool b = (m_lex.ntokens() >= m_nsentences_seen);
+    bool c = m_lex.sanity_check();
+    return a and b and c;
 }
 
 
