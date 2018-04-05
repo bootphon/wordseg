@@ -64,8 +64,6 @@ void estimator::bigram::print_statistics(std::wostream& os, uint iter, double te
        << m_ulex.pya() << sep << m_ulex.pyb() << sep << m_ulex.base_dist().p_stop() << sep
        << m_lex.pya() << sep << m_lex.pyb()
        << " ";
-
-    print_scores(os);
 }
 
 void estimator::bigram::estimate_eval_sentence(sentence& s, double temperature, bool maximize)
@@ -127,7 +125,6 @@ void estimator::batch_bigram::estimate(
 
             // run evaluation over test set
             run_eval(os,temp,maximize);
-            print_eval_scores(std::wcout);
 	}
 
         for(auto& sent: m_sentences)
@@ -201,7 +198,6 @@ void estimator::online_bigram::estimate(
 
                 // run evaluation over test set
                 run_eval(os,temp,maximize);
-                print_eval_scores(std::wcout);
             }
 	}
 
@@ -222,7 +218,6 @@ void estimator::online_bigram::estimate(
 
 		// run evaluation over test set
 		run_eval(os,temp,maximize);
-		print_eval_scores(std::wcout);
             }
 
             // add current sentence to _sentences_seen

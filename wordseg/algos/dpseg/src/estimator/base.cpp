@@ -272,15 +272,6 @@ void estimator::base::print_segmented_sentences(std::wostream& os, const std::ve
 }
 
 
-void estimator::base::print_scores_sentences(std::wostream& os, const std::vector<sentence>& sentences)
-{
-    m_scoring.reset();
-    for(const auto& item: sentences)
-        item.score(m_scoring);
-    m_scoring.print_results(os);
-}
-
-
 // make single pass through test data, segmenting based on sampling or
 // maximization of each utt, using current counts from training data
 // only (i.e. no new counts are added)
@@ -305,15 +296,4 @@ void estimator::base::print_segmented(std::wostream& os) const
 void estimator::base::print_eval_segmented(std::wostream& os) const
 {
     print_segmented_sentences(os, m_eval_sentences);
-}
-
-
-void estimator::base::print_scores(std::wostream& os)
-{
-    print_scores_sentences(os, m_sentences);
-}
-
-void estimator::base::print_eval_scores(std::wostream& os)
-{
-    print_scores_sentences(os, m_eval_sentences);
 }

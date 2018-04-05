@@ -59,8 +59,6 @@ void estimator::unigram::print_statistics(std::wostream& os, uint iter, double t
     os << iter << sep << temp << sep << -log_posterior() << sep
        << m_lex.pya() << sep << m_lex.pyb() << sep << m_lex.base_dist().p_stop()
        << " ";
-
-    print_scores(os);
 }
 
 
@@ -122,7 +120,6 @@ void estimator::batch_unigram::estimate(
 
             // run evaluation over test set
             run_eval(os,temp,maximize);
-            print_eval_scores(std::wcout);
 	}
 
         for(auto& sent: m_sentences)
@@ -198,7 +195,6 @@ void estimator::online_unigram::estimate(
 
                 // run evaluation over test set
                 run_eval(os,temp,maximize);
-                print_eval_scores(std::wcout);
             }
 	}
 
@@ -218,7 +214,6 @@ void estimator::online_unigram::estimate(
 
 		// run evaluation over test set
 		run_eval(os,temp,maximize);
-		print_eval_scores(std::wcout);
             }
 
             // add current sentence to _sentences_seen

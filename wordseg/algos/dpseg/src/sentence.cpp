@@ -696,60 +696,6 @@ void sentence::sample_tree(Bigrams& lex, std::size_t nsentences, double temperat
     if (debug_level >= 70000) TRACE(m_boundaries);
 }
 
-void sentence::score(Scoring& scoring) const
-{
-    scoring._sentences++;
-    scoring.add_words_to_lexicon(get_segmented_words(),
-                                 scoring._segmented_lex);
-    scoring.add_words_to_lexicon(get_reference_words(),
-                                 scoring._reference_lex);
-    // calculate number of correct words, segmented words,
-    // and reference words and add to totals
-    const std::vector<bool>& segmented = m_boundaries;
-    const std::vector<bool>& ref = m_true_boundaries;
-    assert(segmented.size() == ref.size());
-    if (debug_level >=50000) TRACE2(segmented, ref);
-    std::size_t s = 2; //start after eos and beginning of 1st word
-    std::size_t r = 2;
-    bool left_match = 1;
-    while (s < segmented.size()-1)
-    {
-        if (segmented[s] && ref[r])
-        {
-            scoring._bs_correct++;
-            scoring._segmented_bs++;
-            scoring._reference_bs++;
-            if (left_match)
-            {
-                scoring._words_correct++;
-            }
-            left_match = 1;
-            scoring._segmented_words++;
-            scoring._reference_words++;
-        }
-        else if (segmented[s])
-        {
-            scoring._segmented_words++;
-            scoring._segmented_bs++;
-            left_match = 0;
-        }
-        else if (ref[r])
-        {
-            scoring._reference_words++;
-            scoring._reference_bs++;
-            left_match = 0;
-        }
-        s++;
-        r++;
-    }
-    //subtract right utt boundary
-    scoring._bs_correct--;
-    scoring._segmented_bs--;
-    scoring._reference_bs--;
-
-    if (debug_level >=60000) TRACE3(scoring._bs_correct, scoring._segmented_bs, scoring._reference_bs);
-    if (debug_level >=60000) TRACE3(scoring._words_correct, scoring._segmented_words, scoring._reference_words);
-}
 
 ///////////////////////////////////////////////////////////////
 // private functions

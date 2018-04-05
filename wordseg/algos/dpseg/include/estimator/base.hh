@@ -5,7 +5,7 @@
 #include "text/corpus_base.hh"
 #include "sentence.hh"
 #include "annealing.hh"
-#include "scoring.hh"
+// #include "scoring.hh"
 
 #include <cstdlib>
 #include <iostream>
@@ -92,10 +92,6 @@ namespace estimator
         virtual void print_eval_segmented(std::wostream& os) const;
         virtual void print_lexicon(std::wostream& os) const = 0;
 
-        // recomputes and prints precision, recall, etc. on training and eval data
-        void print_scores(std::wostream& os);
-        void print_eval_scores(std::wostream& os);
-
     protected:
         estimator::parameters m_params;
         const text::corpus_base& m_corpus;
@@ -105,7 +101,7 @@ namespace estimator
         std::vector<sentence> m_sentences;
         std::vector<sentence> m_eval_sentences;
         uint m_nsentences_seen;
-        Scoring m_scoring;
+        // Scoring m_scoring;
 
         void resample_pya(Unigrams& lex);
         void resample_pyb(Unigrams& lex);

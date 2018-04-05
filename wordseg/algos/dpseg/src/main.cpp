@@ -383,7 +383,6 @@ int main(int argc, char** argv)
         if (eval_file == "none")
         {
             sampler->print_segmented(os);
-            sampler->print_scores(std::wcout);
             std::wcout << "final posterior = " << sampler->log_posterior() << std::endl;
         }
         else
@@ -392,7 +391,6 @@ int main(int argc, char** argv)
             {
                 std::wcout << "segmented training data:" << std::endl;
                 sampler->print_segmented(std::wcout);
-                sampler->print_scores(std::wcout);
                 std::wcout << "training final posterior = " << sampler->log_posterior() << std::endl;
                 std::wcout << "segmented test data:" << std::endl;
             }
@@ -402,7 +400,6 @@ int main(int argc, char** argv)
 
             std::wcout << "testing final posterior = " << sampler->log_posterior() << std::endl;
             sampler->print_eval_segmented(os);
-            sampler->print_eval_scores(std::wcout);
         }
 
         os << std::endl;

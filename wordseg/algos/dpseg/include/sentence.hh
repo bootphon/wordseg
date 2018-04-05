@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "lexicon_items.hpp"
-#include "scoring.hh"
+// #include "scoring.hh"
 #include "substring.hh"
 #include "pitman_yor/unigrams.hpp"
 #include "pitman_yor/bigrams.hpp"
@@ -66,7 +66,7 @@ public:
     void sample_tree(Unigrams& lex, std::size_t nsentences, double temperature, bool do_mbdp = 0);
     void sample_tree(Bigrams& lex, std::size_t nsentences, double temperature);
 
-    void score(Scoring& scoring) const;
+    // void score(Scoring& scoring) const;
 
     friend std::wostream& operator<< (std::wostream& os, const sentence& s);
 
