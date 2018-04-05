@@ -9,7 +9,7 @@ namespace estimator
     class bigram: public base
     {
     public:
-        bigram(const parameters& params, const text::corpus_base& corpus, const annealing& anneal);
+        bigram(const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal);
         virtual ~bigram();
 
         virtual bool sanity_check() const;
@@ -35,7 +35,7 @@ namespace estimator
     class batch_bigram: public bigram
     {
     public:
-        batch_bigram(const parameters& params, const text::corpus_base& corpus, const annealing& anneal);
+        batch_bigram(const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal);
         virtual ~batch_bigram();
         virtual void estimate(
             uint iters, std::wostream& os, uint eval_iters = 0,
@@ -50,7 +50,7 @@ namespace estimator
     {
     public:
         online_bigram(
-            const parameters& params, const text::corpus_base& corpus, const annealing& anneal, double forget_rate = 0);
+            const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal, double forget_rate = 0);
         virtual ~online_bigram();
         virtual void estimate(
             uint iters, std::wostream& os, uint eval_iters = 0,

@@ -1,14 +1,14 @@
-#include "text/corpus_experimental.hh"
+#include "corpus/corpus_experimental.hh"
 
 
-text::corpus_experimental::corpus_experimental()
+corpus::corpus_experimental::corpus_experimental()
 {}
 
 
-text::corpus_experimental::~corpus_experimental()
+corpus::corpus_experimental::~corpus_experimental()
 {}
 
-void text::corpus_experimental::read(std::wistream& is, std::size_t start, std::size_t ns)
+void corpus::corpus_experimental::read(std::wistream& is, std::size_t start, std::size_t ns)
 {
     substring::data.clear();
     m_sentenceboundaries.clear();
@@ -32,7 +32,7 @@ void text::corpus_experimental::read(std::wistream& is, std::size_t start, std::
         {
             if (index == buffer_max)
             {
-                error("utterance length exceeds maximum specified in text:: read_mfdata\n");
+                error("utterance length exceeds maximum specified in corpus:: read_mfdata\n");
             }
             buffer[index] = c;
             index++;
@@ -98,13 +98,13 @@ void text::corpus_experimental::read(std::wistream& is, std::size_t start, std::
 }
 
 
-const std::vector<std::pair<substring, substring> >& text::corpus_experimental::get_test_pairs() const
+const std::vector<std::pair<substring, substring> >& corpus::corpus_experimental::get_test_pairs() const
 {
     return m_test_pairs;
 }
 
 
-void text::corpus_experimental::initialize(std::size_t ns)
+void corpus::corpus_experimental::initialize(std::size_t ns)
 {
     m_ntrainsentences = ns;
     if (m_ntrainsentences == 0)

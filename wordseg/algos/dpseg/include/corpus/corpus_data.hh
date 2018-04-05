@@ -1,9 +1,9 @@
-#ifndef _TEXT_CORPUS_DATA_HH
-#define _TEXT_CORPUS_DATA_HH
+#ifndef _CORPUS_CORPUS_DATA_HH
+#define _CORPUS_CORPUS_DATA_HH
 
-#include "text/corpus_base.hh"
+#include "corpus/corpus_base.hh"
 
-namespace text
+namespace corpus
 {
     class corpus_data: public corpus_base
     {
@@ -27,4 +27,4 @@ namespace text
     };
 }
 
-#endif  // _TEXT_CORPUS_DATA_HH
+#endif  // _CORPUS_CORPUS_DATA_HH

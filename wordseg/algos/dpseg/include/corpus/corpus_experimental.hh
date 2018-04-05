@@ -1,10 +1,10 @@
-#ifndef _TEXT_CORPUS_EXPERIMENTAL_H
-#define _TEXT_CORPUS_EXPERIMENTAL_H
+#ifndef _CORPUS_CORPUS_EXPERIMENTAL_H
+#define _CORPUS_CORPUS_EXPERIMENTAL_H
 
-#include "text/corpus_base.hh"
+#include "corpus/corpus_base.hh"
 
 
-namespace text
+namespace corpus
 {
     // format of input files from Mike Frank's experimental stimuli:
     // Lexicon: word1<tab>word2<tab>...<tab>wordN
@@ -40,4 +40,4 @@ namespace text
     };
 }
 
-#endif  // _TEXT_CORPUS_EXPERIMENTAL_H
+#endif  // _CORPUS_CORPUS_EXPERIMENTAL_H

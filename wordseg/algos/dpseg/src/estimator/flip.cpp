@@ -2,7 +2,7 @@
 
 
 estimator::batch_unigram_flip::batch_unigram_flip(
-    const parameters& params, const text::corpus_base& corpus, const annealing& anneal)
+    const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal)
     : batch_unigram(params, corpus, anneal)
 {
     if(debug_level >= 1000)
@@ -22,7 +22,7 @@ void estimator::batch_unigram_flip::estimate_sentence(sentence& s, double temper
 
 
 estimator::batch_bigram_flip::batch_bigram_flip(
-    const parameters& params, const text::corpus_base& corpus, const annealing& anneal)
+    const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal)
     : batch_bigram(params, corpus, anneal)
 {}
 

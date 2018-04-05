@@ -10,7 +10,7 @@ namespace estimator
     class dmcmc  // short for decayed MCMC
     {
     public:
-        dmcmc(double decay_rate = 0, uint samples_per_utt = 100);
+        dmcmc(double decay_rate = 0, std::size_t samples_per_utt = 100);
         virtual ~dmcmc();
 
     protected:
@@ -36,7 +36,7 @@ namespace estimator
     {
     public:
         online_unigram_dmcmc(
-            const parameters& params, const text::corpus_base& corpus, const annealing& anneal,
+            const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal,
             double forget_rate = 0, double decay_rate = 1.0, std::size_t samples_per_utt = 1000);
 
         virtual ~online_unigram_dmcmc()
@@ -51,7 +51,7 @@ namespace estimator
     {
     public:
         online_bigram_dmcmc(
-            const parameters& params, const text::corpus_base& corpus, const annealing& anneal,
+            const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal,
             double forget_rate = 0, double decay_rate = 1.0, std::size_t samples_per_utt = 1000);
 
         virtual ~online_bigram_dmcmc()

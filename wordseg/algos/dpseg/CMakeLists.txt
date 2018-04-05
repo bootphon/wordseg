@@ -25,8 +25,8 @@ set(CMAKE_CXX_FLAGS "-std=c++11 -DNDEBUG")
 
 # the source files to compile
 file(GLOB SOURCES
-  src/* src/estimator/* src/text/* src/pitman_yor/*
-  include/* include/estimator/* include/pitman_yor/* include/text/*)
+  src/* src/estimator/* src/corpus/* src/pitman_yor/*
+  include/* include/estimator/* include/pitman_yor/* include/corpus/*)
 
 add_executable(dpseg ${SOURCES})
 include_directories(include ${Boost_INCLUDE_DIRS})

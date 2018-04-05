@@ -2,7 +2,7 @@
 
 
 estimator::batch_unigram_viterbi::batch_unigram_viterbi(
-    const parameters& params, const text::corpus_base& corpus, const annealing& anneal)
+    const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal)
     : batch_unigram(params, corpus, anneal)
 {}
 
@@ -18,7 +18,7 @@ void estimator::batch_unigram_viterbi::estimate_sentence(sentence& s, double tem
 
 
 estimator::batch_bigram_viterbi::batch_bigram_viterbi(
-    const parameters& params, const text::corpus_base& corpus, const annealing& anneal)
+    const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal)
     : batch_bigram(params, corpus, anneal)
 {}
 
@@ -36,7 +36,7 @@ void estimator::batch_bigram_viterbi::estimate_sentence(sentence& s, double temp
 
 
 estimator::online_unigram_viterbi::online_unigram_viterbi(
-    const parameters& params, const text::corpus_base& corpus, const annealing& anneal, double forget_rate)
+    const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal, double forget_rate)
     : online_unigram(params, corpus, anneal, forget_rate)
 {}
 
@@ -51,7 +51,7 @@ void estimator::online_unigram_viterbi::estimate_sentence(sentence& s, double te
 
 
 estimator::online_bigram_viterbi::online_bigram_viterbi(
-    const parameters& params, const text::corpus_base& corpus, const annealing& anneal)
+    const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal)
     : online_bigram(params, corpus, anneal)
 {}
 

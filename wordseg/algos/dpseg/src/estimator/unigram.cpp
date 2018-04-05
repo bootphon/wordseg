@@ -1,7 +1,7 @@
 #include "estimator/unigram.hh"
 
 
-estimator::unigram::unigram(const parameters& params, const text::corpus_base& corpus, const annealing& anneal)
+estimator::unigram::unigram(const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal)
     : base(params, corpus, anneal),
       m_lex(m_base_dist, unif01, m_params.a1, m_params.b1)
 {}
@@ -74,7 +74,7 @@ void estimator::unigram::estimate_eval_sentence(sentence& s, double temperature,
 
 
 estimator::batch_unigram::batch_unigram(
-    const parameters& params, const text::corpus_base& corpus, const annealing& anneal)
+    const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal)
     : unigram(params, corpus, anneal)
 {
     for(const auto& sent: m_sentences)
@@ -160,7 +160,7 @@ void estimator::batch_unigram::estimate(
 
 
 estimator::online_unigram::online_unigram(
-    const parameters& params, const text::corpus_base& corpus, const annealing& anneal, double forget_rate)
+    const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal, double forget_rate)
     : unigram(params, corpus, anneal),
       m_forget_rate(forget_rate)
 {

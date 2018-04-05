@@ -5,14 +5,14 @@
 #include <string>
 
 #include "estimator/base.hh"
-#include "text/corpus_data.hh"
+#include "corpus/corpus_data.hh"
 
 
 namespace estimator
 {
     std::shared_ptr<estimator::base> get_estimator(
         const parameters& params,
-        const text::corpus_data& data,
+        const corpus::corpus_data& data,
         const annealing& anneal,
         const std::size_t ngram,
         const std::string& mode,

@@ -9,7 +9,7 @@
 
 std::shared_ptr<estimator::base> estimator::get_estimator(
     const estimator::parameters& params,
-    const text::corpus_data& corpus,
+    const corpus::corpus_data& corpus,
     const annealing& anneal,
     const std::size_t ngram,
     const std::string& mode,

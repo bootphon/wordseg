@@ -1,7 +1,7 @@
 #include "estimator/dmcmc.hh"
 
 
-estimator::dmcmc::dmcmc(double decay_rate, uint samples_per_utt)
+estimator::dmcmc::dmcmc(double decay_rate, std::size_t samples_per_utt)
     : m_decay_rate(decay_rate), m_samples_per_utt(samples_per_utt)
 {}
 
@@ -251,7 +251,7 @@ void estimator::dmcmc::replace_sampled_sentence(
 
 
 estimator::online_unigram_dmcmc::online_unigram_dmcmc(
-const parameters& params, const text::corpus_base& corpus,
+const parameters& params, const corpus::corpus_base& corpus,
     const annealing& anneal, double forget_rate, double decay_rate, std::size_t samples_per_utt)
     : online_unigram(params, corpus, anneal, forget_rate),
       dmcmc(decay_rate, samples_per_utt)
@@ -342,7 +342,7 @@ void estimator::online_unigram_dmcmc::estimate_sentence(sentence& s, double temp
 
 
 estimator::online_bigram_dmcmc::online_bigram_dmcmc(
-    const parameters& params, const text::corpus_base& corpus,
+    const parameters& params, const corpus::corpus_base& corpus,
     const annealing& anneal, double forget_rate, double decay_rate, std::size_t samples_per_utt)
     : online_bigram(params, corpus, anneal, forget_rate),
       dmcmc(decay_rate, samples_per_utt)

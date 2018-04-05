@@ -22,7 +22,7 @@ inline double normal_density (double val, double mean=0, double std=1)
 }
 
 
-estimator::base::base(const parameters& params, const text::corpus_base& corpus, const annealing& anneal):
+estimator::base::base(const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal):
     m_params(params),
     m_corpus(corpus),
     m_sentences(corpus.get_sentences(m_params.init_pboundary, m_params.aeos)),

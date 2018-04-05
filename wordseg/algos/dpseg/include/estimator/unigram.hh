@@ -9,7 +9,7 @@ namespace estimator
     class unigram: public base
     {
     public:
-        unigram(const parameters& params, const text::corpus_base& corpus, const annealing& anneal);
+        unigram(const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal);
         virtual ~unigram();
         virtual bool sanity_check() const;
         virtual double log_posterior() const;
@@ -33,7 +33,7 @@ namespace estimator
     class batch_unigram: public unigram
     {
     public:
-        batch_unigram(const parameters& params, const text::corpus_base& corpus, const annealing& anneal);
+        batch_unigram(const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal);
         virtual ~batch_unigram();
         virtual void estimate(uint iters, std::wostream& os, uint eval_iters = 0,
             double temperature = 1, bool maximize = false, bool is_decayed = false);
@@ -47,7 +47,7 @@ namespace estimator
     {
     public:
         online_unigram(
-            const parameters& params, const text::corpus_base& corpus, const annealing& anneal, double forget_rate = 0);
+            const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal, double forget_rate = 0);
         virtual ~online_unigram();
         virtual void estimate(
             uint iters, std::wostream& os, uint eval_iters = 0,

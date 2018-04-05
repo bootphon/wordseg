@@ -10,7 +10,7 @@ namespace estimator
     class batch_unigram_viterbi: public batch_unigram
     {
     public:
-        batch_unigram_viterbi(const parameters& params, const text::corpus_base& corpus, const annealing& anneal);
+        batch_unigram_viterbi(const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal);
         virtual ~batch_unigram_viterbi();
 
     protected:
@@ -22,7 +22,7 @@ namespace estimator
     {
     public:
         online_unigram_viterbi(
-            const parameters& params, const text::corpus_base& corpus, const annealing& anneal, double forget_rate = 0);
+            const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal, double forget_rate = 0);
         virtual ~online_unigram_viterbi();
 
     protected:
@@ -33,7 +33,7 @@ namespace estimator
     class batch_bigram_viterbi: public batch_bigram
     {
     public:
-        batch_bigram_viterbi(const parameters& params, const text::corpus_base& corpus, const annealing& anneal);
+        batch_bigram_viterbi(const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal);
         virtual ~batch_bigram_viterbi();
 
     protected:
@@ -44,7 +44,7 @@ namespace estimator
     class online_bigram_viterbi: public online_bigram
     {
     public:
-        online_bigram_viterbi(const parameters& params, const text::corpus_base& corpus, const annealing& anneal);
+        online_bigram_viterbi(const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal);
         virtual ~online_bigram_viterbi();
 
     protected:

@@ -1,7 +1,7 @@
 #include "estimator/bigram.hh"
 
 
-estimator::bigram::bigram(const parameters& params, const text::corpus_base& corpus, const annealing& anneal)
+estimator::bigram::bigram(const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal)
     : estimator::base(params, corpus, anneal),
       m_ulex(m_base_dist, unif01, m_params.a1, m_params.b1),
       m_lex(m_ulex, unif01, m_params.a2, m_params.b2)
@@ -79,7 +79,7 @@ void estimator::bigram::estimate_eval_sentence(sentence& s, double temperature, 
 }
 
 
-estimator::batch_bigram::batch_bigram(const parameters& params, const text::corpus_base& corpus, const annealing& anneal)
+estimator::batch_bigram::batch_bigram(const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal)
     : bigram(params, corpus, anneal)
 {
     for(const auto& item: m_sentences)
@@ -162,7 +162,7 @@ void estimator::batch_bigram::estimate(
 
 
 estimator::online_bigram::online_bigram(
-    const parameters& params, const text::corpus_base& corpus, const annealing& anneal, double forget_rate)
+    const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal, double forget_rate)
     : bigram(params, corpus, anneal)
 {
     base::m_nsentences_seen = 0;

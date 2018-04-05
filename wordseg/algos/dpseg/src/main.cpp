@@ -13,7 +13,7 @@
 #define BOOST_UTF8_DECL
 #include <boost/detail/utf8_codecvt_facet.ipp>
 
-#include "text/corpus_data.hh"
+#include "corpus/corpus_data.hh"
 #include "estimator/parameters.hh"
 #include "estimator/factory.hh"
 #include "random-mt19937ar.hpp"
@@ -51,7 +51,7 @@ int main(int argc, char** argv)
     std::cin.tie(0);
 
     estimator::parameters params;
-    text::corpus_data corpus;
+    corpus::corpus_data corpus;
     std::string csep;
 
     // define the command line arguments

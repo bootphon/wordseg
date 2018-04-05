@@ -10,7 +10,7 @@ namespace estimator
     class batch_unigram_flip: public batch_unigram
     {
     public:
-        batch_unigram_flip(const parameters& params, const text::corpus_base& corpus, const annealing& anneal);
+        batch_unigram_flip(const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal);
         virtual ~batch_unigram_flip();
 
     protected:
@@ -20,7 +20,7 @@ namespace estimator
     class batch_bigram_flip: public batch_bigram
     {
     public:
-        batch_bigram_flip(const parameters& params, const text::corpus_base& corpus, const annealing& anneal);
+        batch_bigram_flip(const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal);
         virtual ~batch_bigram_flip();
 
     protected:

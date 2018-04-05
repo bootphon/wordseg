@@ -2,10 +2,9 @@
 #define _SAMPLER_BASE_H
 
 #include "estimator/parameters.hh"
-#include "text/corpus_base.hh"
+#include "corpus/corpus_base.hh"
 #include "sentence.hh"
 #include "annealing.hh"
-// #include "scoring.hh"
 
 #include <cstdlib>
 #include <iostream>
@@ -70,7 +69,7 @@ namespace estimator
     class base
     {
     public:
-        base(const parameters& params, const text::corpus_base& corpus, const annealing& anneal);
+        base(const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal);
         virtual ~base();
 
         virtual bool sanity_check() const;
@@ -94,7 +93,7 @@ namespace estimator
 
     protected:
         estimator::parameters m_params;
-        const text::corpus_base& m_corpus;
+        const corpus::corpus_base& m_corpus;
         annealing m_annealing;
 
         P0 m_base_dist;

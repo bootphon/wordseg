@@ -1,8 +1,8 @@
-#include "text/corpus_base.hh"
+#include "corpus/corpus_base.hh"
 #include <set>
 
 
-text::corpus_base::corpus_base()
+corpus::corpus_base::corpus_base()
     : m_sentenceboundaries(),
       m_possible_boundaries(),
       m_true_boundaries(),
@@ -12,11 +12,11 @@ text::corpus_base::corpus_base()
 {}
 
 
-text::corpus_base::~corpus_base()
+corpus::corpus_base::~corpus_base()
 {}
 
 
-std::vector<sentence> text::corpus_base::get_sentences(double init_pboundary, double aeos) const
+std::vector<sentence> corpus::corpus_base::get_sentences(double init_pboundary, double aeos) const
 {
     std::vector<sentence> s;
     std::vector<bool> possible_bs;
@@ -36,7 +36,7 @@ std::vector<sentence> text::corpus_base::get_sentences(double init_pboundary, do
     return s;
 }
 
-void text::corpus_base::initialize_chars()
+void corpus::corpus_base::initialize_chars()
 {
     // may have been set on commandline
     if (! m_nchartypes)
@@ -49,7 +49,7 @@ void text::corpus_base::initialize_chars()
     }
 }
 
-void text::corpus_base::initialize_boundaries(
+void corpus::corpus_base::initialize_boundaries(
     std::size_t start, std::size_t end,
     std::vector<bool>& possible_bs, std::vector<bool>& true_bs) const
 {
@@ -69,42 +69,42 @@ void text::corpus_base::initialize_boundaries(
     }
 }
 
-const std::vector<std::size_t>& text::corpus_base::sentence_boundary_list() const
+const std::vector<std::size_t>& corpus::corpus_base::sentence_boundary_list() const
 {
     return m_sentenceboundaries;
 }
 
-const std::vector<bool>& text::corpus_base::possible_boundaries() const
+const std::vector<bool>& corpus::corpus_base::possible_boundaries() const
 {
     return m_possible_boundaries;
 }
 
-const std::vector<bool>& text::corpus_base::true_boundaries() const
+const std::vector<bool>& corpus::corpus_base::true_boundaries() const
 {
     return m_true_boundaries;
 }
 
-std::size_t text::corpus_base::nchartypes() const
+std::size_t corpus::corpus_base::nchartypes() const
 {
     return m_nchartypes;
 }
 
-std::size_t text::corpus_base::nsentences() const
+std::size_t corpus::corpus_base::nsentences() const
 {
     return m_ntrainsentences;
 }
 
-std::size_t text::corpus_base::nchars() const
+std::size_t corpus::corpus_base::nchars() const
 {
     return m_ntrain;
 }
 
-std::vector<sentence> text::corpus_base::get_eval_sentences() const
+std::vector<sentence> corpus::corpus_base::get_eval_sentences() const
 {
     return std::vector<sentence>();
 }
 
-std::wostream& text::corpus_base::write_segmented_corpus(
+std::wostream& corpus::corpus_base::write_segmented_corpus(
     std::wostream& os, const std::vector<bool>& b, int begin, int end) const
 {
     // negative boundaries mean count from end

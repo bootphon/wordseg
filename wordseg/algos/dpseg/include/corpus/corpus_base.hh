@@ -1,5 +1,5 @@
-#ifndef _TEXT_CORPUS_BASE_H
-#define _TEXT_CORPUS_BASE_H
+#ifndef _CORPUS_CORPUS_BASE_H
+#define _CORPUS_CORPUS_BASE_H
 
 #include <unordered_map>
 #include <vector>
@@ -8,7 +8,7 @@
 extern std::size_t debug_level;
 
 
-namespace text
+namespace corpus
 {
     template<typename T>
     inline void error(const T& message)
@@ -77,4 +77,4 @@ namespace text
     };
 }
 
-#endif  // _TEXT_CORPUS_BASE_H
+#endif  // _CORPUS_CORPUS_BASE_H

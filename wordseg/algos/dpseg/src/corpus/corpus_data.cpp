@@ -1,16 +1,16 @@
-#include "text/corpus_data.hh"
+#include "corpus/corpus_data.hh"
 
 
-text::corpus_data::corpus_data()
+corpus::corpus_data::corpus_data()
     : corpus_base(), m_evalsent_start(0)
 {}
 
 
-text::corpus_data::~corpus_data()
+corpus::corpus_data::~corpus_data()
 {}
 
 
-std::vector<sentence> text::corpus_data::get_eval_sentences(double init_pboundary, double aeos) const
+std::vector<sentence> corpus::corpus_data::get_eval_sentences(double init_pboundary, double aeos) const
 {
     std::vector<sentence> s;
     std::vector<bool> possible_bs;
@@ -30,7 +30,7 @@ std::vector<sentence> text::corpus_data::get_eval_sentences(double init_pboundar
 }
 
 
-void text::corpus_data::read(std::wistream& is, std::size_t start, std::size_t ns)
+void corpus::corpus_data::read(std::wistream& is, std::size_t start, std::size_t ns)
 {
     substring::data.clear();
     m_sentenceboundaries.clear();
@@ -62,14 +62,14 @@ void text::corpus_data::read(std::wistream& is, std::size_t start, std::size_t n
 
 // read additional data for evaluation. This will go into the same
 // S::data as the training data.
-void text::corpus_data::read_eval(std::wistream& is, std::size_t start, std::size_t ns)
+void corpus::corpus_data::read_eval(std::wistream& is, std::size_t start, std::size_t ns)
 {
     m_evalsent_start = m_sentenceboundaries.size()-1;
     read_data(is, start, ns);
 }
 
 
-void text::corpus_data::read_data(std::wistream& is, std::size_t start, std::size_t ns)
+void corpus::corpus_data::read_data(std::wistream& is, std::size_t start, std::size_t ns)
 {
     assert(substring::data.size() >0);
     assert(*(substring::data.end()-1) == L'\n');
@@ -141,7 +141,7 @@ void text::corpus_data::read_data(std::wistream& is, std::size_t start, std::siz
 }
 
 
-void text::corpus_data::initialize(std::size_t ns)
+void corpus::corpus_data::initialize(std::size_t ns)
 {
     m_ntrainsentences = ns;
     if (m_ntrainsentences == 0)
