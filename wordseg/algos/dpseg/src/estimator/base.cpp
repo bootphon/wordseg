@@ -25,10 +25,10 @@ inline double normal_density (double val, double mean=0, double std=1)
 estimator::base::base(const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal):
     m_params(params),
     m_corpus(corpus),
-    m_sentences(corpus.get_sentences(m_params.init_pboundary, m_params.aeos)),
+    m_sentences(corpus.get_sentences(m_params.init_pboundary(), m_params.aeos())),
     m_eval_sentences(corpus.get_eval_sentences()),
     m_nsentences_seen(corpus.nsentences()),
-    m_base_dist(m_params.pstop, corpus.nchartypes()),
+    m_base_dist(m_params.pstop(), corpus.nchartypes()),
     m_annealing(anneal)
 {}
 
@@ -52,7 +52,7 @@ double estimator::base::log_posterior(const Unigrams& lex) const
     double lp1 = lex.base_dist().logprob(); // word Probs
     if (debug_level >= 110000) TRACE(lp1);
 
-    double tau = m_params.aeos/2.0;
+    double tau = m_params.aeos()/2.0;
     double ns = m_nsentences_seen;
 
     // sentence length probs: 1st wd of each sent is free.
@@ -92,7 +92,11 @@ void estimator::base::resample_pyb(Unigrams& lex)
 {
     // number of resampling iterations
     uint niterations = 20;
-    resample_pyb_type<Unigrams, double> pyb_logP(lex, m_params.pyb_gamma_c, m_params.pyb_gamma_s);
+    resample_pyb_type<Unigrams, double> pyb_logP(
+        lex,
+        m_params.pyb_gamma_c(),
+        m_params.pyb_gamma_s());
+
     lex.pyb() = slice_sampler1d(
         pyb_logP, lex.pyb(), unif01, 0.0, std::numeric_limits<double>::infinity(),
         0.0, niterations, 100 * niterations);
@@ -103,7 +107,11 @@ void estimator::base::resample_pya(Unigrams& lex)
 {
     // number of resampling iterations
     uint niterations = 20;
-    resample_pya_type<Unigrams, double> pya_logP(lex, m_params.pya_beta_a, m_params.pya_beta_b);
+    resample_pya_type<Unigrams, double> pya_logP(
+        lex,
+        m_params.pya_beta_a(),
+        m_params.pya_beta_b());
+
     lex.pya() = slice_sampler1d(
         pya_logP, lex.pya(), unif01, std::numeric_limits<double>::min(),
         1.0, 0.0, niterations, 100*niterations);
@@ -196,7 +204,7 @@ std::vector<bool> estimator::base::hypersample(Unigrams& ulex, Bigrams& lex, dou
 // changed.
 bool estimator::base::sample_hyperparm(double& beta, bool is_prob, double temp)
 {
-    double std_ratio = m_params.hypersampling_ratio;
+    double std_ratio = m_params.hypersampling_ratio();
     if (std_ratio <= 0)
         return false;
 

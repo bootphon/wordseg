@@ -3,7 +3,7 @@
 
 estimator::unigram::unigram(const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal)
     : base(params, corpus, anneal),
-      m_lex(m_base_dist, unif01, m_params.a1, m_params.b1)
+      m_lex(m_base_dist, unif01, m_params.a1(), m_params.b1())
 {}
 
 
@@ -45,7 +45,7 @@ std::vector<bool> estimator::unigram::hypersample(double temperature)
 }
 
 
-void estimator::unigram::print_statistics(std::wostream& os, uint iter, double temp, bool header)
+void estimator::unigram::print_statistics(std::wostream& os, std::size_t iter, double temp, bool header)
 {
     if (header)
     {
@@ -66,10 +66,10 @@ void estimator::unigram::estimate_eval_sentence(sentence& s, double temperature,
 {
     if (maximize)
         s.maximize(
-            m_lex, m_corpus.nsentences()-1, temperature, m_params.do_mbdp);
+            m_lex, m_corpus.nsentences()-1, temperature, m_params.do_mbdp());
     else
         s.sample_tree(
-            m_lex, m_corpus.nsentences()-1, temperature, m_params.do_mbdp);
+            m_lex, m_corpus.nsentences()-1, temperature, m_params.do_mbdp());
 }
 
 
@@ -92,14 +92,14 @@ estimator::batch_unigram::~batch_unigram()
 
 
 void estimator::batch_unigram::estimate(
-    uint iters, std::wostream& os, uint eval_iters, double temp, bool maximize, bool is_decayed)
+    std::size_t iters, std::wostream& os, std::size_t eval_iters, double temp, bool maximize, bool is_decayed)
 {
     if(debug_level >= 10000)
     {
         std::wcout << "Inside BatchUnigram estimate " << std::endl;
     }
 
-    if (m_params.trace_every > 0)
+    if (m_params.trace_every() > 0)
     {
         print_statistics(os, 0, 0, true);
     }
@@ -107,11 +107,11 @@ void estimator::batch_unigram::estimate(
     //number of accepts in hyperparm resampling. Init to correct length.
     std::vector<bool> accepted_anneal(hypersample(1).size());
     std::vector<bool> accepted(hypersample(1).size());
-    uint nanneal = 0;
-    uint n = 0;
-    for (uint i=1; i <= iters; i++)
+    std::size_t nanneal = 0;
+    std::size_t n = 0;
+    for (std::size_t i=1; i <= iters; i++)
     {
-        //uint nchanged = 0; // if need to print out, use later
+        //std::size_t nchanged = 0; // if need to print out, use later
         double temperature = m_annealing.temperature(i);
         // if (i % 10 == 0) wcerr << ".";
 	if (eval_iters && (i % eval_iters == 0))
@@ -129,7 +129,7 @@ void estimator::batch_unigram::estimate(
             if (debug_level >= 9000) std::wcerr << m_lex << std::endl;
         }
 
-        if (m_params.hypersampling_ratio)
+        if (m_params.hypersampling_ratio())
         {
             if (temperature > 1)
             {
@@ -143,7 +143,7 @@ void estimator::batch_unigram::estimate(
             }
         }
 
-        if (m_params.trace_every > 0 and i%m_params.trace_every == 0)
+        if (m_params.trace_every() > 0 and i%m_params.trace_every() == 0)
         {
             print_statistics(os, i, temperature);
         }
@@ -151,7 +151,7 @@ void estimator::batch_unigram::estimate(
     }
 
     os << "hyperparm accept rate: ";
-    if (m_params.hypersampling_ratio)
+    if (m_params.hypersampling_ratio())
         os << accepted_anneal/nanneal << " (during annealing), "
            << accepted/n << " (after)" << std::endl;
     else
@@ -173,17 +173,17 @@ estimator::online_unigram::~online_unigram()
 
 
 void estimator::online_unigram::estimate(
-    uint iters, std::wostream& os, uint eval_iters, double temp, bool maximize, bool is_decayed)
+    std::size_t iters, std::wostream& os, std::size_t eval_iters, double temp, bool maximize, bool is_decayed)
 {
     if(debug_level >= 10000)
         std::wcout << "Inside OnlineUnigram estimate " << std::endl;
 
-    if (m_params.trace_every > 0)
+    if (m_params.trace_every() > 0)
     {
         print_statistics(os, 0, 0, true);
     }
     m_nsentences_seen = 0;
-    for (uint i=1; i <= iters; i++)
+    for (std::size_t i=1; i <= iters; i++)
     {
         double temperature = m_annealing.temperature(i);
 	if(!is_decayed)
@@ -225,7 +225,7 @@ void estimator::online_unigram::estimate(
             if (debug_level >= 15000)  TRACE2(m_lex.ntypes(),m_lex);
         }
 
-        if (m_params.trace_every > 0 and i % m_params.trace_every == 0)
+        if (m_params.trace_every() > 0 and i % m_params.trace_every() == 0)
         {
             print_statistics(os, i, temperature);
         }
@@ -250,15 +250,15 @@ void estimator::online_unigram::forget_items(std::vector<sentence>::iterator ite
         }
         assert(sanity_check());
     }
-    else if (m_params.type_memory)
+    else if (m_params.type_memory())
     {
-        while (m_lex.ntypes() > m_params.type_memory)
+        while (m_lex.ntypes() > m_params.type_memory())
         {
-            if (m_params.forget_method == "U")
+            if (m_params.forget_method() == "U")
             {
                 m_lex.erase_type_uniform();
             }
-            else if (m_params.forget_method == "P")
+            else if (m_params.forget_method() == "P")
             {
                 m_lex.erase_type_proportional();
             }
@@ -278,11 +278,11 @@ void estimator::online_unigram::forget_items(std::vector<sentence>::iterator ite
         }
         assert(sanity_check());
     }
-    else if (m_params.token_memory)
+    else if (m_params.token_memory())
     {
-        while (m_lex.ntokens() > m_params.token_memory)
+        while (m_lex.ntokens() > m_params.token_memory())
         {
-            if (m_params.forget_method == "U")
+            if (m_params.forget_method() == "U")
             {
                 m_lex.erase_token_uniform();
             }
@@ -301,7 +301,7 @@ void estimator::online_unigram::forget_items(std::vector<sentence>::iterator ite
         }
         assert(sanity_check());
     }
-    else if (m_params.token_memory)
+    else if (m_params.token_memory())
     {
         error("unigram forgetting scheme not yet implemented");
     }

@@ -10,14 +10,14 @@ estimator::dmcmc::~dmcmc()
 {}
 
 
-void estimator::dmcmc::decayed_initialization(std::vector<sentence> _sentences)
+void estimator::dmcmc::decayed_initialization(std::vector<sentence> sentences)
 {
     // calculate total number of potential boundaries in training set,
     // this is needed for calculating the cumulative decay
     // probabilities cycle through _sentences
     m_num_total_pot_boundaries = 0;
-    std::vector<unsigned int> possible_boundaries;
-    for(auto& sent: _sentences)
+    std::vector<std::size_t> possible_boundaries;
+    for(auto& sent: sentences)
     {
         m_num_total_pot_boundaries += sent.get_possible_boundaries().size();
     }
@@ -29,15 +29,15 @@ void estimator::dmcmc::decayed_initialization(std::vector<sentence> _sentences)
     }
 
     // initialize _boundaries_num_sampled to be this size
-    m_boundaries_num_sampled.resize(m_num_total_pot_boundaries+1);
+    m_boundaries_num_sampled.resize(m_num_total_pot_boundaries + 1);
 
     // create decay probabilities, uses _decay_rate and
     // _num_total_pot_potboundaries to create binned probability
     // distribution that will be used to find potential boundaries
     // store values in _decay_offset_probs go to one beyond total
     // potential boundaries
-    m_decay_offset_probs.resize(m_num_total_pot_boundaries+2);
-    for(uint index = 0; index < m_num_total_pot_boundaries + 1; index++)
+    m_decay_offset_probs.resize(m_num_total_pot_boundaries + 2);
+    for(std::size_t index = 0; index < m_num_total_pot_boundaries + 1; index++)
     {
         // add 1 so that current boundary (index 0) is possible
         m_decay_offset_probs[index] = pow((index+1), (-1) * m_decay_rate);

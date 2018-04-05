@@ -12,7 +12,7 @@ estimator::batch_unigram_tree::~batch_unigram_tree()
 void estimator::batch_unigram_tree::estimate_sentence(sentence& s, double temperature)
 {
     s.erase_words(m_lex);
-    s.sample_tree(m_lex, m_corpus.nsentences()-1, temperature, m_params.do_mbdp);
+    s.sample_tree(m_lex, m_corpus.nsentences()-1, temperature, m_params.do_mbdp());
     s.insert_words(m_lex);
 }
 
@@ -59,6 +59,6 @@ estimator::online_unigram_tree::~online_unigram_tree()
 
 void estimator::online_unigram_tree::estimate_sentence(sentence& s, double temperature)
 {
-    s.sample_tree(m_lex, m_nsentences_seen, temperature, m_params.do_mbdp);
+    s.sample_tree(m_lex, m_nsentences_seen, temperature, m_params.do_mbdp());
     s.insert_words(m_lex);
 }

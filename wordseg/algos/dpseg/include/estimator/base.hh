@@ -75,10 +75,14 @@ namespace estimator
         virtual bool sanity_check() const;
         virtual double log_posterior() const = 0;
 
-        //use whatever sampling method is in subclass to segment training data
+        // use whatever sampling method is in subclass to segment training data
         virtual void estimate(
-            uint iters, std::wostream& os, uint eval_iters = 0,
-            double temperature = 1, bool maximize = false, bool is_decayed = false) = 0;
+            std::size_t iters,
+            std::wostream& os,
+            std::size_t eval_iters = 0,
+            double temperature = 1,
+            bool maximize = false,
+            bool is_decayed = false) = 0;
 
         // make single pass through test data, segmenting based on sampling
         // or maximization of each utt, using current counts from training
@@ -99,8 +103,7 @@ namespace estimator
         P0 m_base_dist;
         std::vector<sentence> m_sentences;
         std::vector<sentence> m_eval_sentences;
-        uint m_nsentences_seen;
-        // Scoring m_scoring;
+        std::size_t m_nsentences_seen;
 
         void resample_pya(Unigrams& lex);
         void resample_pyb(Unigrams& lex);
@@ -120,7 +123,7 @@ namespace estimator
         void print_segmented_sentences(std::wostream& os, const std::vector<sentence>& sentences) const;
         void print_scores_sentences(std::wostream& os, const std::vector<sentence>& sentences);
 
-        virtual void print_statistics(std::wostream& os, uint iters, double temp, bool do_header=false) = 0;
+        virtual void print_statistics(std::wostream& os, std::size_t iters, double temp, bool do_header=false) = 0;
         virtual void estimate_sentence(sentence& s, double temperature) = 0;
         virtual void estimate_eval_sentence(sentence& s, double temperature, bool maximize = false) = 0;
     };

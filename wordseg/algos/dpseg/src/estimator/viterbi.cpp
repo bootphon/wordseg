@@ -12,7 +12,7 @@ estimator::batch_unigram_viterbi::~batch_unigram_viterbi()
 void estimator::batch_unigram_viterbi::estimate_sentence(sentence& s, double temperature)
 {
     s.erase_words(m_lex);
-    s.maximize(m_lex, m_corpus.nsentences()-1, temperature, m_params.do_mbdp);
+    s.maximize(m_lex, m_corpus.nsentences()-1, temperature, m_params.do_mbdp());
     s.insert_words(m_lex);
 }
 
@@ -45,7 +45,7 @@ estimator::online_unigram_viterbi::~online_unigram_viterbi()
 
 void estimator::online_unigram_viterbi::estimate_sentence(sentence& s, double temperature)
 {
-    s.maximize(m_lex, m_nsentences_seen, temperature, m_params.do_mbdp);
+    s.maximize(m_lex, m_nsentences_seen, temperature, m_params.do_mbdp());
     s.insert_words(m_lex);
 }
 

@@ -3,8 +3,8 @@
 
 estimator::bigram::bigram(const parameters& params, const corpus::corpus_base& corpus, const annealing& anneal)
     : estimator::base(params, corpus, anneal),
-      m_ulex(m_base_dist, unif01, m_params.a1, m_params.b1),
-      m_lex(m_ulex, unif01, m_params.a2, m_params.b2)
+      m_ulex(m_base_dist, unif01, m_params.a1(), m_params.b1()),
+      m_lex(m_ulex, unif01, m_params.a2(), m_params.b2())
 {}
 
 
@@ -48,7 +48,7 @@ std::vector<bool> estimator::bigram::hypersample(double temperature)
 }
 
 
-void estimator::bigram::print_statistics(std::wostream& os, uint iter, double temp, bool header)
+void estimator::bigram::print_statistics(std::wostream& os, std::size_t iter, double temp, bool header)
 {
     if (header)
     {
@@ -97,12 +97,12 @@ estimator::batch_bigram::~batch_bigram()
 
 
 void estimator::batch_bigram::estimate(
-    uint iters, std::wostream& os, uint eval_iters, double temp, bool maximize, bool is_decayed)
+    std::size_t iters, std::wostream& os, std::size_t eval_iters, double temp, bool maximize, bool is_decayed)
 {
     if(debug_level >= 10000)
         std::wcout << "Inside BatchBigram estimate " << std::endl;
 
-    if (m_params.trace_every > 0)
+    if (m_params.trace_every() > 0)
     {
         print_statistics(os, 0, 0, true);
     }
@@ -111,11 +111,11 @@ void estimator::batch_bigram::estimate(
     // correct length
     std::vector<bool> accepted_anneal(hypersample(1).size());
     std::vector<bool> accepted(hypersample(1).size());
-    uint nanneal = 0;
-    uint n = 0;
-    for (uint i=1; i <= iters; i++)
+    std::size_t nanneal = 0;
+    std::size_t n = 0;
+    for (std::size_t i=1; i <= iters; i++)
     {
-        //uint nchanged = 0; if need to print out, un-comment
+        //std::size_t nchanged = 0; if need to print out, un-comment
         double temperature = m_annealing.temperature(i);
 
         // if (i % 10 == 0) wcerr << ".";
@@ -134,7 +134,7 @@ void estimator::batch_bigram::estimate(
             if (debug_level >= 9000) std::wcerr << m_lex << std::endl;
         }
 
-        if (m_params.hypersampling_ratio)
+        if (m_params.hypersampling_ratio())
         {
             if (temperature > 1)
             {
@@ -148,7 +148,7 @@ void estimator::batch_bigram::estimate(
             }
         }
 
-        if (m_params.trace_every > 0 and i % m_params.trace_every == 0)
+        if (m_params.trace_every() > 0 and i % m_params.trace_every() == 0)
         {
             print_statistics(os, i, temperature);
         }
@@ -174,18 +174,18 @@ estimator::online_bigram::~online_bigram()
 
 
 void estimator::online_bigram::estimate(
-    uint iters, std::wostream& os, uint eval_iters, double temp, bool maximize, bool is_decayed)
+    std::size_t iters, std::wostream& os, std::size_t eval_iters, double temp, bool maximize, bool is_decayed)
 {
     if(debug_level >= 10000)
         std::wcout << "Inside OnlineBigram estimate " << std::endl;
 
-    if (m_params.trace_every > 0)
+    if (m_params.trace_every() > 0)
     {
         print_statistics(os, 0, 0, true);
     }
 
     m_nsentences_seen = 0;
-    for (uint i=1; i <= iters; i++)
+    for (std::size_t i=1; i <= iters; i++)
     {
         std::wcerr << "bigram::online_bigram::estimate iteration " << i << "/" << iters << std::endl;
         double temperature = m_annealing.temperature(i);
@@ -226,7 +226,7 @@ void estimator::online_bigram::estimate(
             m_nsentences_seen++;
         }
 
-        if (m_params.trace_every > 0 and i % m_params.trace_every == 0)
+        if (m_params.trace_every() > 0 and i % m_params.trace_every() == 0)
         {
             print_statistics(os, i, temperature);
         }
@@ -248,7 +248,7 @@ void estimator::online_bigram::forget_items(std::vector<sentence>::iterator iter
             m_nsentences_seen--;
         }
     }
-    else if (m_params.type_memory || m_params.token_memory)
+    else if (m_params.type_memory() || m_params.token_memory())
     {
         error("bigram forgetting scheme not yet implemented");
     }

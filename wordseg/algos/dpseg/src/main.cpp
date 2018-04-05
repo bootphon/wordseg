@@ -35,6 +35,70 @@ std::wstring str2wstr(std::string str)
 }
 
 
+corpus::corpus_data load_corpus(const boost::program_options::variables_map& vm,
+                                const std::string& data_file, const std::string& eval_file)
+{
+    corpus::corpus_data corpus;
+
+    // read training data
+    if (data_file != "stdin")
+    {
+        std::wifstream is(data_file.c_str());
+        if (!is)
+        {
+            std::cerr << "Error: couldn't open " << data_file << std::endl;
+            exit(1);
+        }
+
+        corpus.read(
+            is,
+            vm["data-start-index"].as<std::size_t>(),
+            vm["data-num-sents"].as<std::size_t>());
+    }
+    else
+    {
+        corpus.read(
+            std::wcin,
+            vm["data-start-index"].as<std::size_t>(),
+            vm["data-num-sents"].as<std::size_t>());
+    }
+
+    // read evaluation data
+    if (eval_file !=  "none")
+    {
+        std::wifstream is(eval_file.c_str());
+        if (!is)
+        {
+            std::cerr << "Error: couldn't open " << eval_file << std::endl;
+            exit(1);
+        }
+
+        corpus.read_eval(
+            is,
+            vm["eval-start-index"].as<std::size_t>(),
+            vm["eval-num-sents"].as<std::size_t>());
+    }
+
+    if (debug_level >= 98000)
+    {
+        TRACE(substring::data.size());
+        TRACE(substring::data);
+        TRACE(corpus.sentence_boundary_list());
+        TRACE(corpus.nchars());
+        TRACE(corpus.possible_boundaries());
+        TRACE(corpus.true_boundaries());
+    }
+
+    if (debug_level >= 100)
+    {
+        std::wcout << "text nchartypes=" << corpus.nchartypes() << std::endl
+                   << "text nsentences=" << corpus.nsentences() << std::endl;
+    }
+
+    return corpus;
+}
+
+
 int main(int argc, char** argv)
 {
     // Set a new global UTF8 locale to make output streams handle utf8.
@@ -42,17 +106,10 @@ int main(int argc, char** argv)
     // values.
     std::locale utf8_locale(std::locale(), new utf8_codecvt_facet());
     std::locale::global(utf8_locale);
-
-    // std::wcerr.imbue(utf8_locale);
-    // std::wcout.imbue(utf8_locale);
+    // set float precision to 5 decimals
     std::wcout.precision(5);
-
     std::ios_base::sync_with_stdio(false);
     std::cin.tie(0);
-
-    estimator::parameters params;
-    corpus::corpus_data corpus;
-    std::string csep;
 
     // define the command line arguments
     namespace po = boost::program_options;
@@ -117,28 +174,28 @@ int main(int argc, char** argv)
         ("ngram", po::value<std::size_t>()->default_value(2),
          "possible values are: 1 (unigram), 2 (bigram)")
 
-        ("do-mbdp", po::value<bool>(&params.do_mbdp)->default_value(false),
+        ("do-mbdp", po::value<bool>()->default_value(false),
          "maximize using Brent ngram instead of DP")
 
-        ("a1", po::value<double>(&params.a1)->default_value(0),
+        ("a1", po::value<double>()->default_value(0),
          "Unigram Pitman-Yor a parameter")
 
-        ("b1", po::value<double>(&params.b1)->default_value(1),
+        ("b1", po::value<double>()->default_value(1),
          "Unigram Pitman-Yor b parameter")
 
-        ("a2", po::value<double>(&params.a2)->default_value(0),
+        ("a2", po::value<double>()->default_value(0),
          "Bigram Pitman-Yor a parameter")
 
-        ("b2", po::value<double>(&params.b2)->default_value(1),
+        ("b2", po::value<double>()->default_value(1),
          "Bigram Pitman-Yor b parameter")
 
-        ("Pstop", po::value<double>(&params.pstop)->default_value(0.5),
+        ("Pstop", po::value<double>()->default_value(0.5),
          "Monkey model stop probability")
 
         // not completely sure that hyper parameter sampling is
         // working correctly yet. However it does yield pretty good
         // results when using all four PY parameters.
-        ("hypersamp-ratio", po::value<double>(&params.hypersampling_ratio)->default_value(0.1),
+        ("hypersamp-ratio", po::value<double>()->default_value(0.1),
          "Standard deviation for new hyperparm proposals (0 turns off hyperp sampling)")
 
         // ("nchartypes", po::value<std::size_t>(&data.m_nchartypes)->default_value(0),
@@ -147,22 +204,22 @@ int main(int argc, char** argv)
         // ("p_nl", po::value<double>(&data.p_nl)->default_value(0.5),
         // "End of sentence prob")
 
-        ("aeos", po::value<double>(&params.aeos)->default_value(2),
+        ("aeos", po::value<double>()->default_value(2),
          "Beta prior on end of sentence prob")
 
-        ("init-pboundary", po::value<double>(&params.init_pboundary)->default_value(0),
+        ("init-pboundary", po::value<double>()->default_value(0),
          "Initial segmentation boundary probability (-1 = gold)")
 
-        ("pya-beta-a", po::value<double>(&params.pya_beta_a)->default_value(1),
+        ("pya-beta-a", po::value<double>()->default_value(1),
          "if non-zero, a parameter of Beta prior on pya")
 
-        ("pya-beta-b", po::value<double>(&params.pya_beta_b)->default_value(1),
+        ("pya-beta-b", po::value<double>()->default_value(1),
          "if non-zero, b parameter of Beta prior on pya")
 
-        ("pya-gamma-s", po::value<double>(&params.pyb_gamma_s)->default_value(10),
+        ("pya-gamma-s", po::value<double>()->default_value(10),
          "if non-zero, parameter of Gamma prior on pyb")
 
-        ("pya-gamma-c", po::value<double>(&params.pyb_gamma_c)->default_value(0.1),
+        ("pya-gamma-c", po::value<double>()->default_value(0.1),
          "if non-zero, parameter of Gamma prior on pyb")
 
         ("randseed", po::value<std::size_t>()->default_value(
@@ -170,11 +227,8 @@ int main(int argc, char** argv)
             std::chrono::system_clock::now().time_since_epoch().count()),
          "Random number seed, default is based on current time")
 
-        ("trace-every", po::value<std::size_t>(&params.trace_every)->default_value(100),
+        ("trace-every", po::value<std::size_t>()->default_value(100),
          "Epochs between printing out trace information (0 = don't trace)")
-
-        ("nsubjects,s", po::value<std::size_t>()->default_value(1),
-         "Number of subjects to simulate")
 
         ("forget-rate,f", po::value<double>()->default_value(0),
          "Number of utterances whose words can be remembered")
@@ -199,16 +253,16 @@ int main(int argc, char** argv)
         ("anneal-b", po::value<double>()->default_value(0.2),
          "Parameter in annealing temperature sigmoid function")
 
-        ("result-field-separator", po::value<std::string>(&csep)->default_value("\t"),
+        ("result-field-separator", po::value<std::string>()->default_value("\t"),
          "Field separator used to print results")
 
-        ("forget-method", po::value< std::string>(&params.forget_method)->default_value("U"),
+        ("forget-method", po::value< std::string>()->default_value("U"),
          "Method of deleting lexical items: U(niformly), P(roportional)")
 
-        ("token-memory,N", po::value<std::size_t>(&params.token_memory)->default_value(0),
+        ("token-memory,N", po::value<std::size_t>()->default_value(0),
          "Number of tokens that can be remembered (0 = no limit)")
 
-        ("type-memory,L", po::value<std::size_t>(&params.type_memory)->default_value(0),
+        ("type-memory,L", po::value<std::size_t>()->default_value(0),
          "Number of types that can be remembered (0 = no limit)")
         ;
 
@@ -232,6 +286,34 @@ int main(int argc, char** argv)
         po::notify(vm);
     }
 
+
+    // load the model parameters
+    estimator::parameters params(
+        vm["do-mbdp"].as<bool>(),
+        vm["Pstop"].as<double>(),
+        vm["hypersamp-ratio"].as<double>(),
+        vm["init-pboundary"].as<double>(),
+        vm["forget-method"].as<std::string>(),
+        vm["aeos"].as<double>(),
+        vm["a1"].as<double>(),
+        vm["b1"].as<double>(),
+        vm["a2"].as<double>(),
+        vm["b2"].as<double>(),
+        vm["pya-beta-a"].as<double>(),
+        vm["pya-beta-b"].as<double>(),
+        vm["pya-gamma-c"].as<double>(),
+        vm["pya-gamma-s"].as<double>(),
+        vm["trace-every"].as<std::size_t>(),
+        vm["token-memory"].as<std::size_t>(),
+        vm["type-memory"].as<std::size_t>());
+
+    // init the random seed
+    unif01.seed(vm["randseed"].as<std::size_t>());
+
+    // wchar version of the result-field-separator
+    std::string csep(vm["result-field-separator"].as<std::string>());
+    sep.assign(csep.begin(), csep.end());
+
     // setup data_file to stdin or file
     std::string data_file = "stdin";
     if (vm.count("data-file") > 0)
@@ -242,8 +324,18 @@ int main(int argc, char** argv)
     if (vm.count("eval-file") > 0)
         eval_file = vm["eval-file"].as<std::string>();
 
-    // We need a wide version of the result-field-separator parameter string
-    sep.assign(csep.begin(), csep.end());
+    // load the input/eval text corpus
+    corpus::corpus_data corpus = load_corpus(vm, data_file, eval_file);
+
+    // open the output file, handle UTF8
+    std::wofstream os(vm["output-file"].as<std::string>().c_str());
+    if (! os)
+    {
+        std::cerr << "couldn't open output file: "
+                  << vm["output-file"].as<std::string>()
+                  << std::endl;
+        exit(1);
+    }
 
     if (debug_level >= 20000)
     {
@@ -269,16 +361,16 @@ int main(int argc, char** argv)
             << "# b1=" << vm["b1"].as<double>() << std::endl
             << "# a2=" << vm["a2"].as<double>() << std::endl
             << "# b2=" << vm["b2"].as<double>() << std::endl
-            << "# Pstop=" << params.pstop << std::endl
-            << "# hypersamp-ratio=" << params.hypersampling_ratio << std::endl
-            << "# aeos=" << params.aeos << std::endl
-            << "# init_pboundary=" << vm["init-pboundary"].as<double>() << std::endl
-            << "# pya-beta-a="  << params.pya_beta_a << std::endl
-            << "# pya-beta-b="  << params.pya_beta_b << std::endl
-            << "# pyb-gamma-s="  << params.pyb_gamma_s << std::endl
-            << "# pyb-gamma-c="  << params.pyb_gamma_c << std::endl
+            << "# Pstop=" << params.pstop() << std::endl
+            << "# hypersamp-ratio=" << params.hypersampling_ratio() << std::endl
+            << "# aeos=" << params.aeos() << std::endl
+            << "# init_pboundary=" << params.init_pboundary() << std::endl
+            << "# pya-beta-a="  << params.pya_beta_a() << std::endl
+            << "# pya-beta-b="  << params.pya_beta_b() << std::endl
+            << "# pyb-gamma-s="  << params.pyb_gamma_s() << std::endl
+            << "# pyb-gamma-c="  << params.pyb_gamma_c() << std::endl
             << "# randseed=" << vm["randseed"].as<std::size_t>() << std::endl
-            << "# trace-every=" << params.trace_every << std::endl
+            << "# trace-every=" << params.trace_every() << std::endl
             << "# nsubjects=" << vm["nsubjects"].as<std::size_t>() << std::endl
             << "# forget-rate=" << vm["forget-rate"].as<double>() << std::endl
             << "# burnin-iterations=" << vm["burnin-iterations"].as<std::size_t>() << std::endl
@@ -290,66 +382,6 @@ int main(int argc, char** argv)
             << "# result-field-separator=" << sep << std::endl;
     }
 
-    unif01.seed(vm["randseed"].as<std::size_t>());
-
-    // read training data
-    if (data_file != "stdin")
-    {
-        std::wifstream is(data_file.c_str());
-        if (!is)
-        {
-            std::cerr << "Error: couldn't open " << data_file << std::endl;
-            exit(1);
-        }
-        // is.imbue(std::locale(std::locale(), new utf8_codecvt_facet()));
-
-        corpus.read(is, vm["data-start-index"].as<std::size_t>(), vm["data-num-sents"].as<std::size_t>());
-    }
-    else
-    {
-        corpus.read(std::wcin, vm["data-start-index"].as<std::size_t>(), vm["data-num-sents"].as<std::size_t>());
-    }
-
-    // read evaluation data
-    if (eval_file !=  "none")
-    {
-        std::wifstream is(eval_file.c_str());
-        if (!is)
-        {
-            std::cerr << "Error: couldn't open " << eval_file << std::endl;
-            exit(1);
-        }
-        // is.imbue(std::locale(std::locale(), new utf8_codecvt_facet()));
-        corpus.read_eval(is,vm["eval-start-index"].as<std::size_t>(),vm["eval-num-sents"].as<std::size_t>());
-    }
-
-    if (debug_level >= 98000)
-    {
-        TRACE(substring::data.size());
-        TRACE(substring::data);
-        TRACE(corpus.sentence_boundary_list());
-        TRACE(corpus.nchars());
-        TRACE(corpus.possible_boundaries());
-        TRACE(corpus.true_boundaries());
-    }
-
-    if (debug_level >= 100)
-    {
-        std::wcout << "# nchartypes=" << corpus.nchartypes() << std::endl
-                   << "# nsentences=" << corpus.nsentences() << std::endl;
-    }
-
-    // open the output file, handle UTF8
-    std::wofstream os(vm["output-file"].as<std::string>().c_str());
-    if (! os)
-    {
-        std::cerr << "couldn't open output file: "
-                  << vm["output-file"].as<std::string>()
-                  << std::endl;
-        exit(1);
-    }
-    // os.imbue(utf8_locale);
-
     annealing anneal(
         vm["anneal-iterations"].as<std::size_t>(),
         vm["anneal-start-temperature"].as<double>(),
@@ -357,51 +389,51 @@ int main(int argc, char** argv)
         vm["anneal-a"].as<double>(),
         vm["anneal-b"].as<double>());
 
-    for(std::size_t subject = 0; subject < vm["nsubjects"].as<std::size_t>(); subject++)
+    std::shared_ptr<estimator::base> sampler = estimator::get_estimator(
+        params, corpus, anneal,
+        vm["ngram"].as<std::size_t>(),
+        vm["mode"].as<std::string>(),
+        vm["estimator"].as<std::string>(),
+        vm["forget-rate"].as<double>(),
+        vm["decay-rate"].as<double>(),
+        vm["samples-per-utt"].as<std::size_t>());
+
+    std::wcout << "initial probability = " << sampler->log_posterior() << std::endl;
+    assert(sampler->sanity_check());
+
+    // Train the sampler. If want to evaluate test set during
+    // training intervals, need to add that into estimate function
+    sampler->estimate(
+        vm["burnin-iterations"].as<std::size_t>(),
+        std::wcout, vm["eval-interval"].as<std::size_t>(),
+        1,
+        vm["eval-maximize"].as<std::size_t>(),
+        true);
+
+    std::wcerr << "training done" << std::endl;
+
+    // evaluates test set at the end of training
+    if (eval_file == "none")
     {
-        auto sampler = estimator::get_estimator(
-            params, corpus, anneal,
-            vm["ngram"].as<std::size_t>(),
-            vm["mode"].as<std::string>(),
-            vm["estimator"].as<std::string>(),
-            vm["forget-rate"].as<double>(),
-            vm["decay-rate"].as<double>(),
-            vm["samples-per-utt"].as<std::size_t>());
-
-        std::wcout << "initial probability = " << sampler->log_posterior() << std::endl;
-        assert(sampler->sanity_check());
-
-        // Train the sampler. If want to evaluate test set during
-        // training intervals, need to add that into estimate function
-        sampler->estimate(
-            vm["burnin-iterations"].as<std::size_t>(), std::wcout, vm["eval-interval"].as<std::size_t>(),
-            1, vm["eval-maximize"].as<std::size_t>(), true);
-
-        std::wcerr << "training done" << std::endl;
-
-        // evaluates test set at the end of training
-        if (eval_file == "none")
-        {
-            sampler->print_segmented(os);
-            std::wcout << "final posterior = " << sampler->log_posterior() << std::endl;
-        }
-        else
-        {
-            if (debug_level >= 5000)
-            {
-                std::wcout << "segmented training data:" << std::endl;
-                sampler->print_segmented(std::wcout);
-                std::wcout << "training final posterior = " << sampler->log_posterior() << std::endl;
-                std::wcout << "segmented test data:" << std::endl;
-            }
-
-            std::wcout << "Test set at end of training " << std::endl;
-            sampler->run_eval(os,1,vm["eval-maximize"].as<std::size_t>());
-
-            std::wcout << "testing final posterior = " << sampler->log_posterior() << std::endl;
-            sampler->print_eval_segmented(os);
-        }
-
-        os << std::endl;
+        sampler->print_segmented(os);
+        std::wcout << "final posterior = " << sampler->log_posterior() << std::endl;
     }
+    else
+    {
+        if (debug_level >= 5000)
+        {
+            std::wcout << "segmented training data:" << std::endl;
+            sampler->print_segmented(std::wcout);
+            std::wcout << "training final posterior = " << sampler->log_posterior() << std::endl;
+            std::wcout << "segmented test data:" << std::endl;
+        }
+
+        std::wcout << "Test set at end of training " << std::endl;
+        sampler->run_eval(os,1,vm["eval-maximize"].as<std::size_t>());
+
+        std::wcout << "testing final posterior = " << sampler->log_posterior() << std::endl;
+        sampler->print_eval_segmented(os);
+    }
+
+    os << std::endl;
 }
