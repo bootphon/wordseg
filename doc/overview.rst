@@ -15,14 +15,11 @@ The following are the key steps in any wordseg analysis.
 1. Input corpus selection, cleaning, and phonologization
 --------------------------------------------------------
 
-** This step is not covered by the WordSeg package. **
+** This step is not fully covered by the WordSeg package. **
 
-Most users will start with an annotated, orthographic text which
-contains some sequences that were not spoken, or sequences spoken
-by people who are not interesting (e.g., children or adults).
-Cleaning will require removing of these offending sequences or lines.
-Users will then need to phonologize the text by using a
-dictionary look-up or other system.
+The suite does not directly support full pre-processing and phonologization of corpora yet, but we provide some pointers for users. For most researchers, the starting stage will be a CHILDES' style .cha file, which contains comments as well as transcribed content. These first stages of cleaning will be dependent on the particular corpus because they vary somewhat across CHILDES corpora, and on the research question, since researchers may want to include or exclude specific speakers. Sample scripts we have used in the past can, however, serve as inspiration (see the /data/cha/ section).  Additionally, the WordSeg suite assumes that the input has already been phonemized and syllabified. For corpora in which this has not been done, we recommend readers look into the [Phonemizer package](https://github.com/bootphon/phonemizer.git), which provides tools to convert text to phonemes. Another option is the [WebMaus automatic segmentation tool](https://www.clarin-d.net/en/webmaus-basic-), which converts text files to phonemic transcriptions based on trained statistical models. For languages with a transparent orthography, hand-crafted rules can be used to derive the phonemic representation of words. 
+
+It should be noted that we have included in the package a syllabification routine using the Maximize Onset Principle, a rule of thumb whereby a sequence of phones will be parsed such that the onset cluster will be as heavy as the language allows. For instance, the sequence /estra/ will be broken up into /es.tra/ in Spanish and /e.stra/ in English. This procedure relies on the user providing a file that lists vowels and possible syllable onsets. Examples are provided in the /data/syllabification/ section.
 
 
 --------------------
