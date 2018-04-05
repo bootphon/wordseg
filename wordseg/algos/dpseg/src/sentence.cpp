@@ -372,29 +372,33 @@ std::size_t sentence::sample_by_flips(Bigrams& lex, double temperature)
     return nchanged;
 }
 
-void
-sentence::sample_one_flip(Bigrams& lex, double temperature, std::size_t boundary_within_sentence){
+void sentence::sample_one_flip(Bigrams& lex, double temperature, std::size_t boundary_within_sentence)
+{
     // used by DecayedMCMC to sample one boundary within a sentence
     std::size_t i = boundary_within_sentence, i0, i1, i2, i3;
     surrounding_boundaries(i, i0, i1, i2, i3);
-    if (m_boundaries[i]) {
+    if (m_boundaries[i])
+    {
         erase(i0, i1, i, lex);
         erase(i1, i, i2, lex);
         erase(i, i2, i3, lex);
     }
-    else {  // no m_boundaries at position i
+    else
+    {  // no m_boundaries at position i
         erase(i0, i1, i2, lex);
         erase(i1, i2, i3, lex);
     }
     double pb = prob_boundary(i0, i1, i, i2, i3, lex, temperature);
     bool newboundary = (pb > unif01());
-    if (newboundary) {
+    if (newboundary)
+    {
         insert(i0, i1, i, lex);
         insert(i1, i, i2, lex);
         insert(i, i2, i3, lex);
         m_boundaries[i] = 1;
     }
-    else {  // don't insert a boundary at i
+    else
+    {  // don't insert a boundary at i
         insert(i0, i1, i2, lex);
         insert(i1, i2, i3, lex);
         m_boundaries[i] = 0;
@@ -411,36 +415,45 @@ sentence::sample_one_flip(Bigrams& lex, double temperature, std::size_t boundary
 // nsentences is the number of sentences that have been
 // seen (preceding this one, if online; except this one,
 // if batch).
-void
-sentence::maximize(Unigrams& lex, std::size_t nsentences, double temperature, bool do_mbdp){
+void sentence::maximize(Unigrams& lex, std::size_t nsentences, double temperature, bool do_mbdp)
+{
     // cache some useful constants
     int N_branch = lex.ntokens() - nsentences;
     double p_continue = pow((N_branch +  m_aeos/2.0) /
                             (lex.ntokens() +  m_aeos), 1/temperature);
     if (debug_level >=90000) TRACE(p_continue);
+
     // create chart for dynamic program
     typedef std::pair<double, std::size_t> Cell; //best prob, index of best prob
     typedef std::vector<Cell> Chart;
+
     Chart best(m_boundaries.size()-1, Cell(0.0, 0)); //best seg ending at each index
     assert(*(m_padded_possible.begin()) == 1);
     assert(*(m_padded_possible.end()-1) == m_boundaries.size()-2);
+
     std::vector<std::size_t>::const_iterator i;
     std::vector<std::size_t>::const_iterator j;
     best[1] = Cell(1.0, 0);
-    for (j = m_padded_possible.begin() + 1; j <m_padded_possible.end(); j++) {
-        for (i = m_padded_possible.begin(); i < j; i++) {
+
+    for (j = m_padded_possible.begin() + 1; j <m_padded_possible.end(); j++)
+    {
+        for (i = m_padded_possible.begin(); i < j; i++)
+        {
             double prob;
-            if (do_mbdp) {
+            if (do_mbdp)
+            {
                 double mbdp_p = mbdp_prob(lex, word_at(*i, *j), nsentences);
                 prob = pow(mbdp_p, 1/temperature) * best[*i].first;
                 if (debug_level >=85000) TRACE5(*i,*j,word_at(*i, *j),mbdp_p,prob);
             }
-            else {
-                prob = pow(lex(word_at(*i, *j)), 1/temperature)
+            else
+            {
+                prob = pow(lex(word_at(*i, *j)), 1 / temperature)
                     * p_continue * best[*i].first;
                 if (debug_level >=85000) TRACE5(*i,*j,word_at(*i, *j),lex(word_at(*i, *j)),prob);
             }
-            if (prob > best[*j].first) {
+            if (prob > best[*j].first)
+            {
                 best[*j] = Cell(prob, *i);
             }
         }
@@ -449,11 +462,13 @@ sentence::maximize(Unigrams& lex, std::size_t nsentences, double temperature, bo
 
     // now reconstruct the best segmentation
     std::size_t k;
-    for (k = 2; k <m_boundaries.size() -2; k++) {
+    for (k = 2; k <m_boundaries.size() -2; k++)
+    {
         m_boundaries[k] = false;
     }
     k = m_boundaries.size() -2;
-    while (best[k].second >0) {
+    while (best[k].second >0)
+    {
         k = best[k].second;
         m_boundaries[k] = true;
     }
@@ -468,67 +483,85 @@ sentence::maximize(Unigrams& lex, std::size_t nsentences, double temperature, bo
 // nsentences is the number of sentences that have been
 // seen (preceding this one, if online; except this one,
 // if batch).
-void
-sentence::maximize(Bigrams& lex, std::size_t nsentences, double temperature){
+void sentence::maximize(Bigrams& lex, std::size_t nsentences, double temperature)
+{
     // create chart for dynamic program
     typedef std::pair<double, std::size_t> Cell; //best prob, index of best prob
     typedef std::vector<Cell> Row;
     typedef std::vector<Row> Chart;
+
     // chart stores prob of best seg ending at j going thru i
     Chart best(m_boundaries.size(), Row(m_boundaries.size(), Cell(0.0, 0)));
     assert(*(m_padded_possible.begin()) == 1);
     assert(*(m_padded_possible.end()-1) == m_boundaries.size()-2);
+
     std::vector<std::size_t>::const_iterator i;
     std::vector<std::size_t>::const_iterator j;
     std::vector<std::size_t>::const_iterator k;
-    m_padded_possible.insert(m_padded_possible.begin(),0); //ugh.
+    m_padded_possible.insert(m_padded_possible.begin(), 0); //ugh.
+
     // initialise base case
     if (debug_level >=100000) TRACE(m_padded_possible);
-    for (k = m_padded_possible.begin() + 2; k <m_padded_possible.end(); k++) {
+
+    for (k = m_padded_possible.begin() + 2; k <m_padded_possible.end(); k++)
+    {
         double prob = pow(lex(word_at(0, 1),word_at(1, *k)), 1/temperature);
         if (debug_level >=85000) TRACE3(*k,word_at(0, 1),word_at(1, *k));
         if (debug_level >=85000) TRACE2(lex(word_at(0, 1),word_at(1,*k)),prob);
         best[1][*k] = Cell(prob, 0);
     }
+
     // dynamic program
-    for (k = m_padded_possible.begin() + 3; k <m_padded_possible.end(); k++) {
-        for (j = m_padded_possible.begin() + 2; j < k; j++) {
-            for (i = m_padded_possible.begin() + 1; i < j; i++) {
+    for (k = m_padded_possible.begin() + 3; k <m_padded_possible.end(); k++)
+    {
+        for (j = m_padded_possible.begin() + 2; j < k; j++)
+        {
+            for (i = m_padded_possible.begin() + 1; i < j; i++)
+            {
                 double prob = pow(lex(word_at(*i, *j),word_at(*j, *k)), 1/temperature)
                     * best[*i][*j].first;
                 if (debug_level >=85000) TRACE5(*i,*j,*k,word_at(*i, *j),word_at(*j, *k));
                 if (debug_level >=85000) TRACE2(lex(word_at(*i, *j),word_at(*j, *k)),prob);
-                if (prob > best[*j][*k].first) {
+                if (prob > best[*j][*k].first)
+                {
                     best[*j][*k] = Cell(prob, *i);
                 }
             }
         }
     }
+
     // final word must be sentence boundary marker.
     std::size_t m = m_boundaries.size() -1;
     j = m_padded_possible.end() -1; // *j is m_boundaries.size() -2
-    for (i = m_padded_possible.begin()+1; i <j; i++) {
+    for (i = m_padded_possible.begin()+1; i <j; i++)
+    {
         double prob = pow(lex(word_at(*i, *j),word_at(*j, m)), 1/temperature)
             * best[*i][*j].first;
         if (debug_level >=85000) TRACE5(*i,*j,m,word_at(*i, *j),word_at(*j, m));
         if (debug_level >=85000) TRACE2(lex(word_at(*i, *j),word_at(*j, m)),prob);
-        if (prob > best[*j][m].first) {
+        if (prob > best[*j][m].first)
+        {
             best[*j][m] = Cell(prob, *i);
         }
     }
+
     if (debug_level >= 70000) TRACE(best);
+
     // now reconstruct the best segmentation
-    for (m = 2; m <m_boundaries.size() -2; m++) {
+    for (m = 2; m <m_boundaries.size() -2; m++)
+    {
         m_boundaries[m] = false;
     }
     m = m_boundaries.size() -2;
     std::size_t n = m_boundaries.size() -1;
-    while (best[m][n].second >0) {
+    while (best[m][n].second >0)
+    {
         std::size_t previous = best[m][n].second;
         m_boundaries[previous] = true;
         n = m;
         m = previous;
     }
+
     m_padded_possible.erase(m_padded_possible.begin()); //ugh.
     if (debug_level >= 70000) TRACE(m_boundaries);
 }
@@ -541,35 +574,43 @@ sentence::maximize(Bigrams& lex, std::size_t nsentences, double temperature){
 // nsentences is the number of sentences that have been
 // seen (preceding this one, if online; except this one,
 // if batch).
-void
-sentence::sample_tree(Unigrams& lex, std::size_t nsentences, double temperature, bool do_mbdp){
+void sentence::sample_tree(Unigrams& lex, std::size_t nsentences, double temperature, bool do_mbdp)
+{
     // cache some useful constants
     int N_branch = lex.ntokens() - nsentences;
     assert(N_branch >= 0);
-    double p_continue = pow((N_branch +  m_aeos/2.0) /
-                            (lex.ntokens() +  m_aeos), 1/temperature);
+
+    double p_continue = pow(
+        (N_branch +  m_aeos/2.0) / (lex.ntokens() +  m_aeos), 1/temperature);
     if (debug_level >=90000) TRACE(p_continue);
+
     // create chart for dynamic program
     typedef std::pair<double, std::size_t>  Transition; // prob, index from whence prob
     typedef std::vector<Transition> Transitions;
     typedef std::pair<double, Transitions> Cell; // total prob, choices
     typedef std::vector<Cell> Chart;
+
     // chart stores probabilities of different paths up to i
     Chart best(m_boundaries.size()-1);
     assert(*(m_padded_possible.begin()) == 1);
     assert(*(m_padded_possible.end()-1) == m_boundaries.size()-2);
+
     std::vector<std::size_t>::const_iterator i;
     std::vector<std::size_t>::const_iterator j;
     best[1].first = 1.0;
-    for (j = m_padded_possible.begin() + 1; j <m_padded_possible.end(); j++) {
-        for (i = m_padded_possible.begin(); i < j; i++) {
+    for (j = m_padded_possible.begin() + 1; j <m_padded_possible.end(); j++)
+    {
+        for (i = m_padded_possible.begin(); i < j; i++)
+        {
             double prob;
-            if (do_mbdp) {
+            if (do_mbdp)
+            {
                 double mbdp_p = mbdp_prob(lex, word_at(*i, *j), nsentences);
                 prob = pow(mbdp_p, 1/temperature) * best[*i].first;
                 if (debug_level >=85000) TRACE5(*i,*j,word_at(*i, *j),mbdp_p,prob);
             }
-            else {
+            else
+            {
                 prob = pow(lex(word_at(*i, *j)), 1/temperature)
                     * p_continue * best[*i].first;
                 if (debug_level >=85000) TRACE5(*i,*j,word_at(*i, *j),lex(word_at(*i, *j)),prob);
@@ -578,7 +619,9 @@ sentence::sample_tree(Unigrams& lex, std::size_t nsentences, double temperature,
             best[*j].second.push_back(Transition(prob, *i));
         }
     }
+
     if (debug_level >= 70000) TRACE(best);
+
     // now sample a segmentation
     std::size_t k;
     for (k = 2; k <m_boundaries.size() -2; k++)
@@ -602,6 +645,7 @@ sentence::sample_tree(Unigrams& lex, std::size_t nsentences, double temperature,
             }
         }
     }
+
     if (debug_level >= 70000) TRACE(m_boundaries);
 }
 
