@@ -366,6 +366,7 @@ std::size_t sentence::sample_by_flips(Bigrams& lex, double temperature)
             m_boundaries[i] = 0;
         }
     }
+
     return nchanged;
 }
 

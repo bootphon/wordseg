@@ -27,6 +27,28 @@ std::size_t debug_level;  // higher -> mode debug messages on stdout
 std::wstring sep;         // separator used to separate fields during printing of results
 
 
+// #define MAIN_DEBUG
+#ifdef MAIN_DEBUG
+
+int main()
+{
+    pitman_yor::restaurant r1;
+    r1.insert_new();
+    std::wcout << r1 << std::endl;
+
+    pitman_yor::restaurant r2(r1);
+    std::wcout << r2 << std::endl;
+
+    r1.erase(1);
+    std::wcout << r1 << std::endl;
+    std::wcout << r2 << std::endl;
+
+    return 0;
+}
+
+#else
+
+
 std::wstring str2wstr(std::string str)
 {
     std::wstring temp_str(str.length(), L' ');  // Make room for characters
@@ -35,82 +57,24 @@ std::wstring str2wstr(std::string str)
 }
 
 
-corpus::corpus_data load_corpus(const boost::program_options::variables_map& vm,
-                                const std::string& data_file, const std::string& eval_file)
+// Set a new global UTF8 locale to make output streams handle utf8.
+// Otherwise we'll get aborts when trying to output large character
+// values.
+void init_iostreams()
 {
-    corpus::corpus_data corpus;
+    std::locale utf8_locale(std::locale(), new utf8_codecvt_facet());
+    std::locale::global(utf8_locale);
 
-    // read training data
-    if (data_file != "stdin")
-    {
-        std::wifstream is(data_file.c_str());
-        if (!is)
-        {
-            std::cerr << "Error: couldn't open " << data_file << std::endl;
-            exit(1);
-        }
+    // set float precision to 5 decimals
+    std::wcout.precision(5);
 
-        corpus.read(
-            is,
-            vm["data-start-index"].as<std::size_t>(),
-            vm["data-num-sents"].as<std::size_t>());
-    }
-    else
-    {
-        corpus.read(
-            std::wcin,
-            vm["data-start-index"].as<std::size_t>(),
-            vm["data-num-sents"].as<std::size_t>());
-    }
-
-    // read evaluation data
-    if (eval_file !=  "none")
-    {
-        std::wifstream is(eval_file.c_str());
-        if (!is)
-        {
-            std::cerr << "Error: couldn't open " << eval_file << std::endl;
-            exit(1);
-        }
-
-        corpus.read_eval(
-            is,
-            vm["eval-start-index"].as<std::size_t>(),
-            vm["eval-num-sents"].as<std::size_t>());
-    }
-
-    if (debug_level >= 98000)
-    {
-        TRACE(substring::data.size());
-        TRACE(substring::data);
-        TRACE(corpus.sentence_boundary_list());
-        TRACE(corpus.nchars());
-        TRACE(corpus.possible_boundaries());
-        TRACE(corpus.true_boundaries());
-    }
-
-    if (debug_level >= 100)
-    {
-        std::wcout << "text nchartypes=" << corpus.nchartypes() << std::endl
-                   << "text nsentences=" << corpus.nsentences() << std::endl;
-    }
-
-    return corpus;
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(0);
 }
 
 
-int main(int argc, char** argv)
+boost::program_options::variables_map parse_arguments(int argc, char** argv)
 {
-    // Set a new global UTF8 locale to make output streams handle utf8.
-    // Otherwise we'll get aborts when trying to output large character
-    // values.
-    std::locale utf8_locale(std::locale(), new utf8_codecvt_facet());
-    std::locale::global(utf8_locale);
-    // set float precision to 5 decimals
-    std::wcout.precision(5);
-    std::ios_base::sync_with_stdio(false);
-    std::cin.tie(0);
-
     // define the command line arguments
     namespace po = boost::program_options;
     po::options_description desc("program_options");
@@ -146,7 +110,7 @@ int main(int argc, char** argv)
         ("eval-num-sents", po::value<std::size_t>()->default_value(0),
          "number of testing sentences to use (0 = all)")
 
-        ("eval-maximize", po::value<std::size_t>()->default_value(0),
+        ("eval-maximize", po::value<bool>()->default_value(false),
          "1 = choose max prob segmentation of test sentences, 0 (default) = sample instead")
 
         ("eval-interval", po::value<std::size_t>()->default_value(0),
@@ -286,6 +250,91 @@ int main(int argc, char** argv)
         po::notify(vm);
     }
 
+    return vm;
+}
+
+corpus::corpus_data load_corpus(
+    const boost::program_options::variables_map& vm,
+    const std::string& data_file,
+    const std::string& eval_file)
+{
+    corpus::corpus_data corpus;
+
+    // read training data
+    if (data_file != "stdin")
+    {
+        std::wifstream is(data_file.c_str());
+        if (!is)
+        {
+            std::cerr << "Error: couldn't open " << data_file << std::endl;
+            exit(1);
+        }
+
+        corpus.read(
+            is,
+            vm["data-start-index"].as<std::size_t>(),
+            vm["data-num-sents"].as<std::size_t>());
+    }
+    else
+    {
+        corpus.read(
+            std::wcin,
+            vm["data-start-index"].as<std::size_t>(),
+            vm["data-num-sents"].as<std::size_t>());
+    }
+
+    // read evaluation data
+    if (eval_file !=  "none")
+    {
+        std::wifstream is(eval_file.c_str());
+        if (!is)
+        {
+            std::cerr << "Error: couldn't open " << eval_file << std::endl;
+            exit(1);
+        }
+
+        corpus.read_eval(
+            is,
+            vm["eval-start-index"].as<std::size_t>(),
+            vm["eval-num-sents"].as<std::size_t>());
+    }
+
+    if (debug_level >= 98000)
+    {
+        TRACE(substring::data().size());
+        TRACE(substring::data());
+        TRACE(corpus.sentence_boundary_list());
+        TRACE(corpus.nchars());
+        TRACE(corpus.possible_boundaries());
+        TRACE(corpus.true_boundaries());
+    }
+
+    if (debug_level >= 100)
+    {
+        std::wcout << "text nchartypes=" << corpus.nchartypes() << std::endl
+                   << "text nsentences=" << corpus.nsentences() << std::endl;
+    }
+
+    return corpus;
+}
+
+
+int main(int argc, char** argv)
+{
+    // setup utf8
+    init_iostreams();
+
+    // parse the command line arguments
+    boost::program_options::variables_map vm = parse_arguments(argc, argv);
+
+
+    // init the random seed
+    unif01.seed(vm["randseed"].as<std::size_t>());
+
+    // wchar version of the result-field-separator
+    std::string csep(vm["result-field-separator"].as<std::string>());
+    sep.assign(csep.begin(), csep.end());
+
 
     // load the model parameters
     estimator::parameters params(
@@ -307,12 +356,6 @@ int main(int argc, char** argv)
         vm["token-memory"].as<std::size_t>(),
         vm["type-memory"].as<std::size_t>());
 
-    // init the random seed
-    unif01.seed(vm["randseed"].as<std::size_t>());
-
-    // wchar version of the result-field-separator
-    std::string csep(vm["result-field-separator"].as<std::string>());
-    sep.assign(csep.begin(), csep.end());
 
     // setup data_file to stdin or file
     std::string data_file = "stdin";
@@ -327,6 +370,7 @@ int main(int argc, char** argv)
     // load the input/eval text corpus
     corpus::corpus_data corpus = load_corpus(vm, data_file, eval_file);
 
+
     // open the output file, handle UTF8
     std::wofstream os(vm["output-file"].as<std::string>().c_str());
     if (! os)
@@ -336,6 +380,7 @@ int main(int argc, char** argv)
                   << std::endl;
         exit(1);
     }
+
 
     if (debug_level >= 20000)
     {
@@ -348,7 +393,7 @@ int main(int argc, char** argv)
             << "# eval-file=" << eval_file.c_str() << std::endl
             << "# eval-start-index=" << vm["eval-start-index"].as<std::size_t>() << std::endl
             << "# eval-num-sents=" << vm["eval-num-sents"].as<std::size_t>() << std::endl
-            << "# eval-maximize=" << vm["eval-maximize"].as<std::size_t>() << std::endl
+            << "# eval-maximize=" << vm["eval-maximize"].as<bool>() << std::endl
             << "# eval-interval=" <<vm["eval-interval"].as<std::size_t>() << std::endl
             << "# output-file=" << str2wstr(vm["output-file"].as<std::string>()) << std::endl
             << "# estimator=" << str2wstr(vm["estimator"].as<std::string>()) << std::endl
@@ -382,12 +427,14 @@ int main(int argc, char** argv)
             << "# result-field-separator=" << sep << std::endl;
     }
 
+
     annealing anneal(
         vm["anneal-iterations"].as<std::size_t>(),
         vm["anneal-start-temperature"].as<double>(),
         vm["anneal-stop-temperature"].as<double>(),
         vm["anneal-a"].as<double>(),
         vm["anneal-b"].as<double>());
+
 
     std::shared_ptr<estimator::base> sampler = estimator::get_estimator(
         params, corpus, anneal,
@@ -398,6 +445,12 @@ int main(int argc, char** argv)
         vm["decay-rate"].as<double>(),
         vm["samples-per-utt"].as<std::size_t>());
 
+    if (not sampler)
+    {
+        std::wcout << "Error: cannot instanciate estimator, exiting" << std::endl;
+        exit(1);
+    }
+
     std::wcout << "initial probability = " << sampler->log_posterior() << std::endl;
 
     if (! sampler->sanity_check())
@@ -406,14 +459,16 @@ int main(int argc, char** argv)
         exit(1);
     }
 
+
     // Train the sampler. If want to evaluate test set during
     // training intervals, need to add that into estimate function
     sampler->estimate(
         vm["burnin-iterations"].as<std::size_t>(),
-        std::wcout, vm["eval-interval"].as<std::size_t>(),
-        1,
-        vm["eval-maximize"].as<std::size_t>(),
-        true);
+        std::wcout,
+        vm["eval-interval"].as<std::size_t>(),
+        1.0,  // temperature
+        vm["eval-maximize"].as<bool>(),
+        true);  // is_decayed
 
     std::wcerr << "training done" << std::endl;
 
@@ -442,3 +497,4 @@ int main(int argc, char** argv)
 
     os << std::endl;
 }
+#endif
