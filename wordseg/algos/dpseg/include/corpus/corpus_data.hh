@@ -23,7 +23,7 @@ namespace corpus
     private:
         std::size_t m_evalsent_start;  // sentence # of first eval sentence
 
-        void read_data(std::wistream& is, std::size_t start, std::size_t ns);
+        void read_data(std::wistream& is, std::size_t start, std::size_t ns, std::wstring& data);
     };
 }
 

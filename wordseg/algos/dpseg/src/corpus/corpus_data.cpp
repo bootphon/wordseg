@@ -32,18 +32,18 @@ std::vector<sentence> corpus::corpus_data::get_eval_sentences(double init_pbound
 
 void corpus::corpus_data::read(std::wistream& is, std::size_t start, std::size_t ns)
 {
-    substring::data.clear();
+    std::wstring data;
     m_sentenceboundaries.clear();
     m_true_boundaries.clear();
     m_possible_boundaries.clear();
 
-    substring::data.push_back(L'\n');
+    data.push_back(L'\n');
     m_true_boundaries.push_back(true);
     m_possible_boundaries.push_back(false);
-    m_sentenceboundaries.push_back(substring::data.size());
+    m_sentenceboundaries.push_back(data.size());
 
     // if (debug_level >= 99000) TRACE2(_true_boundaries, _possible_boundaries);
-    read_data(is, start, ns);
+    read_data(is, start, ns, data);
     // if (debug_level >= 99000) TRACE(sentenceboundaries.size());
 
     m_ntrainsentences = ns;
@@ -56,6 +56,7 @@ void corpus::corpus_data::read(std::wistream& is, std::size_t start, std::size_t
 
     // note: this means # chars depends on training data only, not
     // eval data.
+    substring::data(data);
     initialize_chars();
 }
 
@@ -64,16 +65,17 @@ void corpus::corpus_data::read(std::wistream& is, std::size_t start, std::size_t
 // S::data as the training data.
 void corpus::corpus_data::read_eval(std::wistream& is, std::size_t start, std::size_t ns)
 {
-    m_evalsent_start = m_sentenceboundaries.size()-1;
-    read_data(is, start, ns);
+    m_evalsent_start = m_sentenceboundaries.size() - 1;
+    std::wstring data = substring::data();
+    read_data(is, start, ns, data);
 }
 
 
-void corpus::corpus_data::read_data(std::wistream& is, std::size_t start, std::size_t ns)
+void corpus::corpus_data::read_data(std::wistream& is, std::size_t start, std::size_t ns, std::wstring& data)
 {
-    assert(substring::data.size() >0);
-    assert(*(substring::data.end()-1) == L'\n');
-    assert(*(m_sentenceboundaries.end()-1) == substring::data.size());
+    assert(data.size() > 0);
+    assert(*(data.end()-1) == L'\n');
+    assert(*(m_sentenceboundaries.end()-1) == data.size());
 
     std::size_t i = m_sentenceboundaries.size()-1;
     std::size_t offset = i;
@@ -95,14 +97,14 @@ void corpus::corpus_data::read_data(std::wistream& is, std::size_t start, std::s
         }
 
         //prev. char was space -- already did boundary info
-        else if (m_true_boundaries.size() > substring::data.size())
+        else if (m_true_boundaries.size() > data.size())
         {
             if (c == L'\n') error("Input file contains line-final spaces");
-            substring::data.push_back(c);
+            data.push_back(c);
         }
         else
         {
-            if (*(substring::data.end()-1) == L'\n' || c == L'\n')
+            if (*(data.end()-1) == L'\n' || c == L'\n')
             {
                 m_true_boundaries.push_back(true);
                 m_possible_boundaries.push_back(false);
@@ -113,10 +115,10 @@ void corpus::corpus_data::read_data(std::wistream& is, std::size_t start, std::s
                 m_possible_boundaries.push_back(true);
             }
 
-            substring::data.push_back(c);
+            data.push_back(c);
             if (c == L'\n')
             {
-                m_sentenceboundaries.push_back(substring::data.size());
+                m_sentenceboundaries.push_back(data.size());
                 i++;
             }
         }
@@ -124,20 +126,20 @@ void corpus::corpus_data::read_data(std::wistream& is, std::size_t start, std::s
         if (debug_level >= 99000) TRACE3(c, m_true_boundaries, m_possible_boundaries);
     }
 
-    if (*(substring::data.end()-1) != L'\n')
+    if (*(data.end() - 1) != L'\n')
     {
-        substring::data.push_back(L'\n');
-        m_sentenceboundaries.push_back(substring::data.size());
+        data.push_back(L'\n');
+        m_sentenceboundaries.push_back(data.size());
     }
 
-    if (debug_level >= 98000) TRACE2(substring::data.size(), m_possible_boundaries.size());
+    if (debug_level >= 98000) TRACE2(data.size(), m_possible_boundaries.size());
     // TRACE2(substring::data.size(), _possible_boundaries.size());
 
-    assert(substring::data.size() >0);
-    assert(*(substring::data.end()-1) == L'\n');
-    assert(*(m_sentenceboundaries.end()-1) == substring::data.size());
+    assert(data.size() >0);
+    assert(*(data.end() - 1) == L'\n');
+    assert(*(m_sentenceboundaries.end()-1) == data.size());
     assert(m_true_boundaries.size() == m_possible_boundaries.size());
-    assert(substring::data.size() == m_possible_boundaries.size());
+    assert(data.size() == m_possible_boundaries.size());
 }
 
 

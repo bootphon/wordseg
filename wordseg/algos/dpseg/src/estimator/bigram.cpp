@@ -61,7 +61,7 @@ void estimator::bigram::print_statistics(std::wostream& os, std::size_t iter, do
     os << iter << sep << temp << sep << -log_posterior() << sep
        << m_ulex.pya() << sep << m_ulex.pyb() << sep << m_ulex.base_dist().p_stop() << sep
        << m_lex.pya() << sep << m_lex.pyb()
-       << " ";
+       << std::endl;
 }
 
 void estimator::bigram::estimate_eval_sentence(sentence& s, double temperature, bool maximize)
@@ -195,7 +195,7 @@ void estimator::online_bigram::estimate(
                 os << "Test set after " << i << " iterations of training " << std::endl;
 
                 // run evaluation over test set
-                run_eval(os,temp,maximize);
+                run_eval(os, temp, maximize);
             }
 	}
 
@@ -204,7 +204,7 @@ void estimator::online_bigram::estimate(
             if (debug_level >= 10000)
                 iter->print(std::wcerr);
 
-            if(!is_decayed)
+            if (!is_decayed)
             {
 		forget_items(iter);
             }
@@ -215,10 +215,10 @@ void estimator::online_bigram::estimate(
 		os << "Test set after " << m_nsentences_seen << " sentences of training " << std::endl;
 
 		// run evaluation over test set
-		run_eval(os,temp,maximize);
+		run_eval(os, temp, maximize);
             }
 
-            // add current sentence to _sentences_seen
+            // add current sentence to _sentences_seen TODO BUG failed here, iter is valid?
             m_sentences_seen.push_back(*iter);
             estimate_sentence(*iter, temperature);
             m_nsentences_seen++;

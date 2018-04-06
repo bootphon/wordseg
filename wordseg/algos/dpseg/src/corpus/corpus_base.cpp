@@ -42,9 +42,9 @@ void corpus::corpus_base::initialize_chars()
     if (! m_nchartypes)
     {
         std::set<wchar_t> sc;   //!< used to calculate nchartypes
-        for (uint i = 0; i < substring::data.size(); ++i)
-            if (substring::data[i] != L'\n')
-                sc.insert(substring::data[i]);
+        for (uint i = 0; i < substring::data().size(); ++i)
+            if (substring::data()[i] != L'\n')
+                sc.insert(substring::data()[i]);
         m_nchartypes = sc.size();
     }
 }
@@ -130,9 +130,9 @@ std::wostream& corpus::corpus_base::write_segmented_corpus(
 
     for (int i = begin; i < end; ++i)
     {
-        if (substring::data[i] != L'\n' and substring::data[i-1] != L'\n' && b[i])
+        if (substring::data()[i] != L'\n' and substring::data()[i-1] != L'\n' && b[i])
             os << L' ';
-        os << substring::data[i];
+        os << substring::data()[i];
     }
     return os;
 }

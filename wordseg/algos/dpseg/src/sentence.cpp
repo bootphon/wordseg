@@ -1,11 +1,6 @@
 #include "sentence.hh"
 
 
-// global data object, which holds training and eval data
-std::wstring substring::data;
-
-
-
 std::wostream& operator<< (std::wostream& os, const substring& s)
 {
     return os << s.string();
@@ -287,44 +282,46 @@ std::size_t sentence::sample_by_flips(Unigrams& lex, double temperature)
 void sentence::sample_one_flip(Unigrams& lex, double temperature, std::size_t boundary_within_sentence)
 {
     // used by DecayedMCMC to sample one boundary within a sentence
-    //cout << "Debug: Made it to sample_one_flip\n";
+    // std::cout << "Debug: Made it to sample_one_flip" << std::endl;
+
     std::size_t i = boundary_within_sentence;
     std::size_t i0, i1, i2, i3;
     // gets boundaries sufficient for bigram context but only use
     // unigram context
     surrounding_boundaries(i, i0, i1, i2, i3);
-    //cout << "Debug: Found surrounding boundaries\n";
+
+    // std::cout << "Debug: Found surrounding boundaries" << std::endl;
     if (m_boundaries[i])
     {
-        //cout << "Debug: Boundary exists, erasing...\n";
+        // std::cout << "Debug: Boundary exists, erasing..." << std::endl;
         erase(i1, i, lex);
         erase(i, i2, lex);
-        //cout << "Debug: erased\n";
+        // std::cout << "Debug: erased" << std::endl;
     }
     else
     {  // no boundary at position i
-       //cout << "Debug: No boundary, erasing...\n";
-        erase(i1, i2, lex);
-        //cout << "Debug: erased\n";
+       // std::cout << "Debug: No boundary, erasing..." << std::endl;
+       erase(i1, i2, lex);
+       // std::cout << "Debug: erased" << std::endl;
     }
 
     double pb = prob_boundary(i1, i, i2, lex, temperature);
     bool newboundary = (pb > unif01());
-    //cout << "Debug: calculated probability of boundary\n";
+    // std::cout << "Debug: calculated probability of boundary" << std::endl;
     if (newboundary)
     {
-        //cout << "Debug: making new boundary...\n";
+        // std::cout << "Debug: making new boundary..." << std::endl;
         insert(i1, i, lex);
         insert(i, i2, lex);
         m_boundaries[i] = 1;
-        //cout << "Debug: boundary and lexemes inserted\n";
+        // std::cout << "Debug: boundary and lexemes inserted" << std::endl;
     }
     else
     {  // don't insert a boundary at i
-        //cout << "Debug: not making a new boundary...\n";
+        // std::cout << "Debug: not making a new boundary..." << std::endl;
         insert(i1, i2, lex);
         m_boundaries[i] = 0;
-        //cout << "Debug: lexemes inserted, boundary set 0\n";
+        // std::cout << "Debug: lexemes inserted, boundary set 0" << std::endl;
     }
 }
 
@@ -777,14 +774,15 @@ std::vector<substring> sentence::get_words(const std::vector<bool>& boundaries) 
 //unigram insertion
 void sentence::insert(std::size_t left, std::size_t right, Unigrams& lex) const
 {
-    if (debug_level >= 20000) TRACE3(left, right, word_at(left,right));
-    lex.insert(word_at(left,right));
+    if (debug_level >= 10000) TRACE3(left, right, word_at(left,right));
+    lex.insert(word_at(left, right));
+    if (debug_level >= 10000) TRACE("Done");
 }
 
 //unigram removal
 void sentence::erase(std::size_t left, std::size_t right, Unigrams& lex) const
 {
-    if (debug_level >= 20000) TRACE3(left, right, word_at(left,right));
+    if (debug_level > 10000) TRACE4("DEBUG ", left, right, word_at(left,right));
     lex.erase(word_at(left,right));
 }
 

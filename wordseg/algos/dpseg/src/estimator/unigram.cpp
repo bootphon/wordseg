@@ -58,7 +58,7 @@ void estimator::unigram::print_statistics(std::wostream& os, std::size_t iter, d
 
     os << iter << sep << temp << sep << -log_posterior() << sep
        << m_lex.pya() << sep << m_lex.pyb() << sep << m_lex.base_dist().p_stop()
-       << " ";
+       << std::endl;
 }
 
 
@@ -175,20 +175,21 @@ estimator::online_unigram::~online_unigram()
 void estimator::online_unigram::estimate(
     std::size_t iters, std::wostream& os, std::size_t eval_iters, double temp, bool maximize, bool is_decayed)
 {
-    if(debug_level >= 10000)
-        std::wcout << "Inside OnlineUnigram estimate " << std::endl;
+    std::wcout << "Inside OnlineUnigram estimate " << std::endl;
 
     if (m_params.trace_every() > 0)
     {
         print_statistics(os, 0, 0, true);
     }
+
     m_nsentences_seen = 0;
     for (std::size_t i=1; i <= iters; i++)
     {
+        os << "DEBUG iteration " << i << "/" << iters << std::endl;
+
         double temperature = m_annealing.temperature(i);
-	if(!is_decayed)
+	if(! is_decayed)
         {
-            // if (i % 10 == 0) wcerr << ".";
             if (eval_iters && (i % eval_iters == 0))
             {
                 os << "Test set after " << i << " iterations of training " << std::endl;
@@ -198,31 +199,40 @@ void estimator::online_unigram::estimate(
             }
 	}
 
-        for(std::vector<sentence>::iterator iter = m_sentences.begin(); iter != m_sentences.end(); ++iter)
+        std::size_t count = 1;
+        for(std::vector<sentence>::iterator iter = m_sentences.begin(); iter != m_sentences.end(); ++iter, ++count)
+        // for (const auto& sent: m_sentences)
+        // for (auto& sent: m_sentences)
         {
+            os << "DEBUG sentence " << count << "/" << m_sentences.size() << std::endl;
+
             if (debug_level >= 10000) iter->print(std::wcerr);
-            if(!is_decayed)
+            if (! is_decayed)
             {
 		forget_items(iter);
             }
 
-            // if (_nsentences_seen % 100 == 0) wcerr << ".";
             if (eval_iters && (m_nsentences_seen % eval_iters == 0))
             {
 		os << "Test set after " << m_nsentences_seen
                    << " sentences of training " << std::endl;
 
 		// run evaluation over test set
-		run_eval(os,temp,maximize);
+		run_eval(os, temp, maximize);
             }
 
             // add current sentence to _sentences_seen
             m_sentences_seen.push_back(*iter);
+
+            os << "DEBUG estimating... " << std::endl;
             estimate_sentence(*iter, temperature);
+            os << "DEBUG done " << std::endl;
+
             m_nsentences_seen++;
 
+
             if (debug_level >= 9000) TRACE2(-log_posterior(), m_lex.ntokens());
-            if (debug_level >= 15000)  TRACE2(m_lex.ntypes(),m_lex);
+            if (debug_level >= 15000)  TRACE2(m_lex.ntypes(), m_lex);
         }
 
         if (m_params.trace_every() > 0 and i % m_params.trace_every() == 0)
@@ -240,6 +250,7 @@ void estimator::online_unigram::forget_items(std::vector<sentence>::iterator ite
     if (m_forget_rate)
     {
         assert(! m_corpus.token_memory and ! m_corpus.type_memory);
+
         if (m_sentences.begin() + m_forget_rate <= iter)
         {
             if (debug_level >= 9000)
@@ -250,6 +261,7 @@ void estimator::online_unigram::forget_items(std::vector<sentence>::iterator ite
         }
         assert(sanity_check());
     }
+
     else if (m_params.type_memory())
     {
         while (m_lex.ntypes() > m_params.type_memory())

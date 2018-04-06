@@ -10,7 +10,7 @@ corpus::corpus_experimental::~corpus_experimental()
 
 void corpus::corpus_experimental::read(std::wistream& is, std::size_t start, std::size_t ns)
 {
-    substring::data.clear();
+    std::wstring data;
     m_sentenceboundaries.clear();
 
     //where in the file are we?
@@ -44,13 +44,13 @@ void corpus::corpus_experimental::read(std::wistream& is, std::size_t start, std
         {
             //lexicon = false;
             training = true;
-            substring::data.push_back(L'\n');
+            data.push_back(L'\n');
         }
         else if (utterance.length() > 3 and utterance.substr(0,4) == L"Test")
         {
             training = false;
             testing = true;
-            m_testboundaries.push_back(substring::data.size());
+            m_testboundaries.push_back(data.size());
         }
         else
         {
@@ -58,10 +58,10 @@ void corpus::corpus_experimental::read(std::wistream& is, std::size_t start, std
             {
                 for (std::size_t i = 0; i < utterance.size(); i++)
                 {
-                    substring::data.push_back(utterance[i]);
+                    data.push_back(utterance[i]);
                 }
-                substring::data.push_back(L'\n');
-                m_sentenceboundaries.push_back(substring::data.size());
+                data.push_back(L'\n');
+                m_sentenceboundaries.push_back(data.size());
             }
 
             if (testing && !utterance.empty())
@@ -70,17 +70,17 @@ void corpus::corpus_experimental::read(std::wistream& is, std::size_t start, std
                 assert(breakpt != utterance.npos);
                 for (std::size_t i = 0; i < breakpt; i++)
                 {
-                    substring::data.push_back(utterance[i]);
+                    data.push_back(utterance[i]);
                 }
 
-                substring::data.push_back('\t');
-                m_testboundaries.push_back(substring::data.size());
+                data.push_back('\t');
+                m_testboundaries.push_back(data.size());
                 for (std::size_t i = breakpt+1; i < utterance.size(); i++)
                 {
-                    substring::data.push_back(utterance[i]);
+                    data.push_back(utterance[i]);
                 }
-                substring::data.push_back(L'\n');
-                m_testboundaries.push_back(substring::data.size());
+                data.push_back(L'\n');
+                m_testboundaries.push_back(data.size());
             }
         }
     }
@@ -88,11 +88,13 @@ void corpus::corpus_experimental::read(std::wistream& is, std::size_t start, std
     {
         error("wrong input file format\n");
     }
-    else if (*(substring::data.end()-1) != L'\n')
+    else if (*(data.end()-1) != L'\n')
     {
-        substring::data.push_back(L'\n');
-        m_testboundaries.push_back(substring::data.size());
+        data.push_back(L'\n');
+        m_testboundaries.push_back(data.size());
     }
+
+    substring::data(data);
     initialize_chars();
     //  _current_pair = _test_pairs.begin();
 }
@@ -120,14 +122,14 @@ void corpus::corpus_experimental::initialize(std::size_t ns)
 
     //assume any non-s boundary can be a word boundary
     for (std::size_t j = 2; j <= m_ntrain; ++j)
-        if (substring::data[j-1] != L'\n' && substring::data[j] != L'\n')
+        if (substring::data()[j-1] != L'\n' && substring::data()[j] != L'\n')
             m_possible_boundaries[j] = true;
 
     // _true_boundaries[i] is true iff there really is a boundary at i
     m_true_boundaries.resize(m_ntrain);
 
     for (std::size_t i = 0; i < m_ntrain; ++i)
-        if (substring::data[i] == L'\n' || substring::data[i-1] == L'\n')
+        if (substring::data()[i] == L'\n' || substring::data()[i-1] == L'\n')
             // insert sentence boundaries into _true_boundaries[]
             m_true_boundaries[i] = true;
 
