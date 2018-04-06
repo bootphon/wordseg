@@ -20,7 +20,7 @@ namespace pitman_yor
 
         const std::unordered_map<typename Base::argument_type, restaurant>& types()
             {
-                return parent::label_tables;
+                return parent::m_label_tables;
             }
 
         std::wostream& print(std::wostream& os) const
@@ -30,7 +30,7 @@ namespace pitman_yor
                    << std::endl;
 
                 wchar_t sep = '(';
-                for(const auto& item: parent::label_tables)
+                for(const auto& item: parent::m_label_tables)
                 {
                     os << sep << item.first << ' ';
                     // item.second.n;

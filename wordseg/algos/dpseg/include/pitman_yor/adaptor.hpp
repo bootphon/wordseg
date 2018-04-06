@@ -51,108 +51,69 @@ namespace pitman_yor
         typedef typename Base::argument_type argument_type;
         typedef double result_type;
 
-        //public functions are defined after defining private table class
-        //below.
-
-    protected:
-        Base& base;           //!< base distribution
-        uniform01_type& u01;  //!< shared random number generator
-        double a;                  //!< Pitman-Yor b parameter
-        double b;                  //!< Pitman-Yor b parameter
-        std::size_t m;                  //!< number of occupied tables
-        std::size_t n;                  //!< number of customers in restaurant
-
-        typedef argument_type V;
-        typedef std::map<std::size_t,std::size_t> U_U;
-        typedef std::unordered_map<V, restaurant> V_T;
-
-        V_T label_tables;
-
-    public:
-        adaptor(Base& base, uniform01_type& u01, double a, double b)
-            : base(base), u01(u01), a(a), b(b), m(), n()
+        adaptor(Base& base, uniform01_type& u01, double pya, double pyb)
+            : m_base(base), u01(u01), m_pya(pya), m_pyb(pyb), m_ntables(0), m_ntokens(0)
             {}
-
-        // note that copies of the adaptor will have a reference to the
-        // same base distribution (useful for hierarchical models)
-
-        /*
-        // sg: need to figure out and test these if I do a particle
-        // filter; static refs are annoying.
-        PYAdaptor(const PYAdaptor& pya):
-        base(pya.base), u01(pya.u01), a(pya.a), b(pya.b),
-        m(pya.m), n(pya.n), label_tables(pya.label_tables)
-        {}
-
-        // make a copy with a copy of the base distribution (needed for
-        // particle filtering)
-        PYAdaptor(const PYAdaptor& pya, Base& base0):
-        base(base0), u01(pya.u01), a(pya.a), b(pya.b),
-        m(pya.m), n(pya.n), label_tables(pya.label_tables)
-        {}
-        */
-    private:
-        adaptor& operator=(const adaptor& pya)
-            {}
-
-//       PYAdaptor& operator=(const PYAdaptor& pya) {
-// 	base = pya.base; u01 = pya.u01;
-// 	a = pya.a; b = pya.b;
-// 	m = pya.m; n = pya.n;
-// 	label_tables = pya.label_tables;
-// 	return *this;}
 
     public:
         double& pya()
             {
-                return a;
+                return m_pya;
             }
 
         double& pyb()
             {
-                return b;
+                return m_pyb;
             }
 
         std::size_t ntypes() const
             {
-                return label_tables.size();
+                return m_label_tables.size();
             }
 
         std::size_t ntables() const
             {
-                return m;
+                return m_ntables;
             }
 
         std::size_t ntokens() const
             {
-                return n;
+                return m_ntokens;
             }
 
-        std::size_t ntokens(const V& v) const
+        std::size_t ntokens(const argument_type& v) const
             {
-                typename V_T::const_iterator tit = label_tables.find(v);
-                return (tit == label_tables.end()) ? 0 : tit->second.get_n();
+                auto tit = m_label_tables.find(v);
+                if (tit == m_label_tables.end())
+                {
+                    return 0;
+                }
+                else
+                {
+                    tit->second.get_n();
+                }
             }
 
         const Base& base_dist() const
             {
-                return base;
+                return m_base;
             }
 
         Base& base_dist()
             {
-                return base;
+                return m_base;
             }
 
         //! operator() returns the approximate probability for inserting
         //! v, with context
-        double operator() (const V& v) const
+        double operator() (const argument_type& v) const
             {
                 if (debug_level >= 1000000)
                     TRACE1(v);
-                const auto tit = label_tables.find(v);
-                double p_old = (tit == label_tables.end()) ? 0 : (tit->second.get_n() - tit->second.get_m()*a) / (n + b);
-                double p_new = base(v) * (m*a + b) / (n + b);
+
+                const auto tit = m_label_tables.find(v);
+                double p_old = (tit == m_label_tables.end()) ? 0 : (tit->second.get_n() - tit->second.get_m() * m_pya) / (m_ntokens + m_pyb);
+                double p_new = m_base(v) * (m_ntables * m_pya + m_pyb) / (m_ntokens + m_pyb);
 
                 assert(p_new > 0);
 
@@ -160,64 +121,75 @@ namespace pitman_yor
                 return sum_p;
             }
 
-        //! insert() adds a customer to a table, and returns its
-        // (predictive) probability
-        double insert(const V& v)
+        // adds a customer to a table, and returns its (predictive)
+        // probability
+        double insert(const argument_type& v)
             {
-                typename V_T::iterator tit = label_tables.find(v);
+                // std::wcout << "adaptor::insert" << std::endl;
+                auto tit = m_label_tables.find(v);
 
                 // note: ignores (n - b) factor
-                double p_old = (tit == label_tables.end()) ? 0 : (tit->second.get_n() - tit->second.get_m()*a);
-                double p_new = base(v) * (m*a + b);
-                double p = p_old + p_new;  //sgwater: unnormalized prob
+                double p_old = 0.0;
+                if (tit != m_label_tables.end())
+                {
+                    p_old = tit->second.get_n() - tit->second.get_m() * m_pya;
+                }
+
+                double p_new = m_base(v) * (m_ntables * m_pya + m_pyb);
+                double p = p_old + p_new;  // sgwater: unnormalized prob
 
                 assert(p > 0);
-                double r = p*u01();
-                if (r <= p_old && tit != label_tables.end())
+                double r = p * u01();
+                if (r <= p_old && tit != m_label_tables.end())
                 {
                     // insert at an old table
-                    assert(tit != label_tables.end());
-                    tit->second.insert_old(r, a);
+                    assert(tit != m_label_tables.end());
+                    tit->second.insert_old(r, m_pya);
                 }
                 else
                 {
                     // insert customer at a new table
-                    restaurant& t = (tit == label_tables.end()) ? label_tables[v] : tit->second;
+                    restaurant& t = (tit == m_label_tables.end()) ? m_label_tables[v] : tit->second;
                     t.insert_new();
-                    ++m;    // one more table
-                    base.insert(v);
+                    ++m_ntables;    // one more table
+                    m_base.insert(v);
                 }
 
-                p /= (n+b); // normalize
-                ++n;    // one more customer
+                p /= (m_ntokens + m_pyb); // normalize
+                ++m_ntokens;    // one more customer
+
+                // std::wcout << "adaptor::insert done" << std::endl;
                 return p;
             }
 
-        //! erase() removes a customer at random from a restaurant
-        std::size_t erase(const V& v)
+        // removes a customer at random from a restaurant
+        std::size_t erase(const argument_type& v)
             {
-                typename V_T::iterator tit = label_tables.find(v);
+                // std::wcout << "adaptor::erase" << std::endl;
+
+                auto tit = m_label_tables.find(v);
                 assert(tit != label_tables.end());  // we should have tables with this label
 
                 int r = (int) tit->second.get_n() * u01();
-                --n;  // one less customer
 
+                --m_ntokens;  // one less customer
                 if (tit->second.erase(r) == 0)
                 {
-                    --m;
-                    base.erase(v);
+                    --m_ntables;
+                    m_base.erase(v);
                     if (tit->second.is_empty())
-                        label_tables.erase(tit);
+                        m_label_tables.erase(tit);
                 }
 
-                return n;
+                // std::wcout << "adaptor::erase done" << std::endl;
+                return m_ntokens;
             }
 
-        // Removes a token chosen uniformly at random
+        // removes a token chosen uniformly at random
         void erase_token_uniform()
             {
                 double r = ntokens()*u01();
-                for(const auto& item: label_tables)
+                for(const auto& item: m_label_tables)
                 {
                     r -= item.second.get_n();
                     if (r < 0)
@@ -235,7 +207,7 @@ namespace pitman_yor
         void erase_type_uniform()
             {
                 int r = (int)  ntypes()*u01();
-                typename V_T::iterator iter = label_tables.begin();
+                auto iter = m_label_tables.begin();
                 for (int j = 0; j <r; j++)
                 {
                     iter++;
@@ -257,21 +229,21 @@ namespace pitman_yor
             {
                 //find max table
                 double max = 0;
-                for(const auto& item: label_tables)
+                for(const auto& item: m_label_tables)
                 {
                     if (item.second.get_n() > max) max = item.second.get_n();
                 }
 
                 //compute partition func
                 double tot = 0;
-                for(const auto& item: label_tables)
+                for(const auto& item: m_label_tables)
                 {
                     tot += max / item.second.get_n();
                 }
 
                 // I r = (I)  ntypes()*(ntokens()-1)*u01();
                 double r = tot * u01();
-                for(const auto& item: label_tables)
+                for(const auto& item: m_label_tables)
                 {
                     // r -= ntokens() - it->second.n;
                     r -= max / item.second.get_n();
@@ -288,16 +260,17 @@ namespace pitman_yor
         //! empty() returns true if there are no customers in restaurant
         bool empty() const
             {
-                assert(m <= n);
-                return n == 0;
+                assert(m_ntables <= m_ntokens);
+                return m_ntokens == 0;
             }
 
         //! clear() zeros out this adaptor. You'll need to clear base()
         //! yourself
         void clear()
             {
-                m = n = 0;
-                label_tables.clear();
+                m_ntables = 0;
+                m_ntokens = 0;
+                m_label_tables.clear();
             }
 
         //! logprob() returns the log probability of the table assignment in
@@ -306,20 +279,20 @@ namespace pitman_yor
         double logprob() const
             {
                 double logp = 0;
-                for(const auto& it0: label_tables)
+                for(const auto& it0: m_label_tables)
                 {
                     for(const auto& it1: it0.second.get_n_m())
                     {
-                        logp += it1.second * (lgamma(it1.first - a) - lgamma(1 - a));
+                        logp += it1.second * (lgamma(it1.first - m_pya) - lgamma(1 - m_pya));
                     }
                 }
 
-                if (a > 0)
-                    logp += m*log(a) + lgamma(m + b/a) - lgamma(b/a);
+                if (m_pya > 0)
+                    logp += m_ntables * log(m_pya) + lgamma(m_ntables + m_pyb / m_pya) - lgamma(m_pyb / m_pya);
                 else
-                    logp += m*log(b);
+                    logp += m_ntables * log(m_pyb);
 
-                logp -= lgamma(n + b) - lgamma(b);
+                logp -= lgamma(m_ntokens + m_pyb) - lgamma(m_pyb);
                 return logp;
             }
 
@@ -327,11 +300,11 @@ namespace pitman_yor
         std::wostream& print(std::wostream& os) const
             {
                 os << "ntypes=" << ntypes() << ", ";
-                os << "n=" << n << ", m=" << m << ", label_tables=";
+                os << "n=" << m_ntokens << ", m=" << m_ntables << ", label_tables=";
 
                 char sep = '(';
                 std::size_t i=0;
-                for(const auto& item: label_tables)
+                for(const auto& item: m_label_tables)
                 {
                     os << sep << i << ": " << item.first << '=';
                     item.second.print(os);
@@ -346,28 +319,43 @@ namespace pitman_yor
         bool sanity_check() const
             {
                 std::vector<bool> sane;
-                sane.push_back(b >= 0);
-                sane.push_back(a <= 1 && a >= 0);
-                sane.push_back(m <= n);
+                sane.push_back(m_pyb >= 0);
+                sane.push_back(m_pya <= 1 && m_pya >= 0);
+                sane.push_back(m_ntables <= m_ntokens);
 
                 std::size_t nn = 0, mm = 0;
-                for(const auto& item: label_tables)
+                for(const auto& item: m_label_tables)
                 {
                     nn += item.second.get_n();
                     mm += item.second.get_m();
                     sane.push_back(item.second.sanity_check());
                 }
 
-                sane.push_back(n == nn);
-                sane.push_back(m == mm);
+                sane.push_back(m_ntokens == nn);
+                sane.push_back(m_ntables == mm);
 
                 return std::all_of(sane.begin(), sane.end(), [](bool b){return b;});
             }
+
+    protected:
+        Base& m_base;               // base distribution
+        uniform01_type& u01;        // shared random number generator
+        double m_pya;               // Pitman-Yor b parameter
+        double m_pyb;               // Pitman-Yor b parameter
+        std::size_t m_ntables;      // number of occupied tables
+        std::size_t m_ntokens;       // number of customers in restaurant
+        std::unordered_map<argument_type, restaurant> m_label_tables;
+
+    private:
+        // copy is not allowed
+        adaptor& operator=(const adaptor& other) {}
+        //adaptor(const adaptor& other) {}
     };
 
 
     template <typename Base>
-    std::wostream& operator<< (std::wostream& os, const adaptor<Base>& py) {
+    std::wostream& operator<< (std::wostream& os, const adaptor<Base>& py)
+    {
         return py.print(os);
     }
 }

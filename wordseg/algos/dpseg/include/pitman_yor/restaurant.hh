@@ -9,22 +9,18 @@ namespace pitman_yor
 {
     class restaurant
     {
-        // total number of customers at tables with this label
-        std::size_t n;
-
-        // number of tables with this label
-        std::size_t m;
-
-        // number of customers at table -> number of tables
-        std::map<std::size_t, std::size_t> n_m;
-
     public:
         restaurant();
         restaurant(const restaurant& other);
         ~restaurant();
 
-        // inserts a customer at a random old table using PY sampling
-        // distribution
+        // getters
+        const std::map<std::size_t, std::size_t>& get_n_m() const;
+        const std::size_t& get_n() const;
+        const std::size_t& get_m() const;
+
+        // inserts a customer at a random old table using pitman-yor
+        // sampling distribution
         void insert_old(double r, const double& a);
 
         // inserts a customer at a new table
@@ -34,11 +30,6 @@ namespace pitman_yor
         // of customers left at table
         std::size_t erase(int r);
 
-        // getters
-        const std::map<std::size_t, std::size_t>& get_n_m() const;
-        const std::size_t& get_n() const;
-        const std::size_t& get_m() const;
-
         // true if there are no customers left with this label
         bool is_empty() const;
 
@@ -47,6 +38,21 @@ namespace pitman_yor
 
         // print description to an output stream
         std::wostream& print(std::wostream& os) const;
+
+        friend std::wostream& operator<<(std::wostream& os, const restaurant& r);
+
+    private:
+        // total number of customers at tables with this label
+        std::size_t m_ncustomers;
+
+        // number of tables with this label
+        std::size_t m_ntables;
+
+        // number of customers at table -> number of tables
+        std::map<std::size_t, std::size_t> m_occupation_map;
+
+        // cleanup the occupation map, erase entries when count is 0
+        void clean();
     };
 }
 
