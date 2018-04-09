@@ -80,7 +80,7 @@ def test_dpseg_bugfix(prep):
     assert _dpseg_bugfix(['..', '..', '.', '..'], [0, 1, 2]) == [0, 1, 3]
 
 
-def test_replicate_cds_wordseg(datadir):
+def test_replicate_cdswordseg(datadir):
     sep = Separator()
 
     # only the last 10 lines, for a fast test. We cannot take the 10
@@ -116,3 +116,45 @@ def test_replicate_cds_wordseg(datadir):
         'boundary_noedge_recall': 0.5862}
 
     assert score == pytest.approx(expected, rel=1e-3)
+
+
+# the following test compares the wordseg dpseg binary with an
+# alternative one (called from the dpseg.segment() function), it is
+# executed only if the ALTERNATIVE_DPSEG envirnment variable is
+# defined.
+
+def arguments():
+    common = '--randseed 1 --burnin-iteration 100'
+
+    for estimator in ('T', 'V', 'F'):
+        for ngram in (1, 2):
+            for mode in ('batch', 'online'):
+                if not (estimator == 'F' and mode == 'online'):
+                    yield '--estimator {} --ngram {} --mode {} '.format(
+                        estimator, ngram, mode) + common
+
+
+class DpsegTester(object):
+    def __init__(self):
+        if self.is_valid():
+            self.dpseg1 = utils.get_binary('dpseg')
+            self.dpseg2 = os.environ['ALTERNATIVE_DPSEG']
+
+    def is_valid(self):
+        return 'ALTERNATIVE_DPSEG' in os.environ
+
+    def run(self, text, binary, args):
+        return list(segment(text, nfolds=1, njobs=1, args=args, binary=binary))
+
+    def compare(self, text, args):
+        o1 = self.run(text, self.dpseg1, args)
+        o2 = self.run(text, self.dpseg2, args)
+        assert o1 == o2
+
+
+tester = DpsegTester()
+
+@pytest.mark.skipif(not tester.is_valid(), reason='run it by specifying $ALTERNATIVE_DPSEG')
+@pytest.mark.parametrize('args', arguments())
+def test_replicate(args, prep):
+    tester.compare(prep[:10], args)
