@@ -255,12 +255,14 @@ class UnicodeGenerator(object):
         return char
 
 
-def _dpseg(text, args, log_level=logging.ERROR, log_name='wordseg-dpseg'):
+def _dpseg(text, args,
+           log_level=logging.ERROR,
+           log_name='wordseg-dpseg',
+           binary=utils.get_binary('dpseg')):
     log = utils.get_logger(name=log_name, level=log_level)
-
     with tempfile.NamedTemporaryFile() as tmp_output:
         command = '{binary} --output-file {output} {args}'.format(
-            binary=utils.get_binary('dpseg'),
+            binary=binary,
             output=tmp_output.name,
             args=args)
 
@@ -290,7 +292,7 @@ def _dpseg(text, args, log_level=logging.ERROR, log_name='wordseg-dpseg'):
                 log.debug(line_out.strip())
 
             if line_err != "":
-                log.error(line_err.strip())
+                log.debug(line_err.strip())
 
         thread.join()
         process.wait()
@@ -304,7 +306,8 @@ def _dpseg(text, args, log_level=logging.ERROR, log_name='wordseg-dpseg'):
 
 def segment(text, nfolds=5, njobs=1,
             args='--ngram 1 --a1 0 --b1 1',
-            log=utils.null_logger()):
+            log=utils.null_logger(),
+            binary=utils.get_binary('dpseg')):
     """Run the 'dpseg' binary on `nfolds` folds"""
     # force the text to be a list of utterances
     text = list(text)
@@ -330,8 +333,10 @@ def segment(text, nfolds=5, njobs=1,
 
     segmented_texts = joblib.Parallel(n_jobs=njobs, verbose=0)(
         joblib.delayed(_dpseg)(
-            fold, args, log_level=log.getEffectiveLevel(),
-            log_name='wordseg-dpseg - fold {}'.format(n+1))
+            fold, args,
+            log_level=log.getEffectiveLevel(),
+            log_name='wordseg-dpseg - fold {}'.format(n+1),
+            binary=binary)
         for n, fold in enumerate(folded_texts))
 
     log.debug('unfolding the %s folds', nfolds)
@@ -394,7 +399,7 @@ def _dpseg_bugfix(text, boundaries, log=utils.null_logger()):
             'this will cause wordseg-dpseg to bug. '
             'Please re-arrange your text manually and try again.')
 
-    need_to_fix = [i for i, length in enumerate(first_len) if length == 1]
+    need_to_fix = [i for i, len in enumerate(first_len) if len == 1]
     log.debug(
         'dpseg bugfix: need to fix folds {}'
         .format([i+1 for i in need_to_fix]))
