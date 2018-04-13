@@ -52,6 +52,11 @@ def test_bad_train(prep):
         dibs.CorpusSummary(prep)
 
 
+def test_emptyline_in_train(tags):
+    # empty lines are ignored in train file
+    dibs.CorpusSummary([''] + tags)
+
+
 def test_replicate_cdswordseg(datadir):
     sep = Separator()
 

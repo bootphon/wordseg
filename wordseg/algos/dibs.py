@@ -106,17 +106,28 @@ class CorpusSummary(object):
         self.internal_diphones = Counter()
         self.spanning_diphones = Counter()
 
+        nremoved = 0
         for index, utt in enumerate(text):
-            if separator.word not in utt:
-                raise ValueError(
-                    'word separator ("{}") not found in train text: line {}'
-                    .format(separator.word, index + 1))
+            # ignore empty lines (as in wordseg-prep, to have a
+            # consistant behavior between the tools) and let the user
+            # know how many lines we ignored
+            if utt == '':
+                log.debug('ignoring empty line %d', index+1)
+                nremoved += 1
+            else:
+                if separator.word not in utt:
+                    raise ValueError(
+                        'word separator "{}" not found in train text: line {}'
+                        .format(separator.word, index + 1))
 
-            self._read_utterance(utt, level)
+                self._read_utterance(utt, level)
 
         self.diphones = Counter(self.internal_diphones)
         for k, v in self.spanning_diphones.items():
             self.diphones.increment(k, v)
+
+        if nremoved > 0:
+            log.info('ignored %d empty lines in train text', nremoved)
 
         log.info('train data summary: %s', self.summary)
 
