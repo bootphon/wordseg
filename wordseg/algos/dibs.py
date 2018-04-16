@@ -111,7 +111,7 @@ class CorpusSummary(object):
             # ignore empty lines (as in wordseg-prep, to have a
             # consistant behavior between the tools) and let the user
             # know how many lines we ignored
-            if utt == '':
+            if utt.strip() == '':
                 log.debug('ignoring empty line %d', index+1)
                 nremoved += 1
             else:
