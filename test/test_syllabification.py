@@ -21,6 +21,16 @@ def datadir():
         'data/syllabification')
 
 
+@pytest.fixture(scope='session')
+def onsets(datadir):
+    return open_datafile(os.path.join(datadir, 'cspanish_onsets.txt'))
+
+
+@pytest.fixture(scope='session')
+def vowels(datadir):
+    return open_datafile(os.path.join(datadir, 'cspanish_vowels.txt'))
+
+
 def test_bad_input():
     separator = Separator(phone=';', syllable='_', word=' ')
 
@@ -69,10 +79,9 @@ def test_remove_restore_phones(text):
     assert restored == text
 
 
-def test_cspanish(datadir):
-    vowels = open_datafile(os.path.join(datadir, 'cspanish_vowels.txt'))
-    onsets = open_datafile(os.path.join(datadir, 'cspanish_onsets.txt'))
-    separator = Separator(phone=';', syllable='_', word=' ')
+@pytest.mark.parametrize('syllable', ['_', ';esyll'])
+def test_cspanish_good(onsets, vowels, syllable):
+    separator = Separator(phone=';', syllable=syllable, word=' ')
 
     text = [
         'no se kae',
@@ -87,12 +96,10 @@ def test_cspanish(datadir):
         'mi_ra_ es_ta_ xu_gan_9o_ ']
 
     sylls = syllabify(text, onsets, vowels, separator=separator, strip=False)
-    assert sylls == expected
+    assert sylls == [e.replace('_', syllable) for e in expected]
 
 
-def test_cspanish_bad(datadir):
-    vowels = open_datafile(os.path.join(datadir, 'cspanish_vowels.txt'))
-    onsets = open_datafile(os.path.join(datadir, 'cspanish_onsets.txt'))
+def test_cspanish_bad(onsets, vowels):
     separator = Separator(phone=';', syllable='_', word=' ')
 
     text = [
@@ -102,19 +109,11 @@ def test_cspanish_bad(datadir):
         'esta aj la tata e9u',
         'mira esta xugan9o']
 
-    expected = [
-        'no_ se_ ka_e_ ',
-        'si_ aj_ aj_ al_ aj_ ',
-        'es_ta_ aj_ la_ ta_ta_ e_9u_ ',
-        'mi_ra_ es_ta_ xu_gan_9o_ ']
-
     with pytest.raises(ValueError):
-        sylls = syllabify(text, onsets, vowels, separator=separator, strip=False)
+        syllabify(text, onsets, vowels, separator=separator, strip=False)
 
 
-def test_cspanish_strip(datadir):
-    vowels = open_datafile(os.path.join(datadir, 'cspanish_vowels.txt'))
-    onsets = open_datafile(os.path.join(datadir, 'cspanish_onsets.txt'))
+def test_cspanish_strip(onsets, vowels):
     separator = Separator(phone=';', syllable='_', word=' ')
 
     text = [
@@ -133,9 +132,8 @@ def test_cspanish_strip(datadir):
     assert sylls == expected
 
 
-def test_cspanish_phones(datadir):
-    vowels = open_datafile(os.path.join(datadir, 'cspanish_vowels.txt'))
-    onsets = open_datafile(os.path.join(datadir, 'cspanish_onsets.txt'))
+@pytest.mark.parametrize('strip', [True, False])
+def test_cspanish_phones(onsets, vowels, strip):
     separator = Separator(phone=';', syllable='_', word=' ')
 
     text = [
@@ -145,35 +143,29 @@ def test_cspanish_phones(datadir):
         'm;i;r;a; es;t;a; x;u;g;a;n;9o; '
     ]
 
-    expected = [
-        'n;o;_ s;e;_ k;a;_e;_ ',
-        's;i;_ a;j;_ a;j;_ a;l;_ a;j;_ ',
-        'es;_t;a;_ a;j;_ l;a;_ t;a;_t;a;_ e;_9u;_ ',
-        'm;i;_r;a;_ es;_t;a;_ x;u;_g;a;n;_9o;_ '
-    ]
+    if strip:
+        expected = [
+            'n;o s;e k;a_e',
+            's;i a;j a;j a;l a;j',
+            'es_t;a a;j l;a t;a_t;a e_9u',
+            'm;i_r;a es_t;a x;u_g;a;n_9o'
+        ]
+    else:
+        expected = [
+            'n;o;_ s;e;_ k;a;_e;_ ',
+            's;i;_ a;j;_ a;j;_ a;l;_ a;j;_ ',
+            'es;_t;a;_ a;j;_ l;a;_ t;a;_t;a;_ e;_9u;_ ',
+            'm;i;_r;a;_ es;_t;a;_ x;u;_g;a;n;_9o;_ ']
 
-    sylls = syllabify(text, onsets, vowels, separator=separator, strip=False)
+    sylls = syllabify(text, onsets, vowels, separator=separator, strip=strip)
     assert sylls == expected
 
-
-def test_cspanish_phones_strip(datadir):
-    vowels = open_datafile(os.path.join(datadir, 'cspanish_vowels.txt'))
-    onsets = open_datafile(os.path.join(datadir, 'cspanish_onsets.txt'))
-    separator = Separator(phone=';', syllable='_', word=' ')
-
-    text = [
-        'n;o s;e k;a;e',
-        's;i a;j a;j a;l a;j',
-        'es;t;a a;j l;a t;a;t;a e;9u',
-        'm;i;r;a es;t;a x;u;g;a;n;9o'
-    ]
-
-    expected = [
-        'n;o s;e k;a_e',
-        's;i a;j a;j a;l a;j',
-        'es_t;a a;j l;a t;a_t;a e_9u',
-        'm;i_r;a es_t;a x;u_g;a;n_9o'
-    ]
-
-    sylls = syllabify(text, onsets, vowels, separator=separator, strip=True)
-    assert sylls == expected
+# TODO that test is failing for now
+# @pytest.mark.parametrize('strip', [True, False])
+# def test_cspanish_default_separator(onsets, vowels, strip):
+#     text = ['m i r a ;eword']
+#     expected = (
+#         ['m i ;esyllr a ;esyll;eword'] if not strip else ['m i;esyllr a'])
+#
+#     sylls = syllabify(text, onsets, vowels, separator=Separator(), strip=strip)
+#     assert sylls == expected

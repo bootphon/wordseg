@@ -111,7 +111,7 @@ def _syllabify_utterance(utt, onsets, vowels, separator, strip, log):
     words = list(
         separator.split(utt.strip(), 'word', keep_boundaries=True))[::-1]
 
-    # estimate syllables boudaries word per word
+    # estimate syllables boundaries word per word
     output = ''
     for word in words:
         output_word = ''
@@ -146,7 +146,7 @@ def _syllabify_utterance(utt, onsets, vowels, separator, strip, log):
 
 
 def syllabify(text, onsets, vowels, separator=Separator(),
-              strip=False, log=utils.null_logger()):
+              strip=False, tolerant=False, log=utils.null_logger()):
     """Syllabify a text given in phonological or orthographic form
 
     Parameters
@@ -187,6 +187,7 @@ def syllabify(text, onsets, vowels, separator=Separator(),
 
     # we are syllabifying utterance per utterance
     syllabified_text = []
+    nerrors = 0
     for n, utt in enumerate(text):
         utt = utt.strip()
 
@@ -204,19 +205,33 @@ def syllabify(text, onsets, vowels, separator=Separator(),
         syllables = _syllabify_utterance(
             utt, onsets, vowels, separator, strip, log)
 
-        # check we preserve content
+        # check we preserve content during process
         if separator.remove(utt) != separator.remove(syllables):
-            raise ValueError(
-                'line {}: syllabified utterance differs from the input one, '
-                'the onsets and/or vowels may be invalid: "{}" != "{}"'.format(
-                    n+1, separator.remove(syllables), separator.remove(utt)))
+            wutt = separator.tokenize(utt, 'word')
+            wsyll = separator.tokenize(
+                separator.remove(syllables, 'syllable'), 'word')
+            index = [s == u for s, u in zip(wsyll, wutt)].index(False)
+            error = (
+                'line {}, word {}: "{}" != "{}"'.format(
+                    n+1, index + 1, wsyll[index], wutt[index]))
 
+            if tolerant:
+                log.warning(error)
+                nerrors += 1
+                continue
+            else:
+                raise ValueError(error)
 
         # restore the phones separators as they were before
         syllables = _restore_phone_separators(
             syllables, index, separator, strip)
 
         syllabified_text.append(syllables)
+
+    if tolerant and nerrors > 0:
+        log.error(
+            'syllabification failed for {} utterances, '
+            'onsets/vowels may be invalid'.format(nerrors))
 
     return syllabified_text
 
@@ -225,7 +240,7 @@ def _add_arguments(parser):
     """Add command line arguments for wordseg-syll"""
     parser.add_argument(
         'onsets_file', type=str, metavar='<onsets-file>',
-        help=('a file containing valid onsets for the '
+        help=('a file containing the list of valid onsets for the '
               'input text, one onset per line'))
 
     parser.add_argument(
@@ -236,6 +251,11 @@ def _add_arguments(parser):
     parser.add_argument(
         '--strip', action='store_true',
         help='removes the end separators in syllabified output')
+
+    parser.add_argument(
+        '--tolerant', action='store_true',
+        help='tolerate syllabification failures and report them as warnings, '
+        'default is to fail at the first error')
 
 
 def open_datafile(data_file):
@@ -274,8 +294,8 @@ def main():
 
     # syllabify the input text
     sylls = utils.CountingIterator(syllabify(
-        streamin, onsets, vowels,
-        separator=separator, strip=args.strip, log=log))
+        streamin, onsets, vowels, separator=separator,
+        strip=args.strip, tolerant=args.tolerant, log=log))
 
     # display the output
     log.info('syllabified %s utterances', sylls.count)
