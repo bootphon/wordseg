@@ -5,7 +5,7 @@
 import pytest
 
 from wordseg.separator import Separator
-from wordseg.prepare import check_utterance, prepare, _pairwise
+from wordseg.prepare import check_utterance, prepare, gold, _pairwise
 
 
 # correctly formatted phonological forms
@@ -94,3 +94,16 @@ def test_punctuation(utt):
         list(prepare([utt], check_punctuation=True))
 
     list(prepare([utt], check_punctuation=False))
+
+
+def test_empty_lines():
+    text = ['', '']
+    assert len(list(prepare(text))) == 0
+    assert len(list(gold(text))) == 0
+
+    text = [
+        'hh ax l ;esyll ow ;esyll ;eword',
+        '',
+        'hh ax l ;esyll ow ;esyll ;eword']
+    assert len(list(prepare(text, separator=Separator(), unit='phone'))) == 2
+    assert len(list(gold(text, separator=Separator()))) == 2

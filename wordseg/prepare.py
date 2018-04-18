@@ -79,7 +79,7 @@ def check_utterance(utterance, separator=Separator(), check_punctuation=True):
             'utterance is not a string ({}): {}'.format(
                 type(utterance), utterance))
 
-    if not len(utterance):
+    if not len(separator.strip(utterance)):
         raise ValueError('utterance is an empty string')
 
     # search any punctuation in utterance (take care to remove token
@@ -89,19 +89,19 @@ def check_utterance(utterance, separator=Separator(), check_punctuation=True):
         if punctuation_re.sub('', cleaned_utterance) != cleaned_utterance:
             raise ValueError('punctuation found in utterance')
 
-    # utterance begins with a separator
+    # utterance must not begin with a separator
     for sep in separator.iterate():
         if sep and re.match('^{}'.format(re.escape(sep)), utterance):
             raise ValueError(
                 'utterance begins with a separator: "{}"'.format(utterance))
 
-    # utterance ends with a word separator
+    # utterance must end with a word separator
     if not utterance.endswith(separator.word):
         raise ValueError(
             'utterance does not end with a word separator: "{}"'
             .format(utterance))
 
-    # a words does not finish with a syllable separator
+    # a word does not finish with a syllable separator
     if separator.syllable and separator.syllable in utterance and not all(
             a == separator.syllable
             for a, b in _pairwise(utterance.split(separator.phone))
@@ -170,6 +170,8 @@ def prepare(text, separator=Separator(), unit='phone',
         raise ValueError(
             "unit must be 'phone' or 'syllable', it is '{}'".format(unit))
 
+    # define the function that prepare the text (removing requested
+    # separators)
     if unit == 'phone':
         def func(line):
             return line.replace(separator.syllable, '')\
@@ -236,8 +238,9 @@ def gold(text, separator=Separator()):
             .replace(separator.phone or '', '')
             .replace(separator.word, ' ') for line in text)
 
-    # delete any duplicate, begin or end spaces.
-    return (utils.strip(line) for line in gold)
+    # delete any duplicate, begin or end spaces. As for prepare, we
+    # ignore empty lines.
+    return (line for line in (utils.strip(line) for line in gold) if line)
 
 
 @utils.CatchExceptions
@@ -277,6 +280,7 @@ def main():
     streamin = list(streamin)
 
     log.debug('separator is %s', separator)
+    log.info('preparing the text at {} level'.format(args.unit))
 
     # check all the utterances are correctly formatted.
     prep = utils.CountingIterator(prepare(
@@ -285,7 +289,7 @@ def main():
 
     # write prepared text, one utterance a line, ending with a newline
     streamout.write('\n'.join(prep) + '\n')
-    log.debug('prepared %s utterances', prep.count)
+    log.info('prepared %s utterances', prep.count)
 
     if args.gold:
         log.info('generating gold text to %s', args.gold)
