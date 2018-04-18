@@ -1,1 +1,1 @@
-"""The wordseg module """
+"""The wordseg module"""
