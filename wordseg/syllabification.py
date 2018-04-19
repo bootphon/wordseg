@@ -23,97 +23,188 @@ from wordseg import utils
 from wordseg.separator import Separator
 
 
-def _remove_phone_separators(utt, separator):
-    # special case when there is no phone separator in the utterance
-    if not re.search(separator.phone, utt):
-        return utt, []
+class Syllabifier(object):
+    """Syllabify a text given in phonological or orthographic form
 
-    # the returned index is a list of lists (for each word, length of
-    # each phone)
-    index = []
+    Syllabification errors can occur when the onsets and/or vowels are
+    not adapted to the input text (see the `tolerant` parameter).
 
-    # split the utterance in words and index the phones length
-    for word in separator.split(utt, 'word', keep_boundaries=True):
-        phones = separator.split(word, 'phone', keep_boundaries=False)
-        current_index = [len(p) for p in phones if len(p)]
-        if current_index:
-            index.append(current_index)
+    Parameters
+    ----------
+    onsets : list
+        The list of valid onsets in the `text`
+    vowels : list
+        The list of vowels in the `text`
+    separator : Separator, optional
+        Token separation in the `text`
+    log : logging.Logger, optional
+        Where to send log messages
 
-    return separator.remove(utt, level='phone'), index
+    Raises
+    ------
+    ValueError
+        If `onsets` or `vowels` are empty or are not lists.
 
+    """
+    def __init__(self, onsets, vowels, separator=Separator(),
+                 log=utils.null_logger()):
+        self.onsets = onsets
+        self.vowels = vowels
+        self.separator = separator
+        self.log = log
 
-def _restore_phone_separators(utt, index, separator, strip=False):
-    # special case when there is no phone separator in the utterance
-    if index == []:
-        return utt
+        # ensure onsets and vowels are not empty
+        if not isinstance(vowels, list) or not len(vowels):
+            raise ValueError('unvalid or empty vowels list')
+        if not isinstance(onsets, list) or not len(onsets):
+            raise ValueError('unvalid or empty onsets list')
 
-    # restore the utterance word per word (index[i]) and within words,
-    # phone per phone (index[i][j]).
-    restored = ''
-    for i, word in enumerate(
-            separator.split(utt, 'word', keep_boundaries=True)):
-        if len(word) == 0:
-            # coherent behavior for non striped texts
-            restored += separator.word
-        else:
-            j = 0  # iterate on syllables
-            for syllable in separator.split(
-                    word, 'syllable', keep_boundaries=True):
-                # for each phone in the syllable, append a phone
-                # separator
-                k = 0
-                while k < len(syllable):
-                    restored += syllable[k:k+index[i][j]] + separator.phone
-                    k += index[i][j]
-                    j += 1
+        # concatenation of all chars in onsets and vowels (usefull to
+        # detect any char during syllabification)
+        self.symbols = (
+            set(''.join(v for v in vowels)).union(
+                set(''.join(o for o in onsets))))
 
-                # end of the syllable, append a separator
-                if strip:
-                    restored = restored[:-len(separator.phone)]
-                restored += separator.syllable
+    def syllabify(self, text, strip=False, tolerant=False):
+        """Returns the text with syllable boundaries added
 
-            # end of the word, remove the last syllable boundary
-            # append a word separator
-            restored = restored[:-len(separator.syllable)] + separator.word
+        Parameters
+        ----------
+        text : sequence
+            The input text to be syllabified. Each element of the sequence
+            is assumed to be a single and complete utterance in valid
+            phonological form.
+        strip : bool, optional
+            When True, removes the syllable boundary at the end of words.
+        tolerant : bool, optional
+            When False (the default), the function raise a ValueError on
+            the first utterance that have not been correctly
+            syllabified. When True, ignore the failed utterances in output
+            but issue a log warning instead.
 
-    # remove the last word boundary of the utterance
-    return restored[:-len(separator.word)]
+        Returns
+        -------
+        The text with estimated syllable boundaries added. If `tolerant`
+        is True some utterances may be missing in the output.
 
+        Raises
+        ------
+        ValueError
+            If an utterance has not been correctly syllabified . If
+            `separator.syllable` is found in the text, or if `onsets`
+            or `vowels` are empty.
 
-def _build_onset(word, syllable, onsets, vowels):
-    try:
-        prevchar = word[-1]
-        if prevchar not in vowels:
-            # if this char is a vowel and the previous one is not,
-            # then we need to make the onset, start with nothing as
-            # the onset
-            onset = ''
+        """
+        # we are syllabifying utterance per utterance
+        syllabified_text = []
+        nerrors = 0
+        for n, utt in enumerate(text):
+            utt = utt.strip()
 
-            # then we want to take one letter at a time and check
-            # whether their concatenation makes a good onset
-            while len(word) and word[-1] + onset in onsets:
-                onset = word[-1] + onset
-                word = word[:-1]
+            # first ensure the utterance is compatible with the given
+            # syllable separator
+            if self.separator.syllable in utt:
+                raise ValueError(
+                    'syllable separator "{}" found in text (line {}): {}'
+                    .format(self.separator.syllable, n+1, utt))
 
-            # we get here either because we've concatenated the
-            # onset+rest or because there was no onset and the
-            # preceding element is a vowel, so this is the end of the
-            # syllable
-            syllable = onset + syllable
-    except IndexError:  # there is no previous char
-        pass
+            # if we have phone separators, removes them and store
+            # their positions
+            utt, index = self._remove_phone_separators(utt)
 
-    return word, syllable
+            # estimate the syllable boundaries on the utterance
+            try:
+                syllables = self._syllabify_utterance(utt, strip=strip)
+            except RuntimeError as err:
+                error = 'line {}, {}'.format(n+1, err)
+                if tolerant:
+                    # issue a warning and ignore that utterance
+                    self.log.warning(error)
+                    nerrors += 1
+                    continue
+                else:
+                    # fail with error
+                    raise ValueError(error)
 
+            # restore the phones separators as they were before
+            syllables = self._restore_phone_separators(syllables, index, strip)
 
-def _syllabify_utterance(utt, onsets, vowels, separator, strip, log):
-    # split the utterances into words, read them from end to start
-    words = list(
-        separator.split(utt.strip(), 'word', keep_boundaries=True))[::-1]
+            syllabified_text.append(syllables)
 
-    # estimate syllables boundaries word per word
-    output = ''
-    for word in words:
+        if tolerant and nerrors > 0:
+            self.log.error(
+                'syllabification failed for {} utterances'.format(nerrors))
+
+        return syllabified_text
+
+    @staticmethod
+    def open_datafile(data_file):
+        """Read a vowel or onsets file as a list"""
+        data = codecs.open(data_file, 'r', encoding='utf8').readlines()
+
+        # ignore empty lines in data file
+        return [line for line in (line.strip() for line in data) if line]
+
+    def _syllabify_utterance(self, utterance, strip=False):
+        """Syllabify a single utterance
+
+        Auxiliary function to syllabify_text().
+
+        Raises
+        ------
+        RuntimeError
+            If the syllabification failed
+
+        """
+        # split the utterances into words
+        words = self.separator.tokenize(
+            utterance, level='word', keep_boundaries=False)
+
+        # estimate syllables boundaries word per word, read them from
+        # end to start
+        output = ''
+        for n, word in enumerate(words[::-1]):
+            try:
+                output_word = self._syllabify_word(word, strip)
+            except RuntimeError as err:
+                # forward the exception with word id added
+                raise RuntimeError(
+                    'word {}: {}'.format(len(words) - n, err))
+
+            # concatenate the syllabified word to the output, do not
+            # append a word separator at the end if stripped
+            if strip and not self.separator.remove(output):
+                output = output_word
+            else:
+                output = output_word + self.separator.word + output
+
+        return output
+
+    def _syllabify_word(self, word, strip):
+        """Return a single word with syllable boundaries added
+
+        Auxiliary function to syllabify_utterance().
+
+        Raises
+        ------
+        RuntimeError
+            If the word has no vowel, contains an unknown symbol (not
+            present in vowels or onsets) or if the syllabification
+            failed.
+
+        """
+        # ensure all the chars in word are defined in vowels or onsets
+        unknown = self._unknown_char(word)
+        if unknown:
+            raise RuntimeError(
+                'unknown symbol "{}" in word "{}"'.format(unknown, word))
+
+        # ensure the word containe at least a vowel
+        if not self._has_vowels(word):
+            raise RuntimeError(
+                'no vowel in word "{}"'.format(word))
+
+        input_word = word
         output_word = ''
         syllable = ''
 
@@ -125,122 +216,121 @@ def _syllabify_utterance(utt, onsets, vowels, separator, strip, log):
             # necessary regardless of whether it's a vowel or a coda
             syllable = char + syllable
 
-            if char in vowels:
-                word, syllable = _build_onset(word, syllable, onsets, vowels)
+            if char in self.vowels:
+                word, syllable = self._build_onset(word, syllable)
 
                 # add the syllable to words entry
                 if strip and not output_word:
                     output_word = syllable
                 else:
-                    output_word = syllable + separator.syllable + output_word
+                    output_word = (
+                        syllable + self.separator.syllable + output_word)
                 syllable = ''
 
-        # concatenate the syllabified word to the output, do not
-        # append a word separator at the end if stripped
-        if strip and not output:
-            output = output_word
-        else:
-            output = output_word + separator.word + output
+        if input_word != self.separator.remove(output_word, 'syllable'):
+            raise RuntimeError(
+                'onset not found in "{}"'.format(
+                    input_word,
+                    self.separator.remove(output_word, 'syllable')))
 
-    return output
+        return output_word
 
+    def _build_onset(self, word, syllable):
+        try:
+            prevchar = word[-1]
+            if prevchar not in self.vowels:
+                # if this char is a vowel and the previous one is not,
+                # then we need to make the onset, start with nothing as
+                # the onset
+                onset = ''
 
-def syllabify(text, onsets, vowels, separator=Separator(),
-              strip=False, tolerant=False, log=utils.null_logger()):
-    """Syllabify a text given in phonological or orthographic form
+                # then we want to take one letter at a time and check
+                # whether their concatenation makes a good onset
+                while len(word) and word[-1] + onset in self.onsets:
+                    onset = word[-1] + onset
+                    word = word[:-1]
 
-    Syllabification errors can occur when the onsets and/or vowels are
-    not adapted to the input text (see the `tolerant` parameter).
+                # we get here either because we've concatenated the
+                # onset+rest or because there was no onset and the
+                # preceding element is a vowel, so this is the end of the
+                # syllable
+                syllable = onset + syllable
+        except IndexError:  # there is no previous char
+            pass
 
-    Parameters
-    ----------
-    text : sequence
-        The input text to be syllabified. Each element of the sequence
-        is assumed to be a single and complete utterance in valid
-        phonological form.
-    onsets : list
-        The list of valid onsets in the `text`
-    vowels : list
-        The list of vowels in the `text`
-    separator : Separator, optional
-        Token separation in the `text`
-    strip : bool, optional
-        When True, removes the syllable boundary at the end of words.
-    tolerant : bool, optional
-        When False (the default), the function raise a ValueError on
-        the first utterance that have not been correctly
-        syllabified. When True, ignore the failed utterances in output
-        but issue a log warning instead.
-    log : logging.Logger, optional
-        Where to send log messages
+        return word, syllable
 
-    Returns
-    -------
-    The text with estimated syllable boundaries added.
+    def _remove_phone_separators(self, utt):
+        # special case when there is no phone separator in the utterance
+        if not re.search(self.separator.phone, utt):
+            return utt, []
 
-    Raises
-    ------
-    ValueError
-        If an utterance has not been correctly syllabified . If
-        `separator.syllable` is found in the text, or if `onsets` or
-        `vowels` are empty.
+        # the returned index is a list of lists (for each word, length
+        # of each phone)
+        index = []
 
-    """
-    # ensure onsets and vowels are not empty
-    if not isinstance(vowels, list) or not len(vowels):
-        raise ValueError('unvalid or empty vowels list')
-    if not isinstance(onsets, list) or not len(onsets):
-        raise ValueError('unvalid or empty onsets list')
+        # split the utterance in words and index the phones length
+        for word in self.separator.split(utt, 'word', keep_boundaries=True):
+            phones = self.separator.split(word, 'phone', keep_boundaries=False)
+            current_index = [len(p) for p in phones if len(p)]
+            if current_index:
+                index.append(current_index)
 
-    # we are syllabifying utterance per utterance
-    syllabified_text = []
-    nerrors = 0
-    for n, utt in enumerate(text):
-        utt = utt.strip()
+        return self.separator.remove(utt, level='phone'), index
 
-        # first ensure the utterance is compatible with the given
-        # syllable separator
-        if separator.syllable in utt:
-            raise ValueError(
-                'syllable separator "{}" found in text (line {}): {}'
-                .format(separator.syllable, n+1, utt))
+    def _restore_phone_separators(self, utt, index, strip):
+        # special case when there is no phone separator in the
+        # utterance
+        if index == []:
+            return utt
 
-        # if we have phone separators, removes them and store their positions
-        utt, index = _remove_phone_separators(utt, separator)
-
-        # estimate the syllable boundaries on the utterance
-        syllables = _syllabify_utterance(
-            utt, onsets, vowels, separator, strip, log)
-
-        # check we preserve content during process
-        if separator.remove(utt) != separator.remove(syllables):
-            wutt = separator.tokenize(utt, 'word')
-            wsyll = separator.tokenize(
-                separator.remove(syllables, 'syllable'), 'word')
-            index = [s == u for s, u in zip(wsyll, wutt)].index(False)
-            error = (
-                'line {}, word {}: "{}" != "{}"'.format(
-                    n+1, index + 1, wsyll[index], wutt[index]))
-
-            if tolerant:
-                log.warning(error)
-                nerrors += 1
-                continue
+        # restore the utterance word per word (index[i]) and within
+        # words, phone per phone (index[i][j]).
+        restored = ''
+        for i, word in enumerate(
+                self.separator.split(utt, 'word', keep_boundaries=True)):
+            if len(word) == 0 and strip is False:
+                # coherent behavior for non striped texts
+                restored += self.separator.word
             else:
-                raise ValueError(error)
+                j = 0  # iterate on syllables
+                for syllable in self.separator.split(
+                        word, 'syllable', keep_boundaries=True):
+                    # for each phone in the syllable, append a phone
+                    # separator
+                    k = 0
+                    while k < len(syllable):
+                        restored += (
+                            syllable[k:k+index[i][j]] + self.separator.phone)
+                        k += index[i][j]
+                        j += 1
 
-        # restore the phones separators as they were before
-        syllables = _restore_phone_separators(
-            syllables, index, separator, strip)
+                    # end of the syllable, append a separator
+                    if strip:
+                        restored = restored[:-len(self.separator.phone)]
+                    restored += self.separator.syllable
 
-        syllabified_text.append(syllables)
+                # end of the word, remove the last syllable boundary
+                # append a word separator
+                restored = (restored[:-len(self.separator.syllable)] +
+                            self.separator.word)
 
-    if tolerant and nerrors > 0:
-        log.error(
-            'syllabification failed for {} utterances, '
-            'onsets/vowels may be invalid'.format(nerrors))
+        # remove the last word boundary of the utterance
+        return restored[:-len(self.separator.word)]
 
-    return syllabified_text
+    def _unknown_char(self, word):
+        """Returns the unknown char if anyone if found, False otherwise"""
+        for w in word:
+            if w not in self.symbols:
+                return w
+        return False
+
+    def _has_vowels(self, word):
+        """True if the `word` contains any vowel, False otherwise"""
+        for v in self.vowels:
+            if v in word:
+                return True
+        return False
 
 
 def _add_arguments(parser):
@@ -265,13 +355,6 @@ def _add_arguments(parser):
         'default is to fail at the first error')
 
 
-def open_datafile(data_file):
-    """Read a vowel or onsets file as a list"""
-    return [o.strip() for o in
-            codecs.open(data_file, 'r', encoding='utf8').readlines()
-            if o.strip()]  # ignore empty lines
-
-
 @utils.CatchExceptions
 def main():
     """Entry point of the 'wordseg-syll' command"""
@@ -285,13 +368,13 @@ def main():
     if not os.path.isfile(args.onsets_file):
         raise RuntimeError(
             'unknown onsets file "{}"'.format(args.onsets_file))
-    onsets = open_datafile(args.onsets_file)
+    onsets = Syllabifier.open_datafile(args.onsets_file)
 
     # loads the vowels
     if not os.path.isfile(args.vowels_file):
         raise RuntimeError(
             'unknown vowels file "{}"'.format(args.vowels_file))
-    vowels = open_datafile(args.vowels_file)
+    vowels = Syllabifier.open_datafile(args.vowels_file)
 
     log.info('loaded %s onsets', len(onsets))
     log.debug('onsets are "%s"', ', '.join(onsets))
@@ -299,10 +382,12 @@ def main():
     log.debug('vowels are "%s"', ', '.join(vowels))
     log.debug('separator is %s', separator)
 
+    syllabifier = Syllabifier(
+        onsets, vowels, separator=separator,
+        strip=args.strip, tolerant=args.tolerant, log=log)
+
     # syllabify the input text
-    sylls = utils.CountingIterator(syllabify(
-        streamin, onsets, vowels, separator=separator,
-        strip=args.strip, tolerant=args.tolerant, log=log))
+    sylls = utils.CountingIterator(syllabifier.syllabify(streamin))
 
     # display the output
     log.info('syllabified %s utterances', sylls.count)
