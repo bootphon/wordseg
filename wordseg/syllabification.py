@@ -149,6 +149,9 @@ def syllabify(text, onsets, vowels, separator=Separator(),
               strip=False, tolerant=False, log=utils.null_logger()):
     """Syllabify a text given in phonological or orthographic form
 
+    Syllabification errors can occur when the onsets and/or vowels are
+    not adapted to the input text (see the `tolerant` parameter).
+
     Parameters
     ----------
     text : sequence
@@ -163,18 +166,22 @@ def syllabify(text, onsets, vowels, separator=Separator(),
         Token separation in the `text`
     strip : bool, optional
         When True, removes the syllable boundary at the end of words.
+    tolerant : bool, optional
+        When False (the default), the function raise a ValueError on
+        the first utterance that have not been correctly
+        syllabified. When True, ignore the failed utterances in output
+        but issue a log warning instead.
     log : logging.Logger, optional
         Where to send log messages
 
     Returns
     -------
-    The text with estimated syllable boundaries added
+    The text with estimated syllable boundaries added.
 
     Raises
     ------
     ValueError
-        If an utterance has not been correctly syllabified because the
-        `onsets` and/or `vowels` are not adapted to that corpus. If
+        If an utterance has not been correctly syllabified . If
         `separator.syllable` is found in the text, or if `onsets` or
         `vowels` are empty.
 
