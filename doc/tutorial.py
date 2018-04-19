@@ -34,10 +34,7 @@ segmented_baseline = baseline.segment(prepared, probability=0.2)
 segmented_tp = tp.segment(prepared, threshold='relative')
 segmented_puddle = puddle.segment(prepared, njobs=4, window=2)
 segmented_dpseg = dpseg.segment(prepared, nfolds=1, args='--randseed 1')
-
-# we must orovide a grammar to ag. The grammar is stored in wordseg/data/ag.
-grammar_ag = [g for g in ag.get_grammar_files() if 'Colloc0_enFestival' in g][0]
-segmented_ag = ag.segment(prepared, grammar_ag, 'Colloc0', njobs=4)
+segmented_ag = ag.segment(prepared, nruns=4, njobs=4)
 
 # we must provide a trained model to dibs (with stats on diphones)
 model_dibs = dibs.CorpusSummary(text)
@@ -51,12 +48,14 @@ eval_dpseg = evaluate(segmented_dpseg, gold)
 eval_ag = evaluate(segmented_ag, gold)
 eval_dibs = evaluate(segmented_dibs, gold)
 
+
 # a little function to display score with 4-digits precision
 def display(score):
     if score is None:
         return 'None'
     else:
         return '%.4g' % score
+
 
 # concatenate the evaluations in a table and display them
 header = ['score', 'baseline', 'tp', 'puddle', 'dpseg', 'ag', 'dibs']

@@ -4,34 +4,52 @@
    <https://semver.org/>`_ principles.
 
 
-wordseg-0.6.2 (not yet released)
+wordseg-0.7 (not yet released)
 --------------------------------
+
+* Improved documentation and algorithms description.
 
 * Docker image now uses python-3.6 from anaconda,
 
-* New tests to ensure replication of scores from CDSWordSeg to
-  wordseg for puddle, tp, dibs and dpseg.
+* New tests to ensure replication of scores from `CDSWordSeg
+  <https://github.com/alecristia/CDSwordSeg>`_ to wordseg for puddle,
+  tp, dibs and dpseg.
 
-* In **wordseg-dpseg**:
+* In **wordseg-ag** the `<grammar>` and `<segment-category>`
+  parameters are now optional. When omitted a default colloc0 grammar
+  is generated from the input text.
+
+* In **wordseg-dpseg**
 
   * fixed forwarding of some arguments from Python to C++,
   * implementation of dpseg bugfix when single char on first line of
     a fold,
   * use the original random number generator to replicate exactly
-    CDSWprdSeg.
+    CDSWordSeg.
+  * fixed default ngram to bigram (was already bigram but documented
+    as unigram).
 
 * In **wordseg-dibs**
 
   * fixed bug when loading train text at syllable level (new
     *--unit** option)
   * safer use of train text (ensure there are word separators in
-    it).
+    it, ignore empty lines).
 
-* In **wordseg-eval**, when called from bash, the scores are now
-  displayed in a fixed order. New test to ensure bash and python
-  calls to wordseg lead to identical results. See #31.
+* In **wordseg-eval**
+
+  * when called from bash, the scores are now displayed in a fixed
+    order. New test to ensure bash and python calls to wordseg lead to
+    identical results. See #31.
+  * distinction between edge/no edge in boundary scoring. See #21.
 
 * In **wordseg-stats** the scores are now displayed in a fixed order.
+
+* In **wordseg-syll**
+
+  * the `--tolerant` option allows to ignore utterances where the
+    syllabification failed (the default is to exit the program on the
+    first error). See #36.
 
 
 wordseg-0.6.1
