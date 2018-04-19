@@ -15,7 +15,7 @@ Welcome to the wordseg's documentation page
   :ref:`algorithms`).
 
 * From **bash**: provides a set of commands for text preparation,
-  segmentation and evaluation than be used in conjunction to any other
+  segmentation and evaluation to be used in conjunction to any other
   bash utilities (see :ref:`commands`),
 
 * From **python**: provides the ``wordseg`` Python package (see :ref:`python`).
