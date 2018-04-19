@@ -16,7 +16,7 @@ private:
 public:
     typedef std::unordered_map<V,typename parent::T> WordTypes;
 
-    UnigramsT(Base& base, uniform01_type<F>& u01, F a=0, F b=1)
+    UnigramsT(Base& base, uniform01_type& u01, F a=0, F b=1)
         : parent(base, u01, a, b)
         {}
 
@@ -55,7 +55,7 @@ public:
     typedef PYAdaptor<Base> BigramR;  // single bigram restaurant
     typedef typename Base::argument_type argument_type;
 
-    BigramsT(Base& u, uniform01_type<F>& u01, F a=0, F b=1)
+    BigramsT(Base& u, uniform01_type& u01, F a=0, F b=1)
         : _base(u), _empty_bigram(_base, u01, a, b)
         {}
 

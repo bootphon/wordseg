@@ -25,9 +25,9 @@
 // code (with 'extern' declarations). This is bad (source of bugs,
 // hard to read/debug). Use parameters instead.
 
-uniform01_type<double> unif01; // random number generator
-unsigned int debug_level;      // higher -> mode debug messages on stdout
-std::wstring sep;              // separator used to separate fields during printing of results
+uniform01_type unif01;     // random number generator
+unsigned int debug_level;  // higher -> mode debug messages on stdout
+std::wstring sep;          // separator used to separate fields during printing of results
 
 
 std::wstring str2wstr(std::string str)

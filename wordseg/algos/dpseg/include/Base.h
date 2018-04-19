@@ -15,7 +15,7 @@
 #include "mhs.h"
 
 
-extern uniform01_type<F> unif01;
+extern uniform01_type unif01;
 
 
 class S

@@ -84,7 +84,8 @@ DPSEG_ARGUMENTS = [
 
     utils.Argument(
         short_name='-S', name='--samples-per-utt', type=int,
-        help='samples per utterance for decayed-flip estimator, default = 1000'),
+        help='samples per utterance for decayed-flip estimator, '
+        'default is 1000'),
 
     utils.Argument(
         short_name='-m', name='--mode', type=['batch', 'online'],
@@ -92,7 +93,7 @@ DPSEG_ARGUMENTS = [
 
     utils.Argument(
         short_name='-n', name='--ngram', type=['unigram', 'bigram'],
-        help='default is unigram'),
+        help='default is bigram'),
 
     utils.Argument(
         name='--do-mbdp', type=bool,
@@ -120,7 +121,8 @@ DPSEG_ARGUMENTS = [
 
     utils.Argument(
         short_name='-H', name='--hypersamp-ratio', type=float,
-        help='standard deviation for new hyperparmeters proposals, default = 0.1'),
+        help='standard deviation for new hyperparmeters proposals, '
+        'default = 0.1'),
 
     utils.Argument(
         name='--nchartypes', type=int,
@@ -133,7 +135,8 @@ DPSEG_ARGUMENTS = [
 
     utils.Argument(
         short_name='-b', name='--init-pboundary', type=float,
-        help='initial segmentation boundary probability (-1 = gold, default = 0)'),
+        help='initial segmentation boundary probability (-1 = gold, '
+        'default = 0)'),
 
     utils.Argument(
         name='--pya-beta-a', type=float,
@@ -162,12 +165,14 @@ DPSEG_ARGUMENTS = [
 
     utils.Argument(
         short_name='-F', name='--forget-rate', type=int,
-        help='number of utterances whose words can be remembered, default = 1'),
+        help='number of utterances whose words can be remembered, '
+        'default = 1'),
 
     utils.Argument(
         short_name='-i', name='--burnin-iterations', type=int,
         help=('number of burn-in epochs. This is actually the total '
-              'number of iterations through the training data, default = 2000')),
+              'number of iterations through the training data, '
+              'default = 2000')),
 
     utils.Argument(
         name='--anneal-iterations', type=int,
@@ -190,7 +195,8 @@ DPSEG_ARGUMENTS = [
 
     utils.Argument(
         name='--anneal-b', type=float,
-        help='parameter in annealing temperature sigmoid function, default = 0.2'),
+        help='parameter in annealing temperature sigmoid function, '
+        'default = 0.2'),
 
     utils.Argument(
         name='--result-field-separator', type=str,
@@ -249,12 +255,14 @@ class UnicodeGenerator(object):
         return char
 
 
-def _dpseg(text, args, log_level=logging.ERROR, log_name='wordseg-dpseg'):
+def _dpseg(text, args,
+           log_level=logging.ERROR,
+           log_name='wordseg-dpseg',
+           binary=utils.get_binary('dpseg')):
     log = utils.get_logger(name=log_name, level=log_level)
-
     with tempfile.NamedTemporaryFile() as tmp_output:
         command = '{binary} --output-file {output} {args}'.format(
-            binary=utils.get_binary('dpseg'),
+            binary=binary,
             output=tmp_output.name,
             args=args)
 
@@ -284,7 +292,7 @@ def _dpseg(text, args, log_level=logging.ERROR, log_name='wordseg-dpseg'):
                 log.debug(line_out.strip())
 
             if line_err != "":
-                log.error(line_err.strip())
+                log.debug(line_err.strip())
 
         thread.join()
         process.wait()
@@ -298,7 +306,8 @@ def _dpseg(text, args, log_level=logging.ERROR, log_name='wordseg-dpseg'):
 
 def segment(text, nfolds=5, njobs=1,
             args='--ngram 1 --a1 0 --b1 1',
-            log=utils.null_logger()):
+            log=utils.null_logger(),
+            binary=utils.get_binary('dpseg')):
     """Run the 'dpseg' binary on `nfolds` folds"""
     # force the text to be a list of utterances
     text = list(text)
@@ -316,12 +325,18 @@ def segment(text, nfolds=5, njobs=1,
                     for utt in text]
 
     log.debug('building %s folds', nfolds)
-    folded_texts, fold_index = folding.fold(unicode_text, nfolds)
+    fold_boundaries = _dpseg_bugfix(
+        unicode_text, folding.boundaries(unicode_text, nfolds), log)
+
+    folded_texts, fold_index = folding.fold(
+        unicode_text, nfolds, fold_boundaries=fold_boundaries)
 
     segmented_texts = joblib.Parallel(n_jobs=njobs, verbose=0)(
         joblib.delayed(_dpseg)(
-            fold, args, log_level=log.getEffectiveLevel(),
-            log_name='wordseg-dpseg - fold {}'.format(n+1))
+            fold, args,
+            log_level=log.getEffectiveLevel(),
+            log_name='wordseg-dpseg - fold {}'.format(n+1),
+            binary=binary)
         for n, fold in enumerate(folded_texts))
 
     log.debug('unfolding the %s folds', nfolds)
@@ -335,6 +350,81 @@ def segment(text, nfolds=5, njobs=1,
         ''.join(unit_mapping[char] for char in utt) for utt in output_text)
 
     return (utt for utt in segmented_text if utt)
+
+
+def _find_first_line_with_min_len(lines, min_len=2):
+    """Return the index of first line in `lines` with len >= `min_len`
+
+    Or return None when no line found.
+
+    """
+    for i, l in enumerate(lines):
+        if len(l) >= min_len:
+            return i
+    return None
+
+
+def _dpseg_bugfix(text, boundaries, log=utils.null_logger()):
+    """Ensure all folds have their first line with more than one symbol
+
+    There is a bug in the C++ implementation of dpseg: when the first
+    input line is composed of a single character (i.e. a unicode
+    symbol), the program fails. To avoid this, this method ensures all
+    the folds begin with at least two symbols. If this is not the
+    case, the boundary position is moved to the next line containing
+    at least two symbols.
+
+    Raises
+    ------
+    ValueError if the bugfix is needed and cannot be applied
+
+    Notes
+    -----
+    This implementation differs with the one in CDSWordSeg. In wordseg
+    we modify the fold index and thus the fold size, whereas in
+    CDSWordSeg we permute lines in the text (and thus to the gold
+    file). In wordseg we don't want to expose the gold file at this
+    level.
+
+    """
+    # we have something to fix if one of those lengths is 1
+    first_len = [len(text[i]) for i in boundaries]
+    if 1 not in first_len:
+        log.debug('folds boundaries are OK for dpseg')
+        return boundaries
+
+    if first_len[0] == 1:
+        raise ValueError(
+            'The input text\'s first line has a single symbol, '
+            'this will cause wordseg-dpseg to bug. '
+            'Please re-arrange your text manually and try again.')
+
+    need_to_fix = [i for i, length in enumerate(first_len) if length == 1]
+    log.debug(
+        'dpseg bugfix: need to fix folds {}'
+        .format([i+1 for i in need_to_fix]))
+
+    for i in need_to_fix:
+        # find the first line of the fold with len >= 2
+        index = _find_first_line_with_min_len(
+            text[boundaries[i]:], min_len=2)
+
+        if index is None:
+            raise ValueError(
+                'dpseg bugfix failed: all lines in the fold {} have len == 1'
+                .format(i+1))
+
+        log.debug(
+            'dpseg bugfix: fixing fold {} index from {} to {}'
+            .format(i+1, boundaries[i], boundaries[i] + index))
+        boundaries[i] += index
+
+    if not boundaries == sorted(set(boundaries)):
+        raise ValueError(
+            'dpseg bugfix failed: broke the folds order. '
+            'Please re-arrange (shuffle) your text manually and try again.')
+
+    return boundaries
 
 
 def _add_arguments(parser):
@@ -378,7 +468,7 @@ def main():
     excluded_args = ['verbose', 'quiet', 'input', 'output', 'nfolds', 'njobs']
     for k, v in vars(args).items():
         # ignored arguments
-        if k in excluded_args or v in (None, False):
+        if k in excluded_args or (v in (None, False) and v != 0):
             continue
 
         if k == 'estimator':
@@ -397,8 +487,12 @@ def main():
                           for k, v in dpseg_args.items())
 
     # adapt boolean values
-    dpseg_args = dpseg_args.replace('--eval-maximize True', '--eval-maximize 1')
-    dpseg_args = dpseg_args.replace('--do-mbdp True', '--do-mbdp 1')
+    for orig, new in (
+            ('--eval-maximize True', '--eval-maximize 1'),
+            ('--eval-maximize False', ''),
+            ('--do-mbdp True', '--do-mbdp 1'),
+            ('--do-mbdp False', '')):
+        dpseg_args = dpseg_args.replace(orig, new)
 
     segmented = segment(
         streamin, nfolds=args.nfolds, njobs=args.njobs,

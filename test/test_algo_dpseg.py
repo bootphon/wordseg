@@ -1,13 +1,16 @@
 """Test of the 'wordseg-dpseg' command"""
 
+import codecs
 import os
 import pytest
 
 import wordseg
 from wordseg import utils
 from wordseg.separator import Separator
-from wordseg.algos.dpseg import segment
-from . import prep
+from wordseg.prepare import gold, prepare
+from wordseg.evaluate import evaluate
+from wordseg.algos.dpseg import segment, _dpseg_bugfix
+from . import prep, datadir
 
 
 args = [
@@ -59,3 +62,99 @@ def test_dpseg_from_config_file(prep, conf):
     segmented = segment(
         prep[:5], nfolds=1, args='--config-file {}'.format(conf))
     assert len(list(segmented)) == 5
+
+
+def test_dpseg_bugfix(prep):
+    with pytest.raises(ValueError):
+        _dpseg_bugfix(['.', '.', '.', '.'], [0, 2])
+
+    with pytest.raises(ValueError):
+        _dpseg_bugfix(['..', '.', '.', '.'], [0, 2])
+
+    assert _dpseg_bugfix(['..', '.', '..', '.'], [0, 2]) == [0, 2]
+    assert _dpseg_bugfix(['..', '.', '.', '..'], [0, 2]) == [0, 3]
+
+    with pytest.raises(ValueError):
+        _dpseg_bugfix(['..', '.', '.', '..'], [0, 1, 2])
+
+    assert _dpseg_bugfix(['..', '..', '.', '..'], [0, 1, 2]) == [0, 1, 3]
+
+
+def test_replicate_cdswordseg(datadir):
+    sep = Separator()
+
+    # only the last 10 lines, for a fast test. We cannot take the 10
+    # first lines because they cause the dpseg_bugfix to correct a
+    # fold (the implementation of that fix differs in CDS and wordseg,
+    # so the results are not replicated exactly)
+    _tags = [utt for utt in codecs.open(
+        os.path.join(datadir, 'tagged.txt'), 'r', encoding='utf8')
+            if utt][-10:]
+
+    _prepared = prepare(_tags, separator=sep, unit='syllable')
+    _gold = gold(_tags, separator=sep)
+
+    uni_dmcmc_conf = [c for c in wordseg.utils.get_config_files('dpseg')
+                      if 'uni_dmcmc' in c][0]
+    args = '--ngram 1 --a1 0 --b1 1 -C {}'.format(uni_dmcmc_conf)
+    segmented = segment(_prepared, nfolds=5, njobs=4, args=args)
+    score = evaluate(segmented, _gold)
+
+    # we obtained that scores from the dpseg version in CDSWordSeg
+    expected = {
+        'type_fscore': 0.3768,
+        'type_precision': 0.3939,
+        'type_recall': 0.3611,
+        'token_fscore': 0.3836,
+        'token_precision': 0.4118,
+        'token_recall': 0.359,
+        'boundary_all_fscore': 0.7957,
+        'boundary_all_precision': 0.8409,
+        'boundary_all_recall': 0.7551,
+        'boundary_noedge_fscore': 0.6415,
+        'boundary_noedge_precision': 0.7083,
+        'boundary_noedge_recall': 0.5862}
+
+    assert score == pytest.approx(expected, rel=1e-3)
+
+
+# the following test compares the wordseg dpseg binary with an
+# alternative one (called from the dpseg.segment() function), it is
+# executed only if the ALTERNATIVE_DPSEG envirnment variable is
+# defined.
+
+def arguments():
+    common = '--randseed 1 --burnin-iteration 100'
+
+    for estimator in ('T', 'V', 'F'):
+        for ngram in (1, 2):
+            for mode in ('batch', 'online'):
+                if not (estimator == 'F' and mode == 'online'):
+                    yield '--estimator {} --ngram {} --mode {} '.format(
+                        estimator, ngram, mode) + common
+
+
+class DpsegTester(object):
+    def __init__(self):
+        if self.is_valid():
+            self.dpseg1 = utils.get_binary('dpseg')
+            self.dpseg2 = os.environ['ALTERNATIVE_DPSEG']
+
+    def is_valid(self):
+        return 'ALTERNATIVE_DPSEG' in os.environ
+
+    def run(self, text, binary, args):
+        return list(segment(text, nfolds=1, njobs=1, args=args, binary=binary))
+
+    def compare(self, text, args):
+        o1 = self.run(text, self.dpseg1, args)
+        o2 = self.run(text, self.dpseg2, args)
+        assert o1 == o2
+
+
+tester = DpsegTester()
+
+@pytest.mark.skipif(not tester.is_valid(), reason='run it by specifying $ALTERNATIVE_DPSEG')
+@pytest.mark.parametrize('args', arguments())
+def test_replicate(args, prep):
+    tester.compare(prep[:10], args)

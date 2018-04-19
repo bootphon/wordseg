@@ -177,7 +177,8 @@ class CatchExceptions(object):
         try:
             self.function()
 
-        except (ValueError, OSError, RuntimeError, AssertionError) as err:
+        except (IOError, ValueError, OSError,
+                RuntimeError, AssertionError) as err:
             self.exit('fatal error: {}'.format(err))
 
         except pkg_resources.DistributionNotFound:

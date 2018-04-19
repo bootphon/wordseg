@@ -90,5 +90,6 @@ def test_pipeline(algo, encoding, tags, tmpdir):
     results = wordseg.evaluate.evaluate(segmented, gold)
     assert len(results.keys()) % 3 == 0
     for v in results.values():
-        assert v >= 0
-        assert v <= 1
+        if v is not None:
+            assert v >= 0
+            assert v <= 1

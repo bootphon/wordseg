@@ -51,7 +51,7 @@ def check_utterance(utterance, separator=Separator(), check_punctuation=True):
     check_punctuation : bool, optional
         When True (default), forbid any punctuation character in the
         utterance and raise ValueError if any punctuation is
-        found. When False, do not check punctiation.
+        found. When False, do not check punctuation.
 
     Returns
     -------
@@ -186,7 +186,7 @@ def prepare(text, separator=Separator(), unit='phone',
 
         # ignore empty lines
         if line == '':
-            log.debug('ignoring empty line %d', n)
+            log.debug('ignoring empty line %d', n+1)
             nremoved += 1
             continue
 

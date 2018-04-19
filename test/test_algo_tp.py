@@ -1,10 +1,15 @@
 """Test of the wordseg.algos.tp module"""
 
+import codecs
+import os
 import pytest
+
 from wordseg.separator import Separator
+from wordseg.prepare import gold, prepare
+from wordseg.evaluate import evaluate
 from wordseg.algos import tp
 
-from . import prep
+from . import prep, datadir
 
 
 @pytest.mark.parametrize(
@@ -47,3 +52,34 @@ def test_last_utt_relative():
     text = ['waed yuw waant naw', 'buwp']
     expected = ['waedyuwwaantnaw', 'buwp']
     assert expected == list(tp.segment(text, threshold='relative'))
+
+
+def test_replicate(datadir):
+    sep = Separator()
+
+    _tags = [utt for utt in codecs.open(
+        os.path.join(datadir, 'tagged.txt'), 'r', encoding='utf8')
+            if utt][:100]  # 100 first lines only
+    _prepared = prepare(_tags, separator=sep)
+    _gold = gold(_tags, separator=sep)
+
+    segmented = tp.segment(_prepared)
+    score = evaluate(segmented, _gold)
+
+    # we obtained that score from the dibs version in CDSWordSeg
+    # (using wordseg.prepare and wordseg.evaluate in both cases)
+    expected = {
+        'type_fscore': 0.304,
+        'type_precision': 0.2554,
+        'type_recall': 0.3756,
+        'token_fscore': 0.3994,
+        'token_precision': 0.3674,
+        'token_recall': 0.4375,
+        'boundary_all_fscore': 0.7174,
+        'boundary_all_precision': 0.6671,
+        'boundary_all_recall': 0.776,
+        'boundary_noedge_fscore': 0.6144,
+        'boundary_noedge_precision': 0.557,
+        'boundary_noedge_recall': 0.685}
+
+    assert score == pytest.approx(expected, rel=1e-3)

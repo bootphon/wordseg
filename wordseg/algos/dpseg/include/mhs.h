@@ -62,7 +62,7 @@ public:
 
 protected:
     Base& base;           //!< base distribution
-    uniform01_type<F>& u01;  //!< shared random number generator
+    uniform01_type& u01;  //!< shared random number generator
     F a;                  //!< Pitman-Yor b parameter
     F b;                  //!< Pitman-Yor b parameter
     U m;                  //!< number of occupied tables
@@ -175,7 +175,7 @@ protected:
     V_T label_tables;
 
 public:
-    PYAdaptor(Base& base, uniform01_type<F>& u01, F a, F b)
+    PYAdaptor(Base& base, uniform01_type& u01, F a, F b)
         : base(base), u01(u01), a(a), b(b), m(), n()
         {}
 
