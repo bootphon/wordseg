@@ -18,6 +18,7 @@ directory `wordseg/data/syllabification`.
 import codecs
 import os
 import re
+import six
 
 from wordseg import utils
 from wordseg.separator import Separator
@@ -37,6 +38,10 @@ class Syllabifier(object):
         The list of vowels in the `text`
     separator : Separator, optional
         Token separation in the `text`
+    silent : bool, optional
+        When True, append a silent vowel to the end of words without
+        vowel (the vowel is removed after processing so the text is
+        unchanged). When False those words cannot be syllabified.
     log : logging.Logger, optional
         Where to send log messages
 
@@ -47,7 +52,7 @@ class Syllabifier(object):
 
     """
     def __init__(self, onsets, vowels, separator=Separator(),
-                 log=utils.null_logger()):
+                 filling_vowel=False, log=utils.null_logger()):
         self.onsets = onsets
         self.vowels = vowels
         self.separator = separator
@@ -64,6 +69,19 @@ class Syllabifier(object):
         self.symbols = (
             set(''.join(v for v in vowels)).union(
                 set(''.join(o for o in onsets))))
+
+        # if defined, ensure the silent vowel is not already used
+        if filling_vowel:
+            # find a silent vowel (some char not already prensent in
+            # the symbols)
+            code = 1
+            while six.unichr(code) in self.symbols:
+                code += 1
+            self.silent = six.unichr(code)
+            self.symbols.add(self.silent)
+            self.vowels.append(self.silent)
+        else:
+            self.silent = None
 
     def syllabify(self, text, strip=False, tolerant=False):
         """Returns the text with syllable boundaries added
@@ -201,8 +219,11 @@ class Syllabifier(object):
 
         # ensure the word containe at least a vowel
         if not self._has_vowels(word):
-            raise RuntimeError(
-                'no vowel in word "{}"'.format(word))
+            if not self.silent:
+                raise RuntimeError(
+                    'no vowel in word "{}"'.format(word))
+            else:
+                word += self.silent
 
         input_word = word
         output_word = ''
@@ -233,7 +254,10 @@ class Syllabifier(object):
                     input_word,
                     self.separator.remove(output_word, 'syllable')))
 
-        return output_word
+        if self.silent:
+            return re.sub(self.silent, '', output_word)
+        else:
+            return output_word
 
     def _build_onset(self, word, syllable):
         try:
@@ -346,13 +370,18 @@ def _add_arguments(parser):
               'the input text, one vowel per line'))
 
     parser.add_argument(
-        '--strip', action='store_true',
+        '-S', '--strip', action='store_true',
         help='removes the end separators in syllabified output')
 
     parser.add_argument(
-        '--tolerant', action='store_true',
+        '-t', '--tolerant', action='store_true',
         help='tolerate syllabification failures and report them as warnings, '
         'default is to fail at the first error')
+
+    parser.add_argument(
+        '-f', '--filling-vowel', action='store_true',
+        help='add a silent filling vowel to groups of consonants '
+        'with no vowel, by default words with no vowel cannot be syllabified')
 
 
 @utils.CatchExceptions
@@ -384,10 +413,11 @@ def main():
 
     syllabifier = Syllabifier(
         onsets, vowels, separator=separator,
-        strip=args.strip, tolerant=args.tolerant, log=log)
+        filling_vowel=args.filling_vowel, log=log)
 
     # syllabify the input text
-    sylls = utils.CountingIterator(syllabifier.syllabify(streamin))
+    sylls = utils.CountingIterator(syllabifier.syllabify(
+        streamin, strip=args.strip, tolerant=args.tolerant))
 
     # display the output
     log.info('syllabified %s utterances', sylls.count)

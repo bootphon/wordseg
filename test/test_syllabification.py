@@ -188,3 +188,19 @@ def test_errors(onsets, vowels, text, error):
     with pytest.raises(ValueError) as err:
         s.syllabify([text])
     assert error in str(err)
+
+
+def test_no_vowel(onsets, vowels):
+    text = 's;i; a;j; l;j; a;l; a;j; '
+
+    s = Syllabifier(onsets, vowels, separator=Separator(';', '_', ' '))
+    with pytest.raises(ValueError) as err:
+        s.syllabify([text])
+    assert 'no vowel in word' in str(err)
+
+    s = Syllabifier(onsets, vowels, separator=Separator(';', '_', ' '))
+    assert [] == s.syllabify([text], tolerant=True)
+
+    s = Syllabifier(
+        onsets, vowels, separator=Separator(';', '_', ' '), filling_vowel=True)
+    assert ['s;i;_ a;j;_ l;j;_ a;l;_ a;j;_ '] == s.syllabify([text])
