@@ -1,6 +1,6 @@
 """Learn parse trees from a grammar (Adaptor Grammar)
 
-This algorithm adds word boundaries after after adapting a grammar. 
+This algorithm adds word boundaries after adapting a grammar.
 
 
 """
@@ -509,7 +509,7 @@ def _setup_seed(args, nruns):
     return new
 
 
-def segment(text, grammar_file, segment_category,
+def segment(text, grammar_file=None, segment_category='Colloc0',
             args=DEFAULT_ARGS, test_text=None, ignore_first_parses=0,
             nruns=8, njobs=1, log=utils.null_logger()):
     """Segment a text using the Adaptor Grammar algorithm
@@ -522,12 +522,14 @@ def segment(text, grammar_file, segment_category,
     text : sequence
         The list of utterances to train the model on, and to segment
         if `test_text` is None.
-    grammar_file : str
-        The path to the grammar file to use for segmentation
-    segment_category : str
+    grammar_file : str, optional
+        The path to the grammar file to use for segmentation. If not
+        specified, a Colloc0 grammar is generated from the input text.
+    segment_category : str, optional
         The category to segment the text with, must be an existing
         parent in the grammar (i.e. the `segment_category` must be
-        present in the left column of the grammar file)
+        present in the left column of the grammar file), default to
+        'Colloc0'.
     args : str, optional
         Command line options to run the AG program with, use
         'wordseg-ag --help' to have a complete list of available
@@ -557,6 +559,29 @@ def segment(text, grammar_file, segment_category,
         If the `score_category` is not found in the grammar.
 
     """
+    # we may use a temp file to write the grammar, it is automatically
+    # erased when done
+    with tempfile.NamedTemporaryFile() as grammar_temp:
+        # if grammar is not specified, generate a Colloc0 one from
+        # input and write it in the temp file
+        if grammar_file is None:
+            log.info('generating the Colloc0 grammar...')
+            text = list(text)
+            codecs.open(grammar_temp.name, 'w', encoding='utf8').write(
+                build_colloc0_grammar(
+                    # the set of phones in the input text
+                    set(p for utt in text for p in utt.split() if p)))
+            grammar_file = grammar_temp.name
+
+        # know we have our grammar file, delegate the segmentation to
+        # the _segment_aux function
+        return _segment_aux(
+            text, grammar_file, segment_category, args,
+            test_text, ignore_first_parses, nruns, njobs, log)
+
+
+def _segment_aux(text, grammar_file, segment_category, args,
+                 test_text, ignore_first_parses, nruns, njobs, log):
     # make sure the grammar file exists
     if not os.path.isfile(grammar_file):
         raise RuntimeError('grammar file not found: {}'.format(grammar_file))
@@ -625,17 +650,6 @@ def segment(text, grammar_file, segment_category,
 def _add_arguments(parser):
     """Add algorithm specific options to the parser"""
     parser.add_argument(
-        'grammar', metavar='<grammar-file>',
-        help=('read the grammar from this file, for exemple of grammars see {}'
-              .format(os.path.dirname(get_grammar_files()[0]))))
-
-    parser.add_argument(
-        'segment_category', metavar='<segment-category>',
-        help=('the grammar category to segment the text with, '
-              'must be a valid parent in the grammar (ie defined in the '
-              'left column of the grammar file)'))
-
-    parser.add_argument(
         '-j', '--njobs', type=int, metavar='<int>', default=1,
         help='number of parallel jobs to use, default is %(default)s')
 
@@ -656,6 +670,19 @@ def _add_arguments(parser):
         '--ignore-first-parses', type=int, metavar='<int>', default=0,
         help='discard the n first parses of each run, '
         'default is %(default)s')
+
+    group = parser.add_argument_group('grammar arguments')
+    group.add_argument(
+        '--grammar', metavar='<grammar-file>', default=None,
+        help=('read grammar from this file, for exemple of grammars see {}. '
+              'Default is to generate a Colloc0 grammar from the input.'
+              .format(os.path.dirname(get_grammar_files()[0]))))
+
+    group.add_argument(
+        '--category', metavar='<segment-category>', default='Colloc0',
+        help=('the grammar category to segment the text with, '
+              'must be a valid parent in the grammar (ie defined in the '
+              'left column of the grammar file). Default is %(default)s.'))
 
     group = parser.add_argument_group('algorithm options')
     for arg in AG_ARGUMENTS:
@@ -741,7 +768,7 @@ def main():
     segmented = segment(
         streamin,
         args.grammar,
-        args.segment_category,
+        args.category,
         args=cmd_args,
         test_text=test_text,
         ignore_first_parses=args.ignore_first_parses,

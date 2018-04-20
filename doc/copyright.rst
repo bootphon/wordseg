@@ -22,7 +22,7 @@ work of several contributors.
   * Amanda Saksida (tp)
 
 
-**Copyright 2015-2017 LSCP (EHESS, ENS, CNRS, PSL Research University)**
+**Copyright 2015-2018 LSCP (EHESS, ENS, CNRS, PSL Research University)**
 
 wordseg is free software: you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the

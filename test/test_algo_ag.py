@@ -77,6 +77,15 @@ def test_grammars(prep, grammar, level):
     assert segmented == prep
 
 
+def test_default_grammar(prep):
+    segmented = ag.segment(prep, args=test_arguments, nruns=1)
+    assert len(segmented) == len(prep)
+
+    segmented = ''.join(utt.replace(' ', '').strip() for utt in segmented)
+    prep = ''.join(utt.replace(' ', '').strip() for utt in prep)
+    assert segmented == prep
+
+
 def test_mark_jonhson(tmpdir, datadir):
     # this is a transcription of the original "toy run" delivered with
     # the original AG code (as a target in the Makefile)

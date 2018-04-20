@@ -447,7 +447,7 @@ def prepare_main(name=None,
                  description=None,
                  separator=Separator(phone=None, syllable=None, word=None),
                  add_arguments=None):
-    """Initialize a binary program from the wordseg package
+    """Initialize a binary program for the wordseg package
 
     Provides an easy way to setup a command for the wordseg
     package. It defines an argument parser, parse the arguments and
