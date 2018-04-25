@@ -20,6 +20,12 @@ Reporting bugs, issues or ideas
 
 Contributing to the code
 ------------------------
+* We strongly welcome direct contributions. This will require some
+  familiarity with the GitHub system. For readers who do not have 
+  previous experience with git, we recommend the excellent introduction 
+  to `git offered by Software Carpentry <https://swcarpentry.github.io/git-novice/>`,
+  followed by GitHub's tutorials for `forking <https://help.github.com/articles/fork-a-repo/>`
+  and creating `pull requests <https://help.github.com/articles/creating-a-pull-request-from-a-fork/`.
 
 * To contribute directly to the package, please create a `fork
   <https://github.com/bootphon/wordseg/fork>`_ of wordseg in your
