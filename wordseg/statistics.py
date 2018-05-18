@@ -1,6 +1,12 @@
 # coding: utf-8
 
-"""Extract statistics relevant for word segmenation corpora"""
+"""Extract statistics relevant for word segmentation corpora
+
+To analyze a segmented text or a text in orthographic form (i.e. with
+word separators only), you must define empty phone and syllable
+separators (see the token separation arguments below).
+
+"""
 
 import collections
 import json
@@ -42,6 +48,8 @@ class CorpusStatistics(object):
             raise ValueError('word separator not defined')
         if not self.separator.phone:
             log.warning('phone separator not defined, some stats ignored')
+        if not self.separator.syllable:
+            log.warning('syllable separator not defined, some stats ignored')
         self.log.info('token separator is %s', self.separator)
 
         # force to list and ignore empty lines
