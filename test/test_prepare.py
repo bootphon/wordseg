@@ -11,6 +11,7 @@ from wordseg.prepare import check_utterance, prepare, gold, _pairwise
 # correctly formatted phonological forms
 good_utterances = [
     'a ;eword',
+    'þ ;eword',
     'a ;esyll ;eword',
     'ˌʌ s ;eword t ə ;eword p l eɪ ;eword ð ə ;eword s oʊ l oʊ z ;eword']
 
