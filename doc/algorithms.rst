@@ -258,8 +258,11 @@ information processing systems (pp. 641-648). You can also view an
 annotated example produced by Elin Larsen on
 https://docs.google.com/document/d/1NZq-8vOroO7INZolrQ5OsKTo0WMB7HUatNtDGbd24Bo/edit?usp=sharing
 
-Bayesian Segmentor aka DPSEG aka DMCMC
---------------------------------------
+Bayesian Segmentor aka DPSEG aka DMCMC (currently broken)
+---------------------------------------------------------
+
+Please note that we have found a bug in this system and thus
+it is not fully functional at present.
 
 This algorithm uses a different adaptor grammar implementation, with
 several crucial differences:

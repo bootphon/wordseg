@@ -4,6 +4,18 @@ Contributing
 The **wordseg** package is free software made for open science, we
 welcome all the ideas and contributions.
 
+.. note::
+
+   We strongly welcome direct contributions. This will require some
+   familiarity with the GitHub system. For readers who do not have
+   previous experience with git, we recommend the excellent
+   introduction to `git offered by Software Carpentry
+   <https://swcarpentry.github.io/git-novice/>`, followed by GitHub's
+   tutorials for `forking
+   <https://help.github.com/articles/fork-a-repo/>` and creating `pull
+   requests
+   <https://help.github.com/articles/creating-a-pull-request-from-a-fork/`.
+
 
 Reporting bugs, issues or ideas
 -------------------------------
@@ -16,25 +28,6 @@ Reporting bugs, issues or ideas
      When reporting installation issues, please include the full
      output of the `cmake`, `make` and `make install` commands in your
      message.
-
-
-Coding style
-------------
-
-In order to have a consistent style across all the code base, the
-package follows the following conventions:
-
-* C++ code follows the `google style guide`_,
-
-* Python code follows the pep8_ standard,
-
-* Python documentation follows the numpydoc_ standard, this allows
-  automatic conversion of Python docstrings into a HTML based
-  documentation of the code.
-
-* HTML documentation (located in the ``./doc`` directory) are written
-  in *reStructuredText*, a format similar to markdown (a `brief guide
-  here <http://www.sphinx-doc.org/en/stable/rest.html>`_).
 
 
 Contributing to the code
@@ -57,21 +50,38 @@ Contributing to the code
   request. When possible add new tests for your code as well.
 
 
-Add your own segmentation algorithm
------------------------------------
+Coding style
+------------
 
-Once you forked the project as detailed above, you are ready to
-integrate your algorithm to the existing package. To get inspiration,
-you can have a look to the `wordseg-baseline
-<https://github.com/bootphon/wordseg/blob/master/wordseg/algos/baseline.py>`_
-implementation.
+In order to have a consistent style across all the code base, the
+package follows the following conventions:
 
-Here are the minimal steps you must follow:
+* C++ code follows the `google style guide`_,
 
-* Create the Python file ``wordseg/algos/new_algo.py``:
+* Python code follows the pep8_ standard,
 
+* Python documentation follows the numpydoc_ standard, this allows
+  automatic conversion of Python docstrings into a HTML based
+  documentation of the code.
 
+* HTML documentation (located in the ``./doc`` directory) are written
+  in *reStructuredText*, a format similar to markdown (a `brief guide
+  here <http://www.sphinx-doc.org/en/stable/rest.html>`_).
 
+..
+
+   Add your own segmentation algorithm
+   -----------------------------------
+
+   Once you forked the project as detailed above, you are ready to
+   integrate your algorithm to the existing package. To get inspiration,
+   you can have a look to the `wordseg-baseline
+   <https://github.com/bootphon/wordseg/blob/master/wordseg/algos/baseline.py>`_
+   implementation.
+
+   Here are the minimal steps you must follow:
+
+   * Create the Python file ``wordseg/algos/new_algo.py``:
 
 
 .. _Sphinx: http://www.sphinx-doc.org

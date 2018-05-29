@@ -184,7 +184,10 @@ def prepare(text, separator=Separator(), unit='phone',
 
     nremoved = 0
     for n, line in enumerate(text):
-        line = line.strip()
+        try:  # force the utf8 encoding
+            line = line.encode('utf8').decode().strip()
+        except ValueError:  # line is already in bytes, not str
+            line = line.strip()
 
         # ignore empty lines
         if line == '':

@@ -24,9 +24,9 @@ commands for which we provide documentation are:
   - **wordseg-baseline** for random baseline,
   - **wordseg-dibs** for the diphone based segmentation,
   - **wordseg-tp** for the transitional probabilities,
-  - **wordseg-dpseg** for the DPSeg or DMCMC,
   - **wordseg-puddle** for PUDDLE,
   - **wordseg-ag** for the adaptor grammar.
+  - **wordseg-dpseg** for the DPSeg or DMCMC (please note that this algorithm is not functional at present), 
 
 * **wordseg-eval** takes as input a segmented text and a gold version,
   to compute the precision, recall and f-score at type, token and
