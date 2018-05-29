@@ -74,7 +74,8 @@ def test_pipeline(algo, encoding, tags, tmpdir):
             codecs.open(grammar_file, 'w', encoding='utf8').write(
                 '\n'.join(grammar_unicode))
         segmented = list(algos[algo].segment(
-            prepared_text, grammar_file, 'Colloc0', nruns=1))
+            # we just use 10 iterations here to be fast
+            prepared_text, grammar_file, 'Colloc0', nruns=1, args='-n 10'))
     elif algo == 'dibs':
         # dibs need training, train of test set for the test
         dibs_model = wordseg.algos.dibs.CorpusSummary(tags, separator=separator)

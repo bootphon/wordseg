@@ -12,7 +12,7 @@ cat prepared.txt | wordseg-baseline -P 0.5 > segmented.baseline.txt
 cat prepared.txt | wordseg-tp -p forward -t relative > segmented.tp.txt
 cat prepared.txt | wordseg-puddle -w 2 > segmented.puddle.txt
 cat prepared.txt | wordseg-dpseg -f 1 -r 1 > segmented.dpseg.txt
-cat prepared.txt | wordseg-ag --nruns 4 --njobs 4 > segmented.ag.txt
+cat prepared.txt | wordseg-ag --nruns 4 --njobs 4 --niterations 100 > segmented.ag.txt
 
 # dibs must be provided with a training file
 cat prepared.txt | wordseg-dibs -t baseline $1 > segmented.dibs.txt

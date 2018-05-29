@@ -34,7 +34,7 @@ segmented_baseline = baseline.segment(prepared, probability=0.2)
 segmented_tp = tp.segment(prepared, threshold='relative')
 segmented_puddle = puddle.segment(prepared, njobs=4, window=2)
 segmented_dpseg = dpseg.segment(prepared, nfolds=1, args='--randseed 1')
-segmented_ag = ag.segment(prepared, nruns=4, njobs=4)
+segmented_ag = ag.segment(prepared, nruns=4, njobs=4, args='-n 100')
 
 # we must provide a trained model to dibs (with stats on diphones)
 model_dibs = dibs.CorpusSummary(text)
