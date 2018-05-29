@@ -674,7 +674,7 @@ int main(int argc, char** argv) {
   bool random_order = true;
   bool delayed_initialization = false;
   bool predictive_parse_filter = false;
-  U niterations = 100;
+  U niterations = 20000;
   F anneal_start = 1;
   F anneal_stop = 1;
   U anneal_its = 100;

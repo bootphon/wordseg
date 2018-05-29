@@ -53,7 +53,7 @@ AG_ARGUMENTS = [
 
     utils.Argument(
         short_name='-n', name='--niterations', type=int,
-        help='number of iterations'),
+        help='number of iterations (default to 20000)'),
 
     utils.Argument(
         short_name='-A', name='--print-analyses-train', type='file',
