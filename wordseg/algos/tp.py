@@ -82,7 +82,7 @@ def segment(text, threshold='relative', dependency='ftp',
     ------
     ValueError
         If `threshold` is not 'relative' or 'absolute'.
-        If `probability` is not 'ftp', 'btp' or 'mi'.
+        If `dependency` is not 'ftp', 'btp' or 'mi'.
 
     """
     # raise on invalid threshold type
@@ -117,8 +117,8 @@ def segment(text, threshold='relative', dependency='ftp',
         tps = {bigram: float(freq) / unigrams[bigram[1]]
                for bigram, freq in bigrams.items()}
     else:  # dependency == 'mi'
-        tps = {bigram: math.log2(float(freq) / (
-            unigrams[bigram[0]] * unigrams[bigram[1]]))
+        tps = {bigram: math.log(float(freq) / (
+            unigrams[bigram[0]] * unigrams[bigram[1]]), 2)
                for bigram, freq in bigrams.items()}
 
     # segment the input given the transition probalities
