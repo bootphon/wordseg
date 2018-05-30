@@ -13,12 +13,12 @@ from . import prep, datadir
 
 
 @pytest.mark.parametrize(
-    'threshold, probability',
+    'threshold, dependency',
     [(t, p) for t in ('relative', 'absolute')
-     for p in ('forward', 'backward')])
-def test_tp(prep, threshold, probability):
+     for p in ('ftp', 'btp', 'mi')])
+def test_tp(prep, threshold, dependency):
     """Check input and output are the same, once the separators are removed"""
-    out = list(tp.segment(prep, threshold=threshold, probability=probability))
+    out = list(tp.segment(prep, threshold=threshold, dependency=dependency))
     s = Separator().remove
 
     assert len(out) == len(prep)
@@ -30,19 +30,19 @@ def test_hello_world():
     text = ['hh ax l ow w er l d']
 
     assert list(tp.segment(
-        text, threshold='absolute', probability='forward')) \
+        text, threshold='absolute', dependency='ftp')) \
         == ['hhaxl owwerl d']
 
     assert list(tp.segment(
-        text, threshold='relative', probability='forward')) \
+        text, threshold='relative', dependency='ftp')) \
         == ['hhaxl owwerld']
 
     assert list(tp.segment(
-        text, threshold='absolute', probability='backward')) \
+        text, threshold='absolute', dependency='btp')) \
         == ['hhax lowwer ld']
 
     assert list(
-        tp.segment(text, threshold='relative', probability='backward')) \
+        tp.segment(text, threshold='relative', dependency='btp')) \
         == ['hhax lowwer ld']
 
 

@@ -3,6 +3,7 @@
 # Author: Amanda Saksida, Mathieu Bernard
 
 import collections
+import math
 import re
 
 from wordseg import utils
@@ -53,7 +54,7 @@ def _threshold_absolute(units, tps):
     return cwords
 
 
-def segment(text, threshold='relative', probability='forward',
+def segment(text, threshold='relative', dependency='ftp',
             log=utils.null_logger()):
     """Returns a word segmented version of `text` using the TP algorithm
 
@@ -65,9 +66,10 @@ def segment(text, threshold='relative', probability='forward',
         sequence corresponds to a single and complete utterance.
     threshold : str, optional
         Type of threshold to use, must be 'relative' or 'absolute'.
-    probability : str, optional
-        Type of transition probabilities to compute, must be 'forward'
-        or 'backward'.
+    dependency : str, optional
+        Type of dependency measure to compute, must be 'ftp' for
+        forward transitional probability, 'btp' for backward
+        transitional probability or 'mi' for mutual information.
     log : logging.Logger, optional
         The logging instance where to send messages.
 
@@ -80,7 +82,7 @@ def segment(text, threshold='relative', probability='forward',
     ------
     ValueError
         If `threshold` is not 'relative' or 'absolute'.
-        If `probability` is not 'forward' or 'backward'.
+        If `probability` is not 'ftp', 'btp' or 'mi'.
 
     """
     # raise on invalid threshold type
@@ -90,28 +92,34 @@ def segment(text, threshold='relative', probability='forward',
             .format(threshold))
 
     # raise on invalid probability type
-    if probability not in ('forward', 'backward'):
+    if dependency not in ('ftp', 'btp', 'mi'):
         raise ValueError(
-            "invalid probability type, must be 'forward' or 'backward',"
-            "it is {}".format(probability))
+            "invalid dependency measure, must be 'ftp', 'btp' "
+            "or 'mi', it is {}".format(dependency))
 
-    log.info('running TP with %s threshold and %s probabilities',
-             threshold, probability)
+    log.info('running TP with %s threshold and %s dependency measure',
+             threshold, dependency)
 
     # join all the utterances together, seperated by ' UB '
     units = [unit for unit in ' UB '.join(
         line.strip() for line in text).split()]
 
-    # compute and count all the bigrams (two successive units)
-    bigrams = zip(units[0:-1], units[1:])
+    # compute and count all the unigrams and bigrams (two successive units)
+    unigrams = collections.Counter(units)
+    bigrams = collections.Counter(zip(units[0:-1], units[1:]))
 
-    # consider the first or second unit of the bigram according to
-    # `probability`
-    index = 0 if probability == 'forward' else 1
-
-    # dictionary of bigram and its transition probability
-    tps = {bigram: float(freq) / collections.Counter(units)[bigram[index]]
-           for bigram, freq in collections.Counter(bigrams).items()}
+    # compute the transitional probabilities accordoing to the given
+    # dependency measure
+    if dependency == 'ftp':
+        tps = {bigram: float(freq) / unigrams[bigram[0]]
+               for bigram, freq in bigrams.items()}
+    elif dependency == 'btp':
+        tps = {bigram: float(freq) / unigrams[bigram[1]]
+               for bigram, freq in bigrams.items()}
+    else:  # dependency == 'mi'
+        tps = {bigram: math.log2(float(freq) / (
+            unigrams[bigram[0]] * unigrams[bigram[1]]))
+               for bigram, freq in bigrams.items()}
 
     # segment the input given the transition probalities
     cwords = (_threshold_relative(units, tps) if threshold == 'relative'
@@ -134,11 +142,21 @@ def _add_arguments(parser):
         to the mean transition probability over the entire text.
         Default is relative.''')
 
-    group.add_argument(
-        '-p', '--probability', type=str,
-        choices=['forward', 'backward'], default='forward',
-        help='''Compute forward or backward transition probabilities,
-        default is forward''')
+    group1 = group.add_mutually_exclusive_group()
+    group1.add_argument(
+        '-d', '--dependency', type=str,
+        choices=['ftp', 'btp', 'mi'], default='ftp',
+        help='''Dependency measure to use. ftp is forward transitional probability:
+        ftp(XY) = freq(XY) / freq(X), btp is backward transitional
+        probability: ftp(XY) = freq(XY) / freq(Y), mi is mutual
+        information: mi(XY) = log2( freq(XY) / (freq(X) * freq(Y))).
+        ''')
+
+    group1.add_argument(
+        '-p', '--probability', type=str, choices=['forward', 'backward'],
+        help='''DEPRECATED, USE -d/--dependency INSTEAD. Compute forward or
+        backward transitional probabilities. Equivalent to -d ftp / -d
+        btp respectively.''')
 
 
 @utils.CatchExceptions
@@ -150,11 +168,23 @@ def main():
         description=__doc__,
         add_arguments=_add_arguments)
 
+    # if the deprecated --probability option is used, raise a warning
+    # and convert it to the new --dependency option.
+    if args.probability is not None:
+        log.warning(
+            '''-p/--probability option is deprecated (maintained for
+            backward compatibility), please use -d/--dependency instead.''')
+
+        if args.probability == 'forward':
+            args.dependency = 'ftp'
+        else:  # 'backward'
+            args.dependency = 'btp'
+
     # segment the input text
     text = segment(
         streamin,
         threshold=args.threshold,
-        probability=args.probability,
+        dependency=args.dependency,
         log=log)
 
     # output the result
