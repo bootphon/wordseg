@@ -13,7 +13,9 @@ good_utterances = [
     'a ;eword',
     'þ ;eword',
     'a ;esyll ;eword',
-    'ˌʌ s ;eword t ə ;eword p l eɪ ;eword ð ə ;eword s oʊ l oʊ z ;eword']
+    'ˌʌ s ;eword t ə ;eword p l eɪ ;eword ð ə ;eword s oʊ l oʊ z ;eword',
+    # test some unicode chars
+    ' ;eword'.join('ʒえθãāàåå̀ã̟ʔm̄«‡§™•�Œ£±') + ' ;eword']
 
 # badly formatted phonological forms
 bad_utterances = [
