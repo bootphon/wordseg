@@ -153,7 +153,7 @@ typedef std::vector<Ss> Sss;
 // typedef pstream::ostream* Postreamp;
 // typedef std::vector<Postreamp> Postreamps;
 
-int debug = 0;
+int debug = 100;
 
 struct S_F_incrementer {
   const F increment;
@@ -313,8 +313,9 @@ F gibbs_estimate(pycfg_type& g, const Sss& trains,
 
     assert(finite(p.anneal));
 
-    if (debug >= 100) {
-      std::cerr << "# Iteration " << iteration << ", "
+    if (debug >= 100)
+    {
+      std::cerr << "Iteration " << iteration << ", "
 		<< g.sum_pym() << " tables, "
 		<< "-logPcorpus = " << -g.logPcorpus() << ", "
 		<< "-logPrior = " << -g.logPrior() << ", "

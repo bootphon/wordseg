@@ -39,8 +39,9 @@ from wordseg import utils
 
 AG_ARGUMENTS = [
     utils.Argument(
-        short_name='-d', name='--debug', type=int, default=0,
-        help='debugging level'),
+        short_name='-d', name='--debug', type=int, default=100,
+        help='debugging level, regulates the amount of debug messages, '
+        'to be used in conjuction with -vv'),
 
     utils.Argument(
         short_name='-x', name='--eval-every', type=int,
@@ -320,12 +321,16 @@ def _run_ag_single(text, grammar_file, args, test_text=None,
         # log.debug the AG messages AFTER EXECUTION
         messages = messages.decode('utf8').split('\n')
         for msg in messages:
-            log.debug(re.sub('^# ', '', msg).strip())
+            msg = re.sub('^# ', '', msg).strip()
+            if msg:
+                log.debug(msg)
 
         # fail if AG returns an error code
         if process.returncode:
             raise RuntimeError(
                 'fails with error code {}'.format(process.returncode))
+
+        log.info('done!')
 
         return parses.decode('utf8').strip().split('\n')
     finally:
