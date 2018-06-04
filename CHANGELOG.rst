@@ -4,8 +4,29 @@
    <https://semver.org/>`_ principles.
 
 
-wordseg-0.7 (not yet released)
+wordseg-0.6.3 (not yet released)
 --------------------------------
+
+* Added example phonological rules and updated contributong guide in
+  documentation.
+
+* In **wordseg-prep** ignore empty lines in both gold and segmented
+  texts.
+
+* In **wordseg-syll** the syllabification is improved: syllabification
+  of words with no vowel, better error messages (see #35, #36).
+
+* In **wordseg-tp** add of the mutual information dependancy
+  measure. In the bash command, the argument `--probability
+  {forward,backward}` is replaced by `--dependency {ftp,btp,mi}`
+  (maintained for backward compatibility). See #40.
+
+* In **wordseg-ag**: niteration is now 2000 by default (was 100),
+  improved log of iterations with `-vv`.
+
+
+wordseg-0.6.2
+-------------
 
 * Improved documentation and algorithms description.
 
