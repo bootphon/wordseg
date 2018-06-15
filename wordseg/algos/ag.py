@@ -251,7 +251,7 @@ def is_parent_in_grammar(grammar_file, parent):
     return False
 
 
-def _run_ag_single(text, grammar_file, args, test_text=None,
+def _run_ag_single(text, output_file, grammar_file, args, test_text=None,
                    log_level=logging.ERROR, log_name='wordseg-ag'):
     """Runs the AG program a single time and returns the computed parse trees
 
@@ -260,6 +260,8 @@ def _run_ag_single(text, grammar_file, args, test_text=None,
     text : sequence
         The list of utterances to train the model on, and to segment
         if `test_text` is None.
+    output_file : str
+        The file where to write computed parse trees
     grammar_file : str
         The path to the grammar file to use for segmentation
     args : str
@@ -284,39 +286,46 @@ def _run_ag_single(text, grammar_file, args, test_text=None,
     """
     log = utils.get_logger(name=log_name, level=log_level)
 
-    # setup the train text as a multiline string
-    train_text = '\n'.join(utt.strip() for utt in text) + '\n'
-
-    # setup the test text as well
-    test_text = train_text if test_text is None else (
-        '\n'.join(utt.strip() for utt in test_text) + '\n')
-
-    # we need to write the test text as a tempfile, so we create a
+    # we need to write some intermediate files, so we create a
     # tempdir. The directory and its content is automatically erased
     # when done
     temp_dir = tempfile.mkdtemp()
+    log.debug('created tempdir: %s', temp_dir)
+
     try:
-        # write the test text as a temporary file. ylt extension is
-        # the one used in the original AG implementation
+        # setup the train text as a temp file. ylt extension is the
+        # one used in the original AG implementation
+        train_text = '\n'.join(utt.strip() for utt in text) + '\n'
+        train_tmpfile = os.path.join(temp_dir, 'train.ylt')
+        codecs.open(train_tmpfile, 'w', encoding='utf8').write(train_text)
+
+        # setup the test text as well
+        test_text = train_text if test_text is None else (
+            '\n'.join(utt.strip() for utt in test_text) + '\n')
         test_tmpfile = os.path.join(temp_dir, 'test.ylt')
         codecs.open(test_tmpfile, 'w', encoding='utf8').write(test_text)
 
-        # generate the command to run as a subprocess
-        command = ('{binary} {grammar} {args} -u {test} '.format(
-            binary=utils.get_binary('ag'),
-            grammar=grammar_file,
-            args=args,
-            test=test_tmpfile))
+        # write the call to AG in a bash script
+        command = ('cat {train} | {bin} {grammar} {args} -u {test} > {output}'
+                   .format(
+                       train=train_tmpfile,
+                       bin=utils.get_binary('ag'),
+                       grammar=grammar_file,
+                       args=args,
+                       test=test_tmpfile,
+                       output=output_file))
+        script_file = os.path.join(temp_dir, 'script.sh')
+        open(script_file, 'w').write(command + '\n')
 
-        log.info('running %s', command)
+        log.info('running "%s"', command)
 
         # run the command as a subprocess
         process = subprocess.Popen(
-            shlex.split(command),
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
+            shlex.split('bash {}'.format(script_file)),
+            stdin=None,
+            stdout=None,
             stderr=subprocess.PIPE)
-        parses, messages = process.communicate(train_text.encode('utf8'))
+        _, messages = process.communicate()
 
         # log.debug the AG messages AFTER EXECUTION
         messages = messages.decode('utf8').split('\n')
@@ -332,7 +341,7 @@ def _run_ag_single(text, grammar_file, args, test_text=None,
 
         log.info('done!')
 
-        return parses.decode('utf8').strip().split('\n')
+        # return parses.decode('utf8').strip().split('\n')
     finally:
         shutil.rmtree(temp_dir)
 
@@ -621,25 +630,36 @@ def _segment_aux(text, grammar_file, segment_category, args,
     # words.
     log.info('running (%d times)...', nruns)
 
-    raw_trees = joblib.Parallel(
+    temp_dir = tempfile.mkdtemp()
+    log.debug('created tempdir: %s', temp_dir)
+    output_files = [os.path.join(temp_dir, 'run_{}'.format(i+1))
+                         for i in range(nruns)]
+
+    joblib.Parallel(
         n_jobs=njobs, backend="threading", verbose=0)(
             joblib.delayed(_run_ag_single)(
-                text, grammar_file, args[n], test_text=test_text,
+                text,
+                output_files[n],
+                grammar_file, args[n],
+                test_text=test_text,
                 log_level=log.getEffectiveLevel(),
                 log_name='wordseg-ag - run {}'.format(n + 1))
             for n in range(nruns))
 
     log.info(
-        'collapsing the parse trees%s', '' if ignore_first_parses == 0 else
-        ', ignore the {} first parses of each run'.format(ignore_first_parses))
+        'collapsing the parse trees%s and extracting %s boundaries',
+        '' if ignore_first_parses == 0 else
+        ', ignore the {} first parses of each run'.format(ignore_first_parses),
+        segment_category)
 
-    trees = [
-        tree for trees in raw_trees for tree
-        in _yield_trees(trees, ignore_firsts=ignore_first_parses)]
+    trees = (tree for output_file in output_files
+             for line in codecs.open(output_file, 'r', encoding='utf8')
+             for tree in _yield_trees(line, ignore_firsts=ignore_first_parses))
 
-    log.info(
-        'collapsed %s trees, extracting boundaries for category "%s"',
-        len(trees), segment_category)
+    # raw_trees = ()
+    # trees = (
+    #     tree for trees in raw_trees for tree
+    #     in _yield_trees(trees, ignore_firsts=ignore_first_parses))
 
     segmented_trees = [
         _tree2words(tree, score_category_re=segment_category)

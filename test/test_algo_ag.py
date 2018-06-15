@@ -1,7 +1,6 @@
 """Test of the wordseg.algos.ag module"""
 
 import codecs
-import logging
 import os
 import pytest
 
@@ -26,10 +25,14 @@ def test_grammar_files():
     assert len(ag.get_grammar_files()) != 0
 
 
-def test_ag_single_run(prep):
-    raw_parses = ag._run_ag_single(
-        prep, os.path.join(grammar_dir, grammars[1][0]), args=test_arguments)
-    trees = [tree for tree in ag._yield_trees(raw_parses)]
+def test_ag_single_run(prep, tmpdir):
+    output_file = os.path.join(str(tmpdir), 'segmented.txt')
+    ag._run_ag_single(
+        prep, output_file,
+        os.path.join(grammar_dir, grammars[1][0]),
+        args=test_arguments)
+    trees = [tree for tree in ag._yield_trees(
+        codecs.open(output_file, 'r', encoding='utf8'))]
 
     assert len(trees) == 6
     for tree in trees:
@@ -107,7 +110,7 @@ def test_mark_jonhson(tmpdir, datadir):
             # X1=tmpdir.join('X1'), X2=tmpdir.join('X2'),
             # prs1=tmpdir.join('prs1'), prs2=tmpdir.join('prs2')))
         ))
-    ag._run_ag_single(text, grammar_file, args=arguments)
+    ag._run_ag_single(text, tmpdir.join('out'), grammar_file, args=arguments)
 
 
 # # this test is not stable enough, so it is commented out
