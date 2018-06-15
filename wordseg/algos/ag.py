@@ -274,10 +274,6 @@ def _run_ag_single(text, output_file, grammar_file, args, test_text=None,
     log : logging.Logger, optional
         A logger where to send log messages
 
-    Returns
-    -------
-    A list of parse trees, one tree per input utterance in `text`
-
     Raises
     ------
     RuntimeError
@@ -652,9 +648,9 @@ def _segment_aux(text, grammar_file, segment_category, args,
         ', ignore the {} first parses of each run'.format(ignore_first_parses),
         segment_category)
 
-    trees = (tree for output_file in output_files
-             for line in codecs.open(output_file, 'r', encoding='utf8')
-             for tree in _yield_trees(line, ignore_firsts=ignore_first_parses))
+    trees = (tree for output_file in output_files for tree in _yield_trees(
+        codecs.open(output_file, 'r', encoding='utf8'),
+        ignore_firsts=ignore_first_parses))
 
     # raw_trees = ()
     # trees = (
