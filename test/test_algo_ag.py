@@ -26,20 +26,19 @@ def test_grammar_files():
 
 
 def test_ag_single_run(prep, tmpdir):
+    pc = ag.ParseCounter(len(prep))
+
     output_file = os.path.join(str(tmpdir), 'segmented.txt')
-    ag._run_ag_single(
-        prep, output_file,
+    ag._segment_single(
+        pc, prep,
         os.path.join(grammar_dir, grammars[1][0]),
-        args=test_arguments)
-    trees = [tree for tree in ag._yield_trees(
-        codecs.open(output_file, 'r', encoding='utf8'))]
+        'Colloc0', 0, args=test_arguments)
 
-    assert len(trees) == 6
-    for tree in trees:
-        assert len(tree) == len(prep)
+    assert len(prep) == pc.nutts == len(pc.counters)
 
+def test_counter():
+    c = ag.ParseCounter(5)
 
-def test_most_common_parse():
     # 5 utterances in 3 trees
     matrix = [
         [1, 1, 1, 1, 1],
@@ -47,12 +46,14 @@ def test_most_common_parse():
         [2, 2, 2, 2, 2]]
     expected = [1, 1, 2, 1, 1]
 
-    assert list(ag._most_common_parses(matrix)) == expected
+    for v in matrix:
+        c.update(v)
+    assert list(c.most_common()) == expected
 
 
-def test_yield_trees():
+def test_yield_parses():
     def aux(trees, n):
-        return list(ag._yield_trees(trees, ignore_firsts=n))
+        return list(ag.yield_parses(trees, ignore_firsts=n))
 
     assert aux(['a', '', 'b', '', 'c'], 0) == [['a'], ['b'], ['c']]
     assert aux(['a', '', 'b', '', 'c'], 1) == [['b'], ['c']]
@@ -95,8 +96,8 @@ def test_mark_jonhson(tmpdir, datadir):
     assert os.path.isdir(datadir)
 
     grammar_file = os.path.join(datadir, 'ag_testengger.lt')
-    text = codecs.open(
-        os.path.join(datadir, 'ag_testeng.yld'), 'r', encoding='utf8')
+    text = list(codecs.open(
+        os.path.join(datadir, 'ag_testeng.yld'), 'r', encoding='utf8'))
     arguments = (
         '-r 1234 -P -D -R -1 -d 100 -a 1e-2 -b 1 -e 1 -f 1 '
         '-g 1e2 -h 1e-2 -n 10 -C -E -A {prs} -N 10 -F {trace} -G {wlt} '
@@ -110,7 +111,13 @@ def test_mark_jonhson(tmpdir, datadir):
             # X1=tmpdir.join('X1'), X2=tmpdir.join('X2'),
             # prs1=tmpdir.join('prs1'), prs2=tmpdir.join('prs2')))
         ))
-    ag._run_ag_single(text, tmpdir.join('out'), grammar_file, args=arguments)
+    pc = ag.ParseCounter(len(text))
+    output = ag.segment(text, grammar_file, category='VP', args=arguments,
+                        ignore_first_parses=0, nruns=1)
+    assert len(text) == len(output)
+    for i in range(len(text)):
+        assert text[i].strip().replace(' ', '') == output[i].replace(' ', '')
+
 
 
 # # this test is not stable enough, so it is commented out

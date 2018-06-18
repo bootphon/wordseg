@@ -5,21 +5,15 @@ This algorithm adds word boundaries after adapting a grammar.
 
 """
 
-# Commented out because those options are not exposed in this wrapper.
-#
-# The -u and -v flags specify test-sets which are parsed using the
-# current PCFG approximation every eval-every iterations, but they are
-# not trained on.  These parses are piped into the commands specified by
-# the -U and -V parameters respectively.  Just as for the -X eval-cmd,
-# these commands are only run _once_.
 
-# Some notes on this AG implementation.
+# Some notes on this AG implementation (with respect to CDSWordSeg).
 #
 # the option --ag-median is not implemented here (running 5 times the
 # ag pipeline and take the median result) because it relies on the
 # gold file we do not want to expose here. An alternative (still to
 # code) is to have something like "for i in 1..5 do wordseg-ag |
 # wordseg-eval done > extract_median_result""
+#
 
 
 import codecs
@@ -33,8 +27,14 @@ import shlex
 import shutil
 import subprocess
 import tempfile
+import threading
 
 from wordseg import utils
+
+
+#-------------------------------------------------------------------------------
+#  Adaptor Grammar arguments
+#-------------------------------------------------------------------------------
 
 
 AG_ARGUMENTS = [
@@ -192,6 +192,26 @@ DEFAULT_ARGS = ('-E -d 0 -a 0.0001 -b 10000 -e 1 -f 1 '
 """Default Adaptor Grammar parameters"""
 
 
+def _setup_seed(args, nruns):
+    """Setup a unique seed for each run in `args`"""
+    new = [args] * nruns
+    for n in range(nruns):
+        if '-r' in args:
+            # extract the seed from the arguments string
+            seed = int(re.sub(r'^.*\-r *([0-9]+).*$', '\g<1>', args))
+
+            # setup new seed for each run
+            new[n] = re.sub('\-r *([0-9]+)', '-r {}'.format(seed + n), args)
+        else:
+            new[n] = args + ' -r {}'.format(random.randint(0, 2**16))
+    return new
+
+
+#-------------------------------------------------------------------------------
+#  Grammar files and format
+#-------------------------------------------------------------------------------
+
+
 def get_grammar_files():
     """Returns a list of example grammar files bundled with wordseg
 
@@ -251,28 +271,58 @@ def is_parent_in_grammar(grammar_file, parent):
     return False
 
 
-def _run_ag_single(text, output_file, grammar_file, args, test_text=None,
-                   log_level=logging.ERROR, log_name='wordseg-ag'):
-    """Runs the AG program a single time and returns the computed parse trees
+def check_grammar(grammar_file, category):
+    """Raise a RuntimeError if the category is not a parent in the grammar"""
+    # make sure the grammar file exists
+    if not os.path.isfile(grammar_file):
+        raise RuntimeError('grammar file not found: {}'.format(grammar_file))
+
+    # make sure the segment category is valid
+    if not is_parent_in_grammar(grammar_file, category):
+        raise RuntimeError(
+            'category "{}" not found in the grammar'
+            .format(category))
+
+
+#-------------------------------------------------------------------------------
+#  Wrapper on AG C++ program
+#-------------------------------------------------------------------------------
+
+
+def _segment_single(parse_counter, train_text, grammar_file,
+                    category, ignore_first_parses, args, test_text=None,
+                    log_level=logging.ERROR, log_name='wordseg-ag'):
+    """Runs the AG program a single time and count output parses
 
     Parameters
     ----------
-    text : sequence
+    parse_counter : ParseCounter
+        Count the segmented utterances obtained for each parses
+    train_text : sequence
         The list of utterances to train the model on, and to segment
         if `test_text` is None.
-    output_file : str
-        The file where to write computed parse trees
     grammar_file : str
         The path to the grammar file to use for segmentation
+    category : str
+        The category to segment the text with, must be an existing
+        parent in the grammar (i.e. the `segment_category` must be
+        present in the left column of the grammar file), default to
+        'Colloc0'.
+    ignore_first_parses : int
+        Ignore the first parses from the algorithm output
     args : str
         Command line options to run the AG program with, use
         'wordseg-ag --help' to have a complete list of available
         options
     test_text : sequence, optional
-        If not None, the list of utterances to segment on the model
-        learned from `text`
-    log : logging.Logger, optional
-        A logger where to send log messages
+        If not None, the test text contains the list of utterances to
+        segment on the model learned from `train_text`
+    log_level : logging.Level, optional
+        The level of the wrapping log (must be DEBUG to display
+        messages from AG, default to ERROR).
+    log_name: str, optional
+        The name of the logger where to send log messages, default to
+        'wordseg-ag'.
 
     Raises
     ------
@@ -291,27 +341,32 @@ def _run_ag_single(text, output_file, grammar_file, args, test_text=None,
     try:
         # setup the train text as a temp file. ylt extension is the
         # one used in the original AG implementation
-        train_text = '\n'.join(utt.strip() for utt in text) + '\n'
-        train_tmpfile = os.path.join(temp_dir, 'train.ylt')
-        codecs.open(train_tmpfile, 'w', encoding='utf8').write(train_text)
+        train_text = '\n'.join(utt.strip() for utt in train_text) + '\n'
+        train_file = os.path.join(temp_dir, 'train.ylt')
+        codecs.open(train_file, 'w', encoding='utf8').write(train_text)
 
         # setup the test text as well
-        test_text = train_text if test_text is None else (
-            '\n'.join(utt.strip() for utt in test_text) + '\n')
-        test_tmpfile = os.path.join(temp_dir, 'test.ylt')
-        codecs.open(test_tmpfile, 'w', encoding='utf8').write(test_text)
+        if test_text is None:
+            test_file = train_file
+        else:
+            test_text = '\n'.join(utt.strip() for utt in test_text) + '\n'
+            test_file = os.path.join(temp_dir, 'test.ylt')
+            codecs.open(test_file, 'w', encoding='utf8').write(test_text)
+
+        # create a file to store output (raw PTB-format parse trees)
+        output_file = os.path.join(temp_dir, 'output.txt')
 
         # write the call to AG in a bash script
+        script_file = os.path.join(temp_dir, 'script.sh')
         command = ('cat {train} | {bin} {grammar} {args} -u {test} > {output}'
                    .format(
-                       train=train_tmpfile,
+                       train=train_file,
                        bin=utils.get_binary('ag'),
                        grammar=grammar_file,
                        args=args,
-                       test=test_tmpfile,
+                       test=test_file,
                        output=output_file))
-        script_file = os.path.join(temp_dir, 'script.sh')
-        open(script_file, 'w').write(command + '\n')
+        codecs.open(script_file, 'w', encoding='utf8').write(command + '\n')
 
         log.info('running "%s"', command)
 
@@ -321,36 +376,216 @@ def _run_ag_single(text, output_file, grammar_file, args, test_text=None,
             stdin=None,
             stdout=None,
             stderr=subprocess.PIPE)
-        _, messages = process.communicate()
 
-        # log.debug the AG messages AFTER EXECUTION
-        messages = messages.decode('utf8').split('\n')
-        for msg in messages:
-            msg = re.sub('^# ', '', msg).strip()
-            if msg:
-                log.debug(msg)
+        # log.debug the AG messages during execution
+        def stderr2log(line):
+            try:
+                line = line.decode('utf8')
+            except AttributeError:
+                line = str(line)
+            line = re.sub('^# ', '', line.strip())
+            if line:
+                log.debug(line)
+
+        # join the command output to log (from
+        # https://stackoverflow.com/questions/35488927)
+        def consume_lines(pipe, consume):
+            with pipe:
+                # NOTE: workaround read-ahead bug
+                for line in iter(pipe.readline, b''):
+                    consume(line)
+                consume('\n')
+
+        threading.Thread(
+            target=consume_lines,
+            args=[process.stderr, lambda line: stderr2log(line)]).start()
+
+        process.wait()
 
         # fail if AG returns an error code
         if process.returncode:
             raise RuntimeError(
                 'fails with error code {}'.format(process.returncode))
 
-        log.info('done!')
-
-        # return parses.decode('utf8').strip().split('\n')
+        log.info('segmentation done, postprocessing ...')
+        postprocess(parse_counter, output_file, category, ignore_first_parses)
     finally:
         shutil.rmtree(temp_dir)
 
 
-def _yield_trees(trees, ignore_firsts=0):
-    """Yields parse trees, ignoring the first ones"""
+#-------------------------------------------------------------------------------
+#  Postprocessing
+#
+# The parse trees outputed by AG need further postprocessing to
+# extract the segmented words. The trees are in PTB-format (Penn
+# Treebank format). The following functions extract words from trees
+# and count the most frequent segmentation for each utterance.
+#
+#-------------------------------------------------------------------------------
+
+
+class TreeTokenizer(object):
+    """Tokenize an AG tree in a suite of words
+
+    For example, at Colloc0 level, the following tree become "s kr
+    ahmp shaxs":
+
+    (Sentence (Colloc0s (Colloc0#1 (Phonemes (Phoneme s))) (Colloc0s
+    (Colloc0#3 (Phonemes (Phoneme k) (Phonemes (Phoneme r))))
+    (Colloc0s (Colloc0#3 (Phonemes (Phoneme ah) (Phonemes (Phoneme m)
+    (Phonemes (Phoneme p))))) (Colloc0s (Colloc0#3 (Phonemes (Phoneme
+    sh) (Phonemes (Phoneme ax) (Phonemes (Phoneme s))))))))))
+
+    """
+    # some constant regexp to parse AG trees
+    _openpar_re = re.compile(r"\s*\(\s*([^ \t\n\r\f\v()]*)\s*")
+    _closepar_re = re.compile(r"\s*\)\s*")
+    _terminal_re = re.compile(r"\s*((?:[^ \\\t\n\r\f\v()]|\\.)+)\s*")
+
+    def __init__(self, category_re, ignore_terminals_re=r'^[$]{3}$'):
+        self.word_re = re.compile(category_re)
+        self.ignore_terminals_re = re.compile(ignore_terminals_re)
+
+    def tree2words(self, tree):
+        """Tokenize the string `tree` into a suite of words"""
+        trees = ['ROOT'] + self.tree2list(tree.strip())
+        return self.list2words(trees)
+
+    def tree2list(self, tree):
+        """Returns nested lists of the `tree` in PTB-format
+
+        Exemple
+        -------
+
+        >>> tree2list("(A (B 1) (C 2))")
+        ['A', ['B', 1], ['C', 2]]
+
+        """
+        lists = []
+        self._tree2list_aux(lists, tree)
+        return lists
+
+    def _tree2list_aux(self, trees, s, pos=0):
+        """Recursive auxiliary method for tree2list()"""
+        while pos < len(s):
+            closepar_mo = self._closepar_re.match(s, pos)
+            if closepar_mo:
+                return closepar_mo.end()
+            openpar_mo = self._openpar_re.match(s, pos)
+            if openpar_mo:
+                tree = [openpar_mo.group(1)]
+                trees.append(tree)
+                pos = self._tree2list_aux(tree, s, openpar_mo.end())
+            else:
+                terminal_mo = self._terminal_re.match(s, pos)
+                trees.append(terminal_mo.group(1))
+                pos = terminal_mo.end()
+        return pos
+
+    @staticmethod
+    def simplify_terminal(t):
+        """Ignore first character in `t` if it is a backslash"""
+        if len(t) > 0 and t[0] == '\\':
+            return t[1:]
+        else:
+            return t
+
+    @staticmethod
+    def is_terminal(subtree):
+        """True if this subtree consists of a single terminal node
+
+        (i.e., a word or an empty node).
+
+        """
+        return not isinstance(subtree, list)
+
+    @staticmethod
+    def tree_children(tree):
+        """Returns a list of the child subtrees of tree."""
+        if isinstance(tree, list):
+            return tree[1:]
+        else:
+            return []
+
+    @staticmethod
+    def tree_label(tree):
+        """Returns the label on the root node of tree."""
+        if isinstance(tree, list):
+            return tree[0]
+        else:
+            return tree
+
+    def list2words(self, tree):
+        """Extract the segmented utterance from a PTB tree (in nested format)"""
+        def visit(node, words_sofar, segs_sofar):
+            """Does a preorder visit of the nodes in the tree"""
+            if self.is_terminal(node):
+                if not self.ignore_terminals_re.match(node):
+                    segs_sofar.append(self.simplify_terminal(node))
+                return words_sofar, segs_sofar
+
+            for child in self.tree_children(node):
+                words_sofar, segs_sofar = visit(child, words_sofar, segs_sofar)
+
+            if self.word_re.match(self.tree_label(node)) and segs_sofar != []:
+                words_sofar.append(''.join(segs_sofar))
+                segs_sofar = []
+
+            return words_sofar, segs_sofar
+
+        words_sofar, segs_sofar = visit(tree, [], [])
+        if segs_sofar:  # append any unattached segments as a word
+            words_sofar.append(''.join(segs_sofar))
+
+        return ' '.join(words_sofar).strip()
+
+
+class ParseCounter(object):
+    """Count the most frequent utterances in a sequence of parses"""
+    def __init__(self, nutts):
+        self.nutts = nutts
+        self.counters = [collections.Counter() for _ in range(nutts)]
+
+    def update(self, parse):
+        assert len(parse) == self.nutts
+        for i, utt in enumerate(parse):
+            self.counters[i][utt] += 1
+
+    def most_common(self):
+        return [c.most_common(1)[0][0] for c in self.counters]
+
+
+def yield_parses(lines, ignore_firsts=0):
+    """Yields parse trees, ignoring the first ones
+
+    In the raw output of AG the parse , this function yields the successive tress, ignoring the
+    first ones.
+
+    Parameters
+    ----------
+    lines: sequence
+        The parse trees as outputed by the AG program, the trees are
+        separated by an empty line.
+    ignore_first: int, optional
+        The first trees are computed during the first iterations of AG
+        and are usually less accurate. They can be ignored with that
+        argument (default to 0).
+
+    Yields
+    ------
+    tree: list
+
+        The list of lines composing a full parse tree of the input
+        text. Each line is an utterance in the PTB-format
+
+    """
     ntrees = 0
     tree = []
 
     # read input line per line, yield at each empty line
-    for line in trees:
+    for line in lines:
         line = line.strip()
-        if len(line) == 0 and len(tree) > 0:
+        if line == '' and len(tree) > 0:
             ntrees += 1
             if ntrees > ignore_firsts:
                 yield tree
@@ -363,163 +598,23 @@ def _yield_trees(trees, ignore_firsts=0):
         yield tree
 
 
-def _tree_string(tree, ignore_terminal_re, word_re):
-    def simplify_terminal(t):
-        if len(t) > 0 and t[0] == '\\':
-            return t[1:]
-        else:
-            return t
+def postprocess(parse_counter, output_file, category, ignore_first_parses):
+    tokenizer = TreeTokenizer(category)
+    lines = codecs.open(output_file, 'r', encoding='utf8')
+    for parse in yield_parses(lines, ignore_firsts=ignore_first_parses):
+        # convert the parentized expressions as words
+        parse = [tokenizer.tree2words(utt) for utt in parse]
 
-    def is_terminal(subtree):
-        """True if this subtree consists of a single terminal node
-
-        (i.e., a word or an empty node).
-
-        """
-        return not isinstance(subtree, list)
-
-    def tree_children(tree):
-        """Returns a list of the child subtrees of tree."""
-        if isinstance(tree, list):
-            return tree[1:]
-        else:
-            return []
-
-    def tree_label(tree):
-        """Returns the label on the root node of tree."""
-        if isinstance(tree, list):
-            return tree[0]
-        else:
-            return tree
-
-    def visit(node, words_sofar, segs_sofar):
-        """Does a preorder visit of the nodes in the tree"""
-        if is_terminal(node):
-            if not ignore_terminal_re.match(node):
-                segs_sofar.append(simplify_terminal(node))
-            return words_sofar, segs_sofar
-
-        for child in tree_children(node):
-            words_sofar, segs_sofar = visit(child, words_sofar, segs_sofar)
-
-        if word_re.match(tree_label(node)) and segs_sofar != []:
-            words_sofar.append(''.join(segs_sofar))
-            segs_sofar = []
-
-        return words_sofar, segs_sofar
-
-    words_sofar, segs_sofar = visit(tree, [], [])
-    if segs_sofar:  # append any unattached segments as a word
-        words_sofar.append(''.join(segs_sofar))
-
-    return ' '.join(words_sofar)
+        # count the occurences of each utt in the parse
+        parse_counter.update(parse)
 
 
-def _tree2words(tree, nepochs=0, skip=0, rate=1,
-                score_category_re=r'Word\b',
-                ignore_terminals_re=r'^[$]{3}$'):
-    """Extracts segmented words from raw parse trees
-
-    Parameters
-    ----------
-    tree : sequence
-        The parse tree on which to extract the words
-    nepochs : int, optional
-        Total number of epochs
-    skip : int, optional
-        Initial fraction of epochs to skip
-    rate : int, optional
-        Input provides samples every rate epochs
-    score_category_re : str, optional
-        Score categories in tree input that match this regex
-    ignore_terminals_re : str, optional
-        Ignore terminals that match this regular expression
-
-    Returns
-    -------
-    words : list
-        The words extracted from the parse tree
-
-    """
-    _openpar_re = re.compile(r"\s*\(\s*([^ \t\n\r\f\v()]*)\s*")
-    _closepar_re = re.compile(r"\s*\)\s*")
-    _terminal_re = re.compile(r"\s*((?:[^ \\\t\n\r\f\v()]|\\.)+)\s*")
-
-    def string_trees(s):
-        """Returns a list of the trees in PTB-format string s"""
-        trees = []
-        _string_trees(trees, s)
-        return trees
-
-    def _string_trees(trees, s, pos=0):
-        """Reads a sequence of trees in string s[pos:]
-
-        Appends the trees to the argument trees. Returns the ending
-        position of those trees in s.
-
-        """
-        while pos < len(s):
-            closepar_mo = _closepar_re.match(s, pos)
-            if closepar_mo:
-                return closepar_mo.end()
-            openpar_mo = _openpar_re.match(s, pos)
-            if openpar_mo:
-                tree = [openpar_mo.group(1)]
-                trees.append(tree)
-                pos = _string_trees(tree, s, openpar_mo.end())
-            else:
-                terminal_mo = _terminal_re.match(s, pos)
-                trees.append(terminal_mo.group(1))
-                pos = terminal_mo.end()
-        return pos
-
-    word_re = re.compile(score_category_re)
-    ignore_terminals_re = re.compile(ignore_terminals_re)
-
-    nskip = int(skip * nepochs / rate)
-
-    words = []
-    for line in tree:
-        line = line.strip()
-        if len(line) > 0 and nskip <= 0:
-            trees = string_trees(line)
-            trees.insert(0, 'ROOT')
-            words.append(
-                _tree_string(trees, ignore_terminals_re, word_re).strip())
-        else:
-            if nskip <= 0:
-                words.append('\n')
-            nskip -= 1
-        trees = string_trees(line)
-        trees.insert(0, 'ROOT')
-
-    return words
+#-------------------------------------------------------------------------------
+#  Segment function
+#-------------------------------------------------------------------------------
 
 
-def _most_common_parses(trees):
-    """For each utterance in the text find its more common parse in trees"""
-    nutts = len(trees[0])
-    for utt_idx in range(nutts):
-        utterances = (tree[utt_idx] for tree in trees)
-        yield collections.Counter(utterances).most_common(1)[0][0]
-
-
-def _setup_seed(args, nruns):
-    """Setup a unique seed for each run in `args`"""
-    new = [args] * nruns
-    for n in range(nruns):
-        if '-r' in args:
-            # extract the seed from the arguments string
-            seed = int(re.sub(r'^.*\-r *([0-9]+).*$', '\g<1>', args))
-
-            # setup new seed for each run
-            new[n] = re.sub('\-r *([0-9]+)', '-r {}'.format(seed + n), args)
-        else:
-            new[n] = args + ' -r {}'.format(random.randint(0, 2**16))
-    return new
-
-
-def segment(text, grammar_file=None, segment_category='Colloc0',
+def segment(train_text, grammar_file=None, category='Colloc0',
             args=DEFAULT_ARGS, test_text=None, ignore_first_parses=0,
             nruns=8, njobs=1, log=utils.null_logger()):
     """Segment a text using the Adaptor Grammar algorithm
@@ -529,13 +624,13 @@ def segment(text, grammar_file=None, segment_category='Colloc0',
 
     Parameters
     ----------
-    text : sequence
+    train_text : sequence
         The list of utterances to train the model on, and to segment
         if `test_text` is None.
     grammar_file : str, optional
         The path to the grammar file to use for segmentation. If not
         specified, a Colloc0 grammar is generated from the input text.
-    segment_category : str, optional
+    category : str, optional
         The category to segment the text with, must be an existing
         parent in the grammar (i.e. the `segment_category` must be
         present in the left column of the grammar file), default to
@@ -569,103 +664,75 @@ def segment(text, grammar_file=None, segment_category='Colloc0',
         If the `score_category` is not found in the grammar.
 
     """
-    # we may use a temp file to write the grammar, it is automatically
-    # erased when done
-    with tempfile.NamedTemporaryFile() as grammar_temp:
-        # if grammar is not specified, generate a Colloc0 one from
-        # input and write it in the temp file
-        if grammar_file is None:
-            log.info('generating the Colloc0 grammar...')
-            text = list(text)
-            codecs.open(grammar_temp.name, 'w', encoding='utf8').write(
-                build_colloc0_grammar(
-                    # the set of phones in the input text
-                    set(p for utt in text for p in utt.split() if p)))
-            grammar_file = grammar_temp.name
-
-        # know we have our grammar file, delegate the segmentation to
-        # the _segment_aux function
-        return _segment_aux(
-            text, grammar_file, segment_category, args,
-            test_text, ignore_first_parses, nruns, njobs, log)
-
-
-def _segment_aux(text, grammar_file, segment_category, args,
-                 test_text, ignore_first_parses, nruns, njobs, log):
-    # make sure the grammar file exists
-    if not os.path.isfile(grammar_file):
-        raise RuntimeError('grammar file not found: {}'.format(grammar_file))
-
-    # make sure the segment category is valid
-    if not is_parent_in_grammar(grammar_file, segment_category):
-        raise RuntimeError(
-            'category "{}" not found in the grammar'
-            .format(segment_category))
-
     # force the train text from sequence to list
-    text = list(text)
-    log.info('train data: %s utterances loaded', len(text))
+    if not isinstance(train_text, list):
+        train_text = list(train_text)
+    nutts =  len(train_text)
+    log.info('train data: %s utterances loaded', nutts)
 
     # if any, force the test text from sequence to list
     if test_text is not None:
-        test_text = list(test_text)
-        log.info('segmentation data: %s utterances loaded', len(test_text))
+        if not isinstance(test_text, list):
+            test_text = list(test_text)
+            nutts = len(test_text)
+        log.info('test data: %s utterances loaded', nutts)
     else:
-        log.info('no test text provided, segmentation on train data')
+        log.info('no test data provided, segmentation on train data')
+
+    # display the AG algorithm parameters
     log.info('parameters are: "%s"', args)
 
     # ensure we have a different seed for all runs. If the seed is
     # specified in command line (-r SEED) then feed SEED+i for i the
     # ith run. Else put a random seed to each run.
     args = _setup_seed(args, nruns)
-    log.debug('random seeds are: %s', ', '.join(
+    log.info('random seeds are: %s', ', '.join(
         [arg.split('-r ')[1].split(' ')[0] for arg in args]))
 
-    # parallel runs of the AG algorithm, raw_parses is a list of
-    # `nruns_inner` raw parse trees we need to postprocess to obtain
-    # words.
-    log.info('running (%d times)...', nruns)
+    # we may use a temp file to write the grammar, it is automatically
+    # erased when done
+    with tempfile.NamedTemporaryFile() as grammar_temp:
+        # if grammar is not specified, generate a Colloc0 one from the
+        # set of phones in the input text and write it in the tempfile
+        if grammar_file is None:
+            grammar_file = grammar_temp.name
+            log.info('generating Colloc0 grammar in %s ...', grammar_file)
+            # extract all the phones in both train and test data
+            phones = set(p for utt in train_text for p in utt.split() if p)
+            if test_text is not None:
+                phones.update(
+                    set(p for utt in test_text for p in utt.split() if p))
+            # build the grammar from the phoneset
+            grammar = build_colloc0_grammar(phones)
+            codecs.open(grammar_file, 'w', encoding='utf8').write(grammar)
 
-    temp_dir = tempfile.mkdtemp()
-    log.debug('created tempdir: %s', temp_dir)
-    output_files = [os.path.join(temp_dir, 'run_{}'.format(i+1))
-                         for i in range(nruns)]
+        check_grammar(grammar_file, category)
+        log.info('valid grammar for level %s: %s', category, grammar_file)
 
-    joblib.Parallel(
-        n_jobs=njobs, backend="threading", verbose=0)(
-            joblib.delayed(_run_ag_single)(
-                text,
-                output_files[n],
-                grammar_file, args[n],
-                test_text=test_text,
-                log_level=log.getEffectiveLevel(),
-                log_name='wordseg-ag - run {}'.format(n + 1))
-            for n in range(nruns))
+        # parallel runs of the AG algorithm
+        log.info('running AG (%d times)...', nruns)
+        parse_counter = ParseCounter(nutts)
 
-    log.info(
-        'collapsing the parse trees%s and extracting %s boundaries',
-        '' if ignore_first_parses == 0 else
-        ', ignore the {} first parses of each run'.format(ignore_first_parses),
-        segment_category)
+        joblib.Parallel(
+            n_jobs=njobs, backend="threading", verbose=0)(
+                joblib.delayed(_segment_single)(
+                    parse_counter,
+                    train_text,
+                    grammar_file,
+                    category,
+                    ignore_first_parses,
+                    args[n],
+                    test_text=test_text,
+                    log_level=log.getEffectiveLevel(),
+                    log_name='wordseg-ag - run {}'.format(n + 1))
+                for n in range(nruns))
 
-    trees = (tree for output_file in output_files for tree in _yield_trees(
-        codecs.open(output_file, 'r', encoding='utf8'),
-        ignore_firsts=ignore_first_parses))
+        return parse_counter.most_common()
 
-    # raw_trees = ()
-    # trees = (
-    #     tree for trees in raw_trees for tree
-    #     in _yield_trees(trees, ignore_firsts=ignore_first_parses))
 
-    segmented_trees = [
-        _tree2words(tree, score_category_re=segment_category)
-        for tree in trees]
-
-    # for each utterance, get the most frequent parse found in the
-    # sequence of parses
-    log.info('extracting most common parse of each utterance')
-    segmented = _most_common_parses(segmented_trees)
-    return list(segmented)
+#-------------------------------------------------------------------------------
+#  Command line arguments
+#-------------------------------------------------------------------------------
 
 
 def _add_arguments(parser):
