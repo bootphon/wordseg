@@ -18,6 +18,7 @@ This algorithm adds word boundaries after adapting a grammar.
 
 import codecs
 import collections
+import datetime
 import joblib
 import logging
 import os
@@ -193,7 +194,13 @@ DEFAULT_ARGS = ('-E -d 0 -a 0.0001 -b 10000 -e 1 -f 1 '
 
 
 def _setup_seed(args, nruns):
-    """Setup a unique seed for each run in `args`"""
+    """Setup a unique seed for each run in `args`
+
+    Return a list of `nruns` copies of `args` in which only the '-r
+    <seed>' option is modified. This ensure all the AG runs are done
+    with a different random seed.
+
+    """
     new = [args] * nruns
     for n in range(nruns):
         if '-r' in args:
@@ -272,16 +279,27 @@ def is_parent_in_grammar(grammar_file, parent):
 
 
 def check_grammar(grammar_file, category):
-    """Raise a RuntimeError if the category is not a parent in the grammar"""
+    """Return True if the grammar is valid for that `category`
+
+    Raise a RuntimeError if the category is not a parent in the
+    grammar, or if the grammar file is not found or not readable.
+
+    """
     # make sure the grammar file exists
     if not os.path.isfile(grammar_file):
         raise RuntimeError('grammar file not found: {}'.format(grammar_file))
+
+    # make sure the file is readable
+    if not os.access(grammar_file, os.R_OK):
+        raise RuntimeError('grammar file not readable: {}'.format(grammar_file))
 
     # make sure the segment category is valid
     if not is_parent_in_grammar(grammar_file, category):
         raise RuntimeError(
             'category "{}" not found in the grammar'
             .format(category))
+
+    return True
 
 
 #-------------------------------------------------------------------------------
@@ -292,7 +310,24 @@ def check_grammar(grammar_file, category):
 def _segment_single(parse_counter, train_text, grammar_file,
                     category, ignore_first_parses, args, test_text=None,
                     log_level=logging.ERROR, log_name='wordseg-ag'):
-    """Runs the AG program a single time and count output parses
+    """Executes a single run of the AG program and postprocessing
+
+    The function returns nothing but updates the `parse_counter` with
+    the parses built during the AG's iterations. It does the following
+    steps:
+
+    * create a logger to forward AG messages.
+
+    * create a temporary directory, write train/test data files in it.
+
+    * execute the AG program with the given grammar and arguments
+      (in a subprocess, using a bash script as proxy).
+
+    * postprocess the resulting parse trees to extract the segmented
+      utterance from the raw PTB format.
+
+    * update the `parse_counter` with the segmented utterances.
+
 
     Parameters
     ----------
@@ -340,7 +375,10 @@ def _segment_single(parse_counter, train_text, grammar_file,
 
     try:
         # setup the train text as a temp file. ylt extension is the
-        # one used in the original AG implementation
+        # one used in the original AG implementation. TODO actually we
+        # are copying train and test files for each run, this is
+        # useless (maybe expose train_file and test_file as arguments
+        # instead of train_text / test_text?).
         train_text = '\n'.join(utt.strip() for utt in train_text) + '\n'
         train_file = os.path.join(temp_dir, 'train.ylt')
         codecs.open(train_file, 'w', encoding='utf8').write(train_text)
@@ -369,6 +407,8 @@ def _segment_single(parse_counter, train_text, grammar_file,
         codecs.open(script_file, 'w', encoding='utf8').write(command + '\n')
 
         log.info('running "%s"', command)
+
+        t1 = datetime.datetime.now()
 
         # run the command as a subprocess
         process = subprocess.Popen(
@@ -402,13 +442,22 @@ def _segment_single(parse_counter, train_text, grammar_file,
 
         process.wait()
 
+        t2 = datetime.datetime.now()
+
         # fail if AG returns an error code
         if process.returncode:
             raise RuntimeError(
-                'fails with error code {}'.format(process.returncode))
+                'segmentation fails with error code {}'
+                .format(process.returncode))
 
-        log.info('segmentation done, postprocessing ...')
-        postprocess(parse_counter, output_file, category, ignore_first_parses)
+        log.info('segmentation done, took {}'.format(t2 - t1))
+
+        postprocess(
+            parse_counter, output_file, category, ignore_first_parses)
+
+        t3 = datetime.datetime.now()
+        log.info('postprocessing done, took %s', t3 - t2)
+
     finally:
         shutil.rmtree(temp_dir)
 
@@ -427,8 +476,9 @@ def _segment_single(parse_counter, train_text, grammar_file,
 class TreeTokenizer(object):
     """Tokenize an AG tree in a suite of words
 
-    For example, at Colloc0 level, the following tree become "s kr
-    ahmp shaxs":
+    This class parses raw PTB tress as outputed by AG. It extracts
+    word-segmented utterances. For example, at Colloc0 level, the
+    following tree become "s kr ahmp shaxs":
 
     (Sentence (Colloc0s (Colloc0#1 (Phonemes (Phoneme s))) (Colloc0s
     (Colloc0#3 (Phonemes (Phoneme k) (Phonemes (Phoneme r))))
@@ -464,6 +514,30 @@ class TreeTokenizer(object):
         lists = []
         self._tree2list_aux(lists, tree)
         return lists
+
+    def list2words(self, tree):
+        """Extract the segmented utterance from a PTB tree (in nested format)"""
+        def visit(node, words_sofar, segs_sofar):
+            """Does a preorder visit of the nodes in the tree"""
+            if self.is_terminal(node):
+                if not self.ignore_terminals_re.match(node):
+                    segs_sofar.append(self.simplify_terminal(node))
+                return words_sofar, segs_sofar
+
+            for child in self.tree_children(node):
+                words_sofar, segs_sofar = visit(child, words_sofar, segs_sofar)
+
+            if self.word_re.match(self.tree_label(node)) and segs_sofar != []:
+                words_sofar.append(''.join(segs_sofar))
+                segs_sofar = []
+
+            return words_sofar, segs_sofar
+
+        words_sofar, segs_sofar = visit(tree, [], [])
+        if segs_sofar:  # append any unattached segments as a word
+            words_sofar.append(''.join(segs_sofar))
+
+        return ' '.join(words_sofar).strip()
 
     def _tree2list_aux(self, trees, s, pos=0):
         """Recursive auxiliary method for tree2list()"""
@@ -515,43 +589,23 @@ class TreeTokenizer(object):
         else:
             return tree
 
-    def list2words(self, tree):
-        """Extract the segmented utterance from a PTB tree (in nested format)"""
-        def visit(node, words_sofar, segs_sofar):
-            """Does a preorder visit of the nodes in the tree"""
-            if self.is_terminal(node):
-                if not self.ignore_terminals_re.match(node):
-                    segs_sofar.append(self.simplify_terminal(node))
-                return words_sofar, segs_sofar
-
-            for child in self.tree_children(node):
-                words_sofar, segs_sofar = visit(child, words_sofar, segs_sofar)
-
-            if self.word_re.match(self.tree_label(node)) and segs_sofar != []:
-                words_sofar.append(''.join(segs_sofar))
-                segs_sofar = []
-
-            return words_sofar, segs_sofar
-
-        words_sofar, segs_sofar = visit(tree, [], [])
-        if segs_sofar:  # append any unattached segments as a word
-            words_sofar.append(''.join(segs_sofar))
-
-        return ' '.join(words_sofar).strip()
-
 
 class ParseCounter(object):
     """Count the most frequent utterances in a sequence of parses"""
     def __init__(self, nutts):
         self.nutts = nutts
         self.counters = [collections.Counter() for _ in range(nutts)]
+        self.nparses = 0
 
     def update(self, parse):
         assert len(parse) == self.nutts
+        self.nparses += 1
         for i, utt in enumerate(parse):
             self.counters[i][utt] += 1
 
     def most_common(self):
+        if self.nparses == 0:
+            raise RuntimeError('ParseCounter.most_common: no parse counted!')
         return [c.most_common(1)[0][0] for c in self.counters]
 
 
@@ -574,7 +628,6 @@ def yield_parses(lines, ignore_firsts=0):
     Yields
     ------
     tree: list
-
         The list of lines composing a full parse tree of the input
         text. Each line is an utterance in the PTB-format
 
@@ -601,8 +654,9 @@ def yield_parses(lines, ignore_firsts=0):
 def postprocess(parse_counter, output_file, category, ignore_first_parses):
     tokenizer = TreeTokenizer(category)
     lines = codecs.open(output_file, 'r', encoding='utf8')
+
     for parse in yield_parses(lines, ignore_firsts=ignore_first_parses):
-        # convert the parentized expressions as words
+        # convert the PTB parentized expressions as words
         parse = [tokenizer.tree2words(utt) for utt in parse]
 
         # count the occurences of each utt in the parse
@@ -643,7 +697,9 @@ def segment(train_text, grammar_file=None, category='Colloc0',
         If not None, the list of utterances to segment using the model
         learned from `text`
     ignore_first_parses : int, optional
-        Ignore the first parses from the algorithm output
+        Ignore the first parses from the algorithm output. If
+        negative, keep only the last ones (e.g. -1 keeps only the last
+        one, -2 the last two).
     nruns : int, optional
         number of runs to execute and output parses to collapse. This
         number 8 comes from the original recipe provided by M Jonhson.
@@ -664,6 +720,8 @@ def segment(train_text, grammar_file=None, category='Colloc0',
         If the `score_category` is not found in the grammar.
 
     """
+    t1 = datetime.datetime.now()
+
     # force the train text from sequence to list
     if not isinstance(train_text, list):
         train_text = list(train_text)
@@ -681,6 +739,22 @@ def segment(train_text, grammar_file=None, category='Colloc0',
 
     # display the AG algorithm parameters
     log.info('parameters are: "%s"', args)
+
+    # setup ignore_first_parses and make sure ignore_first_parses <=
+    # niterations
+    if '-n' in args:
+        nparses = int(re.sub(r'^.*\-n *([0-9]+).*$', '\g<1>', args))
+        if '-x' in args:
+            interval = int(re.sub(r'^.*\-x *([0-9]+).*$', '\g<1>', args))
+            nparses = int(nparses / interval)
+        nparses += 1  # include the initial one (independant of iterations)
+    else:
+        nparses = 2000 + 1  # the default value fixed in C++
+    if ignore_first_parses < 0:
+        ignore_first_parses = max(0, nparses + ignore_first_parses)
+    if ignore_first_parses >= nparses:
+        raise RuntimeError('cannot ignore {} parses (max is {})'.format(
+            ignore_first_parses, nparses - 1))
 
     # ensure we have a different seed for all runs. If the seed is
     # specified in command line (-r SEED) then feed SEED+i for i the
@@ -727,6 +801,11 @@ def segment(train_text, grammar_file=None, category='Colloc0',
                     log_name='wordseg-ag - run {}'.format(n + 1))
                 for n in range(nruns))
 
+        t2 = datetime.datetime.now()
+        log.info('total processing time: %s', t2 - t1)
+        log.info('extracting most common utterances in %d parses',
+                 parse_counter.nparses)
+
         return parse_counter.most_common()
 
 
@@ -756,8 +835,8 @@ def _add_arguments(parser):
 
     parser.add_argument(
         '--ignore-first-parses', type=int, metavar='<int>', default=0,
-        help='discard the n first parses of each run, '
-        'default is %(default)s')
+        help=('discard the n first parses of each run, default is '
+              '%(default)s. If negative, keeps only the <int> last parses.'))
 
     group = parser.add_argument_group('grammar arguments')
     group.add_argument(

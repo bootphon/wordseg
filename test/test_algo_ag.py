@@ -2,6 +2,8 @@
 
 import codecs
 import os
+import itertools
+import joblib
 import pytest
 
 from wordseg.algos import ag
@@ -11,6 +13,8 @@ from wordseg.evaluate import evaluate
 from wordseg import utils
 from . import prep, datadir
 
+
+# TODO test parse_counter in parallel
 
 test_arguments = (
     '-E -P -R -1 -n 10 -a 0.0001 -b 10000.0 '
@@ -25,16 +29,44 @@ def test_grammar_files():
     assert len(ag.get_grammar_files()) != 0
 
 
-def test_ag_single_run(prep, tmpdir):
+def test_check_grammar():
+    g = ag.get_grammar_files()[1]
+    assert ag.check_grammar(g, 'Colloc0')
+
+    with pytest.raises(RuntimeError):
+        ag.check_grammar(g, 'Phonemes')
+
+    with pytest.raises(RuntimeError):
+        ag.check_grammar(g + 'nonexistingfile', '')
+
+
+def test_segment_single(prep):
     pc = ag.ParseCounter(len(prep))
 
-    output_file = os.path.join(str(tmpdir), 'segmented.txt')
     ag._segment_single(
-        pc, prep,
+        pc,
+        prep,
         os.path.join(grammar_dir, grammars[1][0]),
-        'Colloc0', 0, args=test_arguments)
+        'Colloc0',
+        0,
+        args=test_arguments)
 
     assert len(prep) == pc.nutts == len(pc.counters)
+
+
+def test_tokenizer():
+    tree = ('(Sentence (Colloc0s (Colloc0#1 (Phonemes (Phoneme s))) (Colloc0s '
+            '(Colloc0#3 (Phonemes (Phoneme k) (Phonemes (Phoneme r)))) '
+            '(Colloc0s (Colloc0#3 (Phonemes (Phoneme ah) (Phonemes (Phoneme m) '
+            '(Phonemes (Phoneme p))))) (Colloc0s (Colloc0#3 (Phonemes (Phoneme '
+            'sh) (Phonemes (Phoneme ax) (Phonemes (Phoneme s))))))))))')
+
+    t = ag.TreeTokenizer('Colloc0')
+    assert t.tree2words(tree) == 's kr ahmp shaxs'
+
+    t = ag.TreeTokenizer('unexistinglevel')
+    assert t.tree2words(tree) == 'skrahmpshaxs'
+
 
 def test_counter():
     c = ag.ParseCounter(5)
@@ -68,6 +100,38 @@ def test_setup_seed():
     assert s('-b -r 1 -a 2', 1) == ['-b -r 1 -a 2']
     assert s('-b -r 1 -a 2', 1) == ['-b -r 1 -a 2']
     assert s('-b -r 5 -a 2', 2) == ['-b -r 5 -a 2', '-b -r 6 -a 2']
+
+
+@pytest.mark.parametrize('ignore', [-10, -5, -1, 0, 5, 6, 10])
+def test_ignore_first_parses(prep, ignore):
+    # we use the default test value -n 10 -x 2 (10 iterations yields to 6
+    # parses, initial one and 5 each 2 iterations)
+    if ignore < 6:
+        segmented = ag.segment(
+            prep, args=test_arguments, nruns=1, ignore_first_parses=ignore)
+        assert len(segmented) == len(prep)
+    else:
+        # ignoring more than the extracted parses raises an error
+        with pytest.raises(RuntimeError):
+            ag.segment(prep, args=test_arguments, nruns=1,
+                       ignore_first_parses=ignore)
+
+
+def _update(counter, parse):
+    counter.update(parse)
+
+
+@pytest.mark.parametrize('njobs', [1, 2, 4, 10])
+def test_parse_counter(njobs):
+    counter = ag.ParseCounter(2)
+    parses = [['a', 'a']] * 50 + [['a', 'b']] * 10 + [['b', 'b']] * 45
+
+    joblib.Parallel(n_jobs=njobs, backend='threading', verbose=0)(
+        joblib.delayed(_update)(counter, parses[n])
+        for n in range(len(parses)))
+
+    assert counter.nparses == 105
+    assert counter.most_common() == ['a', 'b']
 
 
 @pytest.mark.parametrize('grammar, level', grammars)
