@@ -454,13 +454,14 @@ def _segment_single(parse_counter, train_text, grammar_file,
         log.info('segmentation done, took {}'.format(t2 - t1))
 
         postprocess(
-            parse_counter, output_file, category, ignore_first_parses)
+            parse_counter, output_file, category, ignore_first_parses, log)
 
         t3 = datetime.datetime.now()
         log.info('postprocessing done, took %s', t3 - t2)
 
     finally:
         shutil.rmtree(temp_dir)
+
 
 #-------------------------------------------------------------------------------
 #  Postprocessing
@@ -600,7 +601,11 @@ class ParseCounter(object):
         self.nparses = 0
 
     def update(self, parse):
-        assert len(parse) == self.nutts
+        if not len(parse) == self.nutts:
+            raise RuntimeError(
+                'ParseCounter.update: len(parse) != nutts: {} != {}'
+                .format(len(parse), self.nutts))
+
         self.nparses += 1
         for i, utt in enumerate(parse):
             self.counters[i][utt] += 1
@@ -640,11 +645,12 @@ def yield_parses(lines, ignore_firsts=0):
     # read input line per line, yield at each empty line
     for line in lines:
         line = line.strip()
-        if line == '' and len(tree) > 0:
-            ntrees += 1
-            if ntrees > ignore_firsts:
-                yield tree
-            tree = []
+        if line == '':
+            if len(tree) > 0:
+                ntrees += 1
+                if ntrees > ignore_firsts:
+                    yield tree
+                tree = []
         else:
             tree.append(line)
 
@@ -653,16 +659,28 @@ def yield_parses(lines, ignore_firsts=0):
         yield tree
 
 
-def postprocess(parse_counter, output_file, category, ignore_first_parses):
+def postprocess(parse_counter, output_file, category, ignore_first_parses, log):
     tokenizer = TreeTokenizer(category)
     lines = gzip.open(output_file, 'rt', encoding='utf8')
+    nwarnings = 0
 
     for parse in yield_parses(lines, ignore_firsts=ignore_first_parses):
-        # convert the PTB parentized expressions as words
-        parse = [tokenizer.tree2words(utt) for utt in parse]
+        if len(parse) != parse_counter.nutts:
+            nwarnings += 1
+            log.warning(
+                'ignoring incomplete parse of %d lines (must be %d): %s',
+                len(parse), parse_counter.nutts, parse)
+        else:
+            # convert the PTB parentized expressions as words
+            parse = [tokenizer.tree2words(utt) for utt in parse]
 
-        # count the occurences of each utt in the parse
-        parse_counter.update(parse)
+            # count the occurences of each utt in the parse
+            parse_counter.update(parse)
+
+    if nwarnings != 0:
+        log.warning(
+            'ignored %d parses (%d accepted) during postprocessing',
+            nwarnings, parse_counter.nparses)
 
 
 #-------------------------------------------------------------------------------
