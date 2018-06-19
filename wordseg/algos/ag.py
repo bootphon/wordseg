@@ -19,6 +19,7 @@ This algorithm adds word boundaries after adapting a grammar.
 import codecs
 import collections
 import datetime
+import gzip
 import joblib
 import logging
 import os
@@ -391,13 +392,13 @@ def _segment_single(parse_counter, train_text, grammar_file,
             test_file = os.path.join(temp_dir, 'test.ylt')
             codecs.open(test_file, 'w', encoding='utf8').write(test_text)
 
-        # create a file to store output (raw PTB-format parse trees)
-        output_file = os.path.join(temp_dir, 'output.txt')
+        # create a file to store output (compressed PTB-format parse trees)
+        output_file = os.path.join(temp_dir, 'output.gz')
 
         # write the call to AG in a bash script
         script_file = os.path.join(temp_dir, 'script.sh')
-        command = ('cat {train} | {bin} {grammar} {args} -u {test} > {output}'
-                   .format(
+        command = ('cat {train} | {bin} {grammar} {args} -u {test} '
+                   '| gzip -c > {output}'.format(
                        train=train_file,
                        bin=utils.get_binary('ag'),
                        grammar=grammar_file,
@@ -461,7 +462,6 @@ def _segment_single(parse_counter, train_text, grammar_file,
     finally:
         shutil.rmtree(temp_dir)
 
-
 #-------------------------------------------------------------------------------
 #  Postprocessing
 #
@@ -519,6 +519,7 @@ class TreeTokenizer(object):
         """Extract the segmented utterance from a PTB tree (in nested format)"""
         def visit(node, words_sofar, segs_sofar):
             """Does a preorder visit of the nodes in the tree"""
+            # TODO slow and critical part to optimize
             if self.is_terminal(node):
                 if not self.ignore_terminals_re.match(node):
                     segs_sofar.append(self.simplify_terminal(node))
@@ -541,6 +542,7 @@ class TreeTokenizer(object):
 
     def _tree2list_aux(self, trees, s, pos=0):
         """Recursive auxiliary method for tree2list()"""
+        # TODO slow and critical part to optimize
         while pos < len(s):
             closepar_mo = self._closepar_re.match(s, pos)
             if closepar_mo:
@@ -653,7 +655,7 @@ def yield_parses(lines, ignore_firsts=0):
 
 def postprocess(parse_counter, output_file, category, ignore_first_parses):
     tokenizer = TreeTokenizer(category)
-    lines = codecs.open(output_file, 'r', encoding='utf8')
+    lines = gzip.open(output_file, 'rt', encoding='utf8')
 
     for parse in yield_parses(lines, ignore_firsts=ignore_first_parses):
         # convert the PTB parentized expressions as words
