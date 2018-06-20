@@ -7,6 +7,10 @@
 wordseg-0.6.3 (not yet released)
 --------------------------------
 
+* Added `tools/wordseg-qsub.sh`, a script to schedule a list of
+  segmentation jobs to a cluster running Sun Grid Engine and the
+  `qsub` scheduler.
+
 * Added example phonological rules and updated contributong guide in
   documentation.
 
@@ -21,8 +25,15 @@ wordseg-0.6.3 (not yet released)
   {forward,backward}` is replaced by `--dependency {ftp,btp,mi}`
   (maintained for backward compatibility). See #40.
 
-* In **wordseg-ag**: niteration is now 2000 by default (was 100),
-  improved log of iterations with `-vv`.
+* In **wordseg-ag**:
+  * niteration is now 2000 by default (was 100),
+  * improved log of iterations with `-vv`,
+  * refactored postprocessing:
+    * parallelized
+    * constant memory usage (was linear wrt niterations*nutts)
+    * temporary parse trees file is now gziped (gains a factor of 20 in disk usage)
+    * detection of incomplete parses (if any issues a warning)
+    * better comments in code, more unit tests
 
 
 wordseg-0.6.2
