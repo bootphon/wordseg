@@ -30,7 +30,7 @@ def test_grammar_files():
 
 
 def test_check_grammar():
-    g = ag.get_grammar_files()[1]
+    g = [g for g in ag.get_grammar_files() if 'Colloc0_aesp' in g][0]
     assert ag.check_grammar(g, 'Colloc0')
 
     with pytest.raises(RuntimeError):
