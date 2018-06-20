@@ -1,0 +1,7 @@
+# you can comment lines with a '#'
+tp_absolute_ftp wordseg-tp -v -t absolute -d ftp
+tp_absolute_btp wordseg-tp -v -t absolute -d btp
+tp_absolute_mi  wordseg-tp -v -t absolute -d mi
+tp_relative_ftp wordseg-tp -v -t relative -d ftp
+tp_relative_btp wordseg-tp -v -t relative -d btp
+tp_relative_mi  wordseg-tp -v -t relative -d mi
