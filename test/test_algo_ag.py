@@ -1,8 +1,9 @@
 """Test of the wordseg.algos.ag module"""
 
 import codecs
-import logging
 import os
+import itertools
+import joblib
 import pytest
 
 from wordseg.algos import ag
@@ -12,6 +13,8 @@ from wordseg.evaluate import evaluate
 from wordseg import utils
 from . import prep, datadir
 
+
+# TODO test parse_counter in parallel
 
 test_arguments = (
     '-E -P -R -1 -n 10 -a 0.0001 -b 10000.0 '
@@ -26,17 +29,48 @@ def test_grammar_files():
     assert len(ag.get_grammar_files()) != 0
 
 
-def test_ag_single_run(prep):
-    raw_parses = ag._run_ag_single(
-        prep, os.path.join(grammar_dir, grammars[1][0]), args=test_arguments)
-    trees = [tree for tree in ag._yield_trees(raw_parses)]
+def test_check_grammar():
+    g = ag.get_grammar_files()[1]
+    assert ag.check_grammar(g, 'Colloc0')
 
-    assert len(trees) == 6
-    for tree in trees:
-        assert len(tree) == len(prep)
+    with pytest.raises(RuntimeError):
+        ag.check_grammar(g, 'Phonemes')
+
+    with pytest.raises(RuntimeError):
+        ag.check_grammar(g + 'nonexistingfile', '')
 
 
-def test_most_common_parse():
+def test_segment_single(prep):
+    pc = ag.ParseCounter(len(prep))
+
+    ag._segment_single(
+        pc,
+        prep,
+        os.path.join(grammar_dir, grammars[1][0]),
+        'Colloc0',
+        0,
+        args=test_arguments)
+
+    assert len(prep) == pc.nutts == len(pc.counters)
+
+
+def test_tokenizer():
+    tree = ('(Sentence (Colloc0s (Colloc0#1 (Phonemes (Phoneme s))) (Colloc0s '
+            '(Colloc0#3 (Phonemes (Phoneme k) (Phonemes (Phoneme r)))) '
+            '(Colloc0s (Colloc0#3 (Phonemes (Phoneme ah) (Phonemes (Phoneme m) '
+            '(Phonemes (Phoneme p))))) (Colloc0s (Colloc0#3 (Phonemes (Phoneme '
+            'sh) (Phonemes (Phoneme ax) (Phonemes (Phoneme s))))))))))')
+
+    t = ag.TreeTokenizer('Colloc0')
+    assert t.tree2words(tree) == 's kr ahmp shaxs'
+
+    t = ag.TreeTokenizer('unexistinglevel')
+    assert t.tree2words(tree) == 'skrahmpshaxs'
+
+
+def test_counter():
+    c = ag.ParseCounter(5)
+
     # 5 utterances in 3 trees
     matrix = [
         [1, 1, 1, 1, 1],
@@ -44,12 +78,14 @@ def test_most_common_parse():
         [2, 2, 2, 2, 2]]
     expected = [1, 1, 2, 1, 1]
 
-    assert list(ag._most_common_parses(matrix)) == expected
+    for v in matrix:
+        c.update(v)
+    assert list(c.most_common()) == expected
 
 
-def test_yield_trees():
+def test_yield_parses():
     def aux(trees, n):
-        return list(ag._yield_trees(trees, ignore_firsts=n))
+        return list(ag.yield_parses(trees, ignore_firsts=n))
 
     assert aux(['a', '', 'b', '', 'c'], 0) == [['a'], ['b'], ['c']]
     assert aux(['a', '', 'b', '', 'c'], 1) == [['b'], ['c']]
@@ -64,6 +100,38 @@ def test_setup_seed():
     assert s('-b -r 1 -a 2', 1) == ['-b -r 1 -a 2']
     assert s('-b -r 1 -a 2', 1) == ['-b -r 1 -a 2']
     assert s('-b -r 5 -a 2', 2) == ['-b -r 5 -a 2', '-b -r 6 -a 2']
+
+
+@pytest.mark.parametrize('ignore', [-10, -5, -1, 0, 5, 6, 10])
+def test_ignore_first_parses(prep, ignore):
+    # we use the default test value -n 10 -x 2 (10 iterations yields to 6
+    # parses, initial one and 5 each 2 iterations)
+    if ignore < 6:
+        segmented = ag.segment(
+            prep, args=test_arguments, nruns=1, ignore_first_parses=ignore)
+        assert len(segmented) == len(prep)
+    else:
+        # ignoring more than the extracted parses raises an error
+        with pytest.raises(RuntimeError):
+            ag.segment(prep, args=test_arguments, nruns=1,
+                       ignore_first_parses=ignore)
+
+
+def _update(counter, parse):
+    counter.update(parse)
+
+
+@pytest.mark.parametrize('njobs', [1, 2, 4, 10])
+def test_parse_counter(njobs):
+    counter = ag.ParseCounter(2)
+    parses = [['a', 'a']] * 50 + [['a', 'b']] * 10 + [['b', 'b']] * 45
+
+    joblib.Parallel(n_jobs=njobs, backend='threading', verbose=0)(
+        joblib.delayed(_update)(counter, parses[n])
+        for n in range(len(parses)))
+
+    assert counter.nparses == 105
+    assert counter.most_common() == ['a', 'b']
 
 
 @pytest.mark.parametrize('grammar, level', grammars)
@@ -92,8 +160,8 @@ def test_mark_jonhson(tmpdir, datadir):
     assert os.path.isdir(datadir)
 
     grammar_file = os.path.join(datadir, 'ag_testengger.lt')
-    text = codecs.open(
-        os.path.join(datadir, 'ag_testeng.yld'), 'r', encoding='utf8')
+    text = list(codecs.open(
+        os.path.join(datadir, 'ag_testeng.yld'), 'r', encoding='utf8'))
     arguments = (
         '-r 1234 -P -D -R -1 -d 100 -a 1e-2 -b 1 -e 1 -f 1 '
         '-g 1e2 -h 1e-2 -n 10 -C -E -A {prs} -N 10 -F {trace} -G {wlt} '
@@ -107,7 +175,13 @@ def test_mark_jonhson(tmpdir, datadir):
             # X1=tmpdir.join('X1'), X2=tmpdir.join('X2'),
             # prs1=tmpdir.join('prs1'), prs2=tmpdir.join('prs2')))
         ))
-    ag._run_ag_single(text, grammar_file, args=arguments)
+    pc = ag.ParseCounter(len(text))
+    output = ag.segment(text, grammar_file, category='VP', args=arguments,
+                        ignore_first_parses=0, nruns=1)
+    assert len(text) == len(output)
+    for i in range(len(text)):
+        assert text[i].strip().replace(' ', '') == output[i].replace(' ', '')
+
 
 
 # # this test is not stable enough, so it is commented out
