@@ -661,7 +661,7 @@ def yield_parses(lines, ignore_firsts=0):
 
 def postprocess(parse_counter, output_file, category, ignore_first_parses, log):
     tokenizer = TreeTokenizer(category)
-    lines = gzip.open(output_file, 'rt', encoding='utf8')
+    lines = (l.decode('utf8') for l in gzip.open(output_file, 'r'))
     nwarnings = 0
 
     for parse in yield_parses(lines, ignore_firsts=ignore_first_parses):
