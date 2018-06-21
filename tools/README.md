@@ -1,48 +1,47 @@
 wordseg-qsub.sh
 ===============
 
-A little script to launch
-[wordseg](https://github.com/bootphon/wordseg) segmentation jobs on
-qsub.
+A little script to launch **wordseg** segmentation jobs on qsub.
 
 
 Usage
 -----
 
-    ./wordseg-qsub.sh <jobs-file> <output-directory> <prepared-file> <gold-file> [<qsub-options>]
-
-Get a detailed usage message with:
-
-    ./wordseg-qsub.sh --help
+    ./wordseg-qsub.sh <jobs-file> <output-directory> [<qsub-options>]
 
 
-Exemple
--------
+Format of <jobs-file>
+-----------------------
 
-Have a look to the exemple provided, which executes six flavors of TP
-on the same input:
-
-    ./wordseg-qsub.sh exemple/jobs.txt ./results exemple/input.txt exemple/gold.txt
-
-
-Format of `jobs.txt`
---------------------
-
-`<jobs-file>` must contain one job definition per line. A job
+<jobs-file> must contain one job definition per line. A job
 definition is made of the following fields:
 
-    <job-name> <wordseg-command>
+    <job-name> <prepared-file> <gold-file> <wordseg-command>
 
-The `<job-name>` must not contain spaces. The <wordseg-command> is a
-usual call to a wordseg algorithm but with no options <input-file> and
-<output-file> specified. See `exemple/jobs.json` for a valid exemple.
+The <job-name> must not contain spaces. Name of the job on qsub and
+n,ame of the result directory in <output-directory>.
+
+<prepared-file> and <gold-file> are files, path expressed from the
+directory containing the `wordseg-qsub.sh` script.
+
+<prepared-file> is the input text file to be segmented. It is a suite
+of space separeted phonemes or syllables, one utterance per
+line.
+
+<gold-file> is the gold file to evaluate the segmented output,
+spaces at word boundaries only.
+
+The <wordseg-command> is a usual call to a wordseg algorithm but with
+no options <input-file> and <output-file> specified. See
+`exemple/jobs.json` for a valid exemple.
 
 
 Output folder
 -------------
 
 The result and intermediate files of each job defined in `jobs.txt`
-are stored in separate folders. Each folder contains those files:
+are stored in distinct folders in
+`<output-directory>/<job-name>`. Each folder contains:
 
 * Input:
 
@@ -52,7 +51,7 @@ are stored in separate folders. Each folder contains those files:
 * Output:
 
   * `output.txt`: The segmented text
-  * `eval.txt`: Evaluation of the segmented text aginst the gold
+  * `eval.txt`: Evaluation of the segmented text against the gold
   * `log.txt`: Data logged during script execution
 
 * Job:
@@ -64,3 +63,14 @@ are stored in separate folders. Each folder contains those files:
     was an issue with `wordseg-ag`), have a:
 
         cat qstat.txt | grep usage | sed -r 's|.*maxvmem=||'
+
+
+Exemple
+-------
+
+Have a look to the exemple provided, which executes six flavors of TP
+on the same input:
+
+    ./wordseg-qsub.sh exemple/jobs.txt ./results
+
+This tool is part of wordseg <https://github.com/bootphon/wordseg>.

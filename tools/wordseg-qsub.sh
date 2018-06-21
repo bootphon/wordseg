@@ -12,51 +12,12 @@
 # A usage string
 function usage
 {
-    cat <<EOF
-Usage:
-
-    $0 <jobs-file> <output-directory> <prepared-file> <gold-file> [<qsub-options>]
-
-Description
------------
-
-Schedules a list of wordseg jobs with qsub, writing all the result and
-intermediate files to <output-dir>. All the jobs take the same intput
-text <prepared-file> and are evaluated against the same gold text
-<gold-file>.
-
-For each defined job, the script schedules on qsub roughly the
-following command:
-
-    cat <prepared-file> | <wordseg-command> | wordseg-eval <gold-file>
-
-Parameters
-----------
-
-<jobs-file> must contain one job definition per line. A job
-  definition is made of the following fields:
-
-    <job-name> <wordseg-command>
-
-  The <job-name> must not contain spaces. The <wordseg-command> is a
-  usual call to a wordseg algorithm but with no options <input-file>
-  and <output-file> specified.
-
-<output-directory> is a non-existing dircetory where to write the
-  result and intermediate files. The output files of each jobs are
-  saved under the sub-directory <output-directory>/<job-name>.
-
-<prepared-file> is the input text file to be segmented. It is a suite
-  of space separeted phonemes or syllables, one utterance per line.
-
-<gold-file> is the gold file to evaluate the segmented output. Spaces
-  at word boundaries.
-
-<qsub-options> is an optional string of additional options for qsub,
-  must be surrounded by "double quotes". For instance when using AG
-  you may want to require a lot of RAM for your job using "-l mem=100G".
-
-EOF
+    echo "Usage: $0 <jobs-file> <output-directory> [<qsub-options>]"
+    echo
+    echo "Each line of the <jobs-file> must be in the format:"
+    echo "  <job-name> <prepared-file> <gold-file> <wordseg-command>"
+    echo
+    echo "See $(dirname $0)/README.md for more details"
     exit 1
 }
 
@@ -91,11 +52,25 @@ function check_jobs
     do
         n=$(( n + 1 ))
 
-        # we need at least 2 arguments
-        [ "$(echo $line | wc -w)" -lt 2 ] && error "line $n: job definition invalid: $"
+        # we need at least 4 arguments
+        [ "$(echo $line | wc -w)" -lt 4 ] && error "line $n: job definition invalid: $"
+
+        # check prepared file exists
+        prepared_file=$(echo $1 | cut -d' ' -f2)
+        [ -f $prepared_file ] || error "prepared file not found: $prepared_file"
+
+        # check gold file exists
+        gold_file=$(echo $1 | cut -d' ' -f3)
+        [ -f $gold_file ] || error "gold file not found: $gold_file"
+
+        # check prepared and gold have the same number of lines
+        np=$(cat $prepared_file | wc -l)
+        ng=$(cat $gold_file | wc -l)
+        ! [ "$np" -eq "$ng" ] \
+            && error "prepared and gold files have different number of lines ($np != $ng)"
 
         # check wordseg command
-        binary=$(echo $line | cut -f2 -d' ')
+        binary=$(echo $line | cut -f4 -d' ')
         [ -z $(which $binary 2> /dev/null) ] && error "line $n: binary not found: $binary"
     done < $jobs
 }
@@ -125,8 +100,10 @@ function schedule_job
 {
     # parse arguments
     job_name=$(echo $1 | cut -d' ' -f1)
-    job_cmd=$(echo $1 | cut -d' ' -f2-)
+    job_cmd=$(echo $1 | cut -d' ' -f4-)
     job_slots=$(parse_nslots "$job_cmd")
+    prepared_file=$(echo $1 | cut -d' ' -f2)
+    gold_file=$(echo $1 | cut -d' ' -f3)
 
     # create the output directory
     job_dir=$output_dir/$job_name
@@ -185,7 +162,7 @@ EOF
 
 
 # display usage message when required (bad arguments or --help)
-[ $# -lt 4 -o $# -gt 5 ] && usage
+[ $# -lt 2 -o $# -gt 3 ] && usage
 [ "$1" == "-h" -o "$1" == "-help" -o "$1" == "--help" ] && usage
 
 
@@ -196,20 +173,7 @@ jobs_file=$1
 output_dir=$2
 [ -e $output_dir ] && error "directory already exists: $output_dir"
 
-prepared_file=$3
-! [ -f $prepared_file ] && error "file not found: $prepared_file"
-
-gold_file=$4
-! [ -f $gold_file ] && error "file not found: $gold_file"
-
-qsub_options=$5  # may be empty
-
-
-# check prepared and gold have the same number of lines
-np=$(cat $prepared_file | wc -l)
-ng=$(cat $gold_file | wc -l)
-! [ "$np" -eq "$ng" ] \
-    && error "prepared and gold files have different number of lines ($np != $ng)"
+qsub_options=$3  # may be empty
 
 
 # remove any comments in the jobs file
