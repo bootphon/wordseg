@@ -10,30 +10,31 @@ Usage
     ./wordseg-qsub.sh <jobs-file> <output-directory> [<qsub-options>]
 
 
-Format of <jobs-file>
+Format of `<jobs-file>`
 -----------------------
 
-<jobs-file> must contain one job definition per line. A job
+`<jobs-file>` must contain one job definition per line. A job
 definition is made of the following fields:
 
     <job-name> <prepared-file> <gold-file> <wordseg-command>
 
-The <job-name> must not contain spaces. Name of the job on qsub and
-n,ame of the result directory in <output-directory>.
+* The `<job-name>` must not contain spaces. Name of the job on qsub and
+  name of the result directory in `<output-directory>`.
 
-<prepared-file> and <gold-file> are files, path expressed from the
-directory containing the `wordseg-qsub.sh` script.
+* `<prepared-file>` and `<gold-file>` are files, path expressed from the
+  directory containing the `wordseg-qsub.sh` script.
 
-<prepared-file> is the input text file to be segmented. It is a suite
-of space separeted phonemes or syllables, one utterance per
-line.
+    * `<prepared-file>` is the input text file to be segmented. It is
+      a suite of space separeted phonemes or syllables, one utterance
+      per line.
 
-<gold-file> is the gold file to evaluate the segmented output,
-spaces at word boundaries only.
+    * `<gold-file>` is the gold file to evaluate the segmented output,
+      spaces at word boundaries only.
 
-The <wordseg-command> is a usual call to a wordseg algorithm but with
-no options <input-file> and <output-file> specified. See
-`exemple/jobs.json` for a valid exemple.
+* The `<wordseg-command>` is a usual call to a wordseg algorithm but
+  with no options `<input-file>` and `<output-file>` specified.
+
+See `exemple/jobs.json` for a valid exemple.
 
 
 Output folder
