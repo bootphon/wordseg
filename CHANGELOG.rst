@@ -26,12 +26,15 @@ wordseg-0.6.3 (not yet released)
   (maintained for backward compatibility). See #40.
 
 * In **wordseg-ag**:
+
   * niteration is now 2000 by default (was 100),
   * improved log of iterations with `-vv`,
   * refactored postprocessing:
+  
     * parallelized
     * constant memory usage (was linear wrt niterations*nutts)
     * temporary parse trees file is now gziped (gains a factor of 20 in disk usage)
+    * new --temdir option to specify another path for tempfile (default is /tmp)
     * detection of incomplete parses (if any issues a warning)
     * better comments in code, more unit tests
 
