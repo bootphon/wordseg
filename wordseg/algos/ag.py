@@ -309,7 +309,8 @@ def check_grammar(grammar_file, category):
 
 
 def _segment_single(parse_counter, train_text, grammar_file,
-                    category, ignore_first_parses, args, test_text=None,
+                    category, ignore_first_parses, args,
+                    test_text=None, tempdir=tempfile.gettempdir(),
                     log_level=logging.ERROR, log_name='wordseg-ag'):
     """Executes a single run of the AG program and postprocessing
 
@@ -353,6 +354,8 @@ def _segment_single(parse_counter, train_text, grammar_file,
     test_text : sequence, optional
         If not None, the test text contains the list of utterances to
         segment on the model learned from `train_text`
+    tempdir : str, optional
+        A directory where to store temporary data
     log_level : logging.Level, optional
         The level of the wrapping log (must be DEBUG to display
         messages from AG, default to ERROR).
@@ -369,10 +372,10 @@ def _segment_single(parse_counter, train_text, grammar_file,
     log = utils.get_logger(name=log_name, level=log_level)
 
     # we need to write some intermediate files, so we create a
-    # tempdir. The directory and its content is automatically erased
-    # when done
-    temp_dir = tempfile.mkdtemp()
-    log.debug('created tempdir: %s', temp_dir)
+    # temporary directory. The directory and its content is
+    # automatically erased when done.
+    temdir = tempfile.mkdtemp(dir=tempdir)
+    log.debug('created tempdir: %s', temdir)
 
     try:
         # setup the train text as a temp file. ylt extension is the
@@ -381,7 +384,7 @@ def _segment_single(parse_counter, train_text, grammar_file,
         # useless (maybe expose train_file and test_file as arguments
         # instead of train_text / test_text?).
         train_text = '\n'.join(utt.strip() for utt in train_text) + '\n'
-        train_file = os.path.join(temp_dir, 'train.ylt')
+        train_file = os.path.join(temdir, 'train.ylt')
         codecs.open(train_file, 'w', encoding='utf8').write(train_text)
 
         # setup the test text as well
@@ -389,14 +392,14 @@ def _segment_single(parse_counter, train_text, grammar_file,
             test_file = train_file
         else:
             test_text = '\n'.join(utt.strip() for utt in test_text) + '\n'
-            test_file = os.path.join(temp_dir, 'test.ylt')
+            test_file = os.path.join(temdir, 'test.ylt')
             codecs.open(test_file, 'w', encoding='utf8').write(test_text)
 
         # create a file to store output (compressed PTB-format parse trees)
-        output_file = os.path.join(temp_dir, 'output.gz')
+        output_file = os.path.join(temdir, 'output.gz')
 
         # write the call to AG in a bash script
-        script_file = os.path.join(temp_dir, 'script.sh')
+        script_file = os.path.join(temdir, 'script.sh')
         command = ('cat {train} | {bin} {grammar} {args} -u {test} '
                    '| gzip -c > {output}'.format(
                        train=train_file,
@@ -460,7 +463,7 @@ def _segment_single(parse_counter, train_text, grammar_file,
         log.info('postprocessing done, took %s', t3 - t2)
 
     finally:
-        shutil.rmtree(temp_dir)
+        shutil.rmtree(temdir)
 
 
 #-------------------------------------------------------------------------------
@@ -690,7 +693,8 @@ def postprocess(parse_counter, output_file, category, ignore_first_parses, log):
 
 def segment(train_text, grammar_file=None, category='Colloc0',
             args=DEFAULT_ARGS, test_text=None, ignore_first_parses=0,
-            nruns=8, njobs=1, log=utils.null_logger()):
+            nruns=8, njobs=1, tempdir=tempfile.gettempdir(),
+            log=utils.null_logger()):
     """Segment a text using the Adaptor Grammar algorithm
 
     The algorithm is ran 8 times in parallel and the results are
@@ -725,6 +729,8 @@ def segment(train_text, grammar_file=None, category='Colloc0',
         number 8 comes from the original recipe provided by M Jonhson.
     njobs : int, optional
         The number of parallel subprocesses to run
+    tempdir : str, optional
+        A directory where to store temporary data
     log : logging.Logger, optional
         A logger where to send log messages
 
@@ -785,7 +791,7 @@ def segment(train_text, grammar_file=None, category='Colloc0',
 
     # we may use a temp file to write the grammar, it is automatically
     # erased when done
-    with tempfile.NamedTemporaryFile() as grammar_temp:
+    with tempfile.NamedTemporaryFile(dir=tempdir) as grammar_temp:
         # if grammar is not specified, generate a Colloc0 one from the
         # set of phones in the input text and write it in the tempfile
         if grammar_file is None:
@@ -806,20 +812,23 @@ def segment(train_text, grammar_file=None, category='Colloc0',
         # parallel runs of the AG algorithm
         log.info('running AG (%d times)...', nruns)
         parse_counter = ParseCounter(nutts)
-
-        joblib.Parallel(
-            n_jobs=njobs, backend="threading", verbose=0)(
-                joblib.delayed(_segment_single)(
-                    parse_counter,
-                    train_text,
-                    grammar_file,
-                    category,
-                    ignore_first_parses,
-                    args[n],
-                    test_text=test_text,
-                    log_level=log.getEffectiveLevel(),
-                    log_name='wordseg-ag - run {}'.format(n + 1))
-                for n in range(nruns))
+        try:
+            joblib.Parallel(
+                n_jobs=njobs, backend="threading", verbose=0)(
+                    joblib.delayed(_segment_single)(
+                        parse_counter,
+                        train_text,
+                        grammar_file,
+                        category,
+                        ignore_first_parses,
+                        args[n],
+                        test_text=test_text,
+                        log_level=log.getEffectiveLevel(),
+                        tempdir=tempdir,
+                        log_name='wordseg-ag - run {}'.format(n + 1))
+                    for n in range(nruns))
+        except joblib.JoblibRuntimeError as err:
+            raise RuntimeError(err)
 
         t2 = datetime.datetime.now()
         log.info('total processing time: %s', t2 - t1)
@@ -870,6 +879,10 @@ def _add_arguments(parser):
         help=('the grammar category to segment the text with, '
               'must be a valid parent in the grammar (ie defined in the '
               'left column of the grammar file). Default is %(default)s.'))
+
+    group.add_argument(
+        '--tempdir', metavar='<directory>', default=tempfile.gettempdir(),
+        help='directory where to store temporary data, default is %(default)s.')
 
     group = parser.add_argument_group('algorithm options')
     for arg in AG_ARGUMENTS:
@@ -959,7 +972,10 @@ def main():
         args=cmd_args,
         test_text=test_text,
         ignore_first_parses=args.ignore_first_parses,
-        nruns=args.nruns, njobs=args.njobs, log=log)
+        nruns=args.nruns,
+        njobs=args.njobs,
+        tempdir=args.tempdir,
+        log=log)
 
     # output the results
     streamout.write('\n'.join(segmented) + '\n')

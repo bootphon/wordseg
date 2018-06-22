@@ -14,8 +14,6 @@ from wordseg import utils
 from . import prep, datadir
 
 
-# TODO test parse_counter in parallel
-
 test_arguments = (
     '-E -P -R -1 -n 10 -a 0.0001 -b 10000.0 '
     '-e 1.0 -f 1.0 -g 100.0 -h 0.01 -x 2')
