@@ -4,8 +4,8 @@
    <https://semver.org/>`_ principles.
 
 
-wordseg-0.6.3 (not yet released)
---------------------------------
+wordseg-0.7 (not yet released)
+------------------------------
 
 * Added `tools/wordseg-qsub.sh`, a script to schedule a list of
   segmentation jobs to a cluster running Sun Grid Engine and the
@@ -30,7 +30,7 @@ wordseg-0.6.3 (not yet released)
   * niteration is now 2000 by default (was 100),
   * improved log of iterations with `-vv`,
   * refactored postprocessing:
-  
+
     * parallelized
     * constant memory usage (was linear wrt niterations*nutts)
     * temporary parse trees file is now gziped (gains a factor of 20 in disk usage)
