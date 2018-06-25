@@ -36,6 +36,7 @@ const char usage[] =
 " -r rand-init    -- initializer for random number generator (integer)\n"
 " -a a            -- default PY a parameter\n"
 " -b b            -- default PY b parameter\n"
+" -c word-cat     -- grammar category at which place word boundary when displaying parsed trees\n"
 " -e pya-beta-a   -- if positive, parameter of Beta prior on pya; if negative, number of iterations to anneal pya\n"
 " -f pya-beta-b   -- if positive, parameter of Beta prior on pya\n"
 " -g pyb-gamma-s  -- if non-zero, parameter of Gamma prior on pyb\n"
@@ -173,6 +174,47 @@ struct RandomNumberGenerator : public std::unary_function<U,U> {
   }
 };
 
+
+/*
+  This function has been for wordseg by Mathieu Bernard. It serves to
+  display an utterance as the input utterance with spaces at word
+  boundaries. In the original code the utterance was displayed as a
+  complete tree, and (slowly) parsed from Python.
+ */
+template<class XTree>
+std::ostream& xtree_parse_words(std::ostream& os, const XTree& tree, const std::string& word_category)
+{
+    // special case of an empty category: stream the complete tree as
+    // in the original code.
+    if(word_category == "")
+    {
+        os << tree;
+        return os;
+    }
+
+    if(tree.children.empty())
+    {
+        // final trees are nuclear phonemes
+        os << tree.specialize().category();
+    }
+    else
+    {
+        for(const auto& child : tree.children)
+        {
+            if(word_category == child->specialize().category().string_reference())
+            {
+                // we found a word boundary
+                os << " ";
+            }
+
+            xtree_parse_words(os, *child, word_category);
+        }
+    }
+
+    return os;
+}
+
+
 F gibbs_estimate(pycfg_type& g, const Sss& trains,
 		 F train_frac, bool train_frac_randomise,
 		 // Postreamps& evalcmds,
@@ -187,6 +229,9 @@ F gibbs_estimate(pycfg_type& g, const Sss& trains,
 		 std::ostream* finalparses_stream_ptr,
 		 std::ostream* grammar_stream_ptr,
 		 std::ostream* trace_stream_ptr,
+                 // grammar category at which to place word boundaries
+                 // when displaying parsed trees to stdout.
+                 const std::string& word_category,
 		 const Sss& test1s, // Postreamps& test1cmds,
 		 const Sss& test2s // Postreamps& test2cmds,
 		 // Postreamps& grammarcmds
@@ -382,7 +427,8 @@ F gibbs_estimate(pycfg_type& g, const Sss& trains,
 	p.inside(*it);
 	tree* tp = p.random_tree();
 	g.incrtree(tp, 1);
-        std::cout << tp << std::endl;
+        // std::cout << tp << std::endl;
+        xtree_parse_words(std::cout, *tp, word_category) << std::endl;
 	// foreach (Postreamps, tcit, test1cmds) {
 	//   pstream::ostream& tc = **tcit;
 	//   tc << tp << std::endl;
@@ -601,7 +647,8 @@ F gibbs_estimate(pycfg_type& g, const Sss& trains,
     p.inside(*it);
     tree* tp = p.random_tree();
     g.incrtree(tp, 1);
-    std::cout << tp << std::endl;
+    // std::cout << tp << std::endl;
+    xtree_parse_words(std::cout, *tp, word_category) << std::endl;
     // foreach (Postreamps, tcit, test1cmds) {
     //   pstream::ostream& tc = **tcit;
     //   tc << tp << std::endl;
@@ -694,10 +741,11 @@ int main(int argc, char** argv) {
   U nparses_iterations = 1;
   F train_frac = 1.0;
   bool train_frac_randomise = false;
+  std::string word_category = "";
 
   int chr;
   // while ((chr = getopt(argc, argv, "A:CDEF:G:H:I:N:PR:ST:U:V:X:Y:Z:a:b:d:e:f:g:h:m:n:r:s:t:u:v:w:x:z:"))
-  while ((chr = getopt(argc, argv, "A:CDEF:G:H:I:N:PR:ST:U:Z:a:b:d:e:f:g:h:m:n:r:s:t:u:w:x:z:"))
+  while ((chr = getopt(argc, argv, "A:CDEF:G:H:I:N:PR:ST:U:Z:a:b:c:d:e:f:g:h:m:n:r:s:t:u:w:x:z:"))
 	 != -1)
     switch (chr) {
     case 'A':
@@ -762,6 +810,9 @@ int main(int argc, char** argv) {
       break;
     case 'b':
       g.default_pyb = atof(optarg);
+      break;
+    case 'c':
+      word_category = optarg;
       break;
     case 'd':
       debug = atoi(optarg);
@@ -849,6 +900,10 @@ int main(int argc, char** argv) {
 
     if (predictive_parse_filter)
       g.initialize_predictive_parse_filter();
+
+    // TODO we should ensure here that the word_category is a valid
+    // category in the grammar (but this is already done in the
+    // wordseg-ag Python wrapper)
   }
 
   Sss test1s;
@@ -949,6 +1004,7 @@ int main(int argc, char** argv) {
                  nparses_iterations,
 		 finalparses_stream_ptr,
                  grammar_stream_ptr, trace_stream_ptr,
+                 word_category,
 		 test1s, // test1cmds,
                  test2s // , test2cmds, grammarcmds
       );

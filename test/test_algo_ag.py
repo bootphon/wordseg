@@ -52,20 +52,6 @@ def test_segment_single(prep):
     assert len(prep) == pc.nutts == len(pc.counters)
 
 
-def test_tokenizer():
-    tree = ('(Sentence (Colloc0s (Colloc0#1 (Phonemes (Phoneme s))) (Colloc0s '
-            '(Colloc0#3 (Phonemes (Phoneme k) (Phonemes (Phoneme r)))) '
-            '(Colloc0s (Colloc0#3 (Phonemes (Phoneme ah) (Phonemes (Phoneme m) '
-            '(Phonemes (Phoneme p))))) (Colloc0s (Colloc0#3 (Phonemes (Phoneme '
-            'sh) (Phonemes (Phoneme ax) (Phonemes (Phoneme s))))))))))')
-
-    t = ag.TreeTokenizer('Colloc0')
-    assert t.tree2words(tree) == 's kr ahmp shaxs'
-
-    t = ag.TreeTokenizer('unexistinglevel')
-    assert t.tree2words(tree) == 'skrahmpshaxs'
-
-
 def test_counter():
     c = ag.ParseCounter(5)
 

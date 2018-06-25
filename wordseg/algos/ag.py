@@ -400,13 +400,15 @@ def _segment_single(parse_counter, train_text, grammar_file,
 
         # write the call to AG in a bash script
         script_file = os.path.join(temdir, 'script.sh')
-        command = ('cat {train} | {bin} {grammar} {args} -u {test} '
+        command = ('cat {train} '
+                   '| {bin} {grammar} {args} -u {test} -c {category}'
                    '| gzip -c > {output}'.format(
                        train=train_file,
                        bin=utils.get_binary('ag'),
                        grammar=grammar_file,
                        args=args,
                        test=test_file,
+                       category=category,
                        output=output_file))
         codecs.open(script_file, 'w', encoding='utf8').write(command + '\n')
 
@@ -457,7 +459,7 @@ def _segment_single(parse_counter, train_text, grammar_file,
         log.info('segmentation done, took {}'.format(t2 - t1))
 
         postprocess(
-            parse_counter, output_file, category, ignore_first_parses, log)
+            parse_counter, output_file, ignore_first_parses, log)
 
         t3 = datetime.datetime.now()
         log.info('postprocessing done, took %s', t3 - t2)
@@ -475,125 +477,6 @@ def _segment_single(parse_counter, train_text, grammar_file,
 # and count the most frequent segmentation for each utterance.
 #
 #-------------------------------------------------------------------------------
-
-
-class TreeTokenizer(object):
-    """Tokenize an AG tree in a suite of words
-
-    This class parses raw PTB tress as outputed by AG. It extracts
-    word-segmented utterances. For example, at Colloc0 level, the
-    following tree become "s kr ahmp shaxs":
-
-    (Sentence (Colloc0s (Colloc0#1 (Phonemes (Phoneme s))) (Colloc0s
-    (Colloc0#3 (Phonemes (Phoneme k) (Phonemes (Phoneme r))))
-    (Colloc0s (Colloc0#3 (Phonemes (Phoneme ah) (Phonemes (Phoneme m)
-    (Phonemes (Phoneme p))))) (Colloc0s (Colloc0#3 (Phonemes (Phoneme
-    sh) (Phonemes (Phoneme ax) (Phonemes (Phoneme s))))))))))
-
-    """
-    # some constant regexp to parse AG trees
-    _openpar_re = re.compile(r"\s*\(\s*([^ \t\n\r\f\v()]*)\s*")
-    _closepar_re = re.compile(r"\s*\)\s*")
-    _terminal_re = re.compile(r"\s*((?:[^ \\\t\n\r\f\v()]|\\.)+)\s*")
-
-    def __init__(self, category_re, ignore_terminals_re=r'^[$]{3}$'):
-        self.word_re = re.compile(category_re)
-        self.ignore_terminals_re = re.compile(ignore_terminals_re)
-
-    def tree2words(self, tree):
-        """Tokenize the string `tree` into a suite of words"""
-        trees = ['ROOT'] + self.tree2list(tree.strip())
-        return self.list2words(trees)
-
-    def tree2list(self, tree):
-        """Returns nested lists of the `tree` in PTB-format
-
-        Exemple
-        -------
-
-        >>> tree2list("(A (B 1) (C 2))")
-        ['A', ['B', 1], ['C', 2]]
-
-        """
-        lists = []
-        self._tree2list_aux(lists, tree)
-        return lists
-
-    def list2words(self, tree):
-        """Extract the segmented utterance from a PTB tree (in nested format)"""
-        def visit(node, words_sofar, segs_sofar):
-            """Does a preorder visit of the nodes in the tree"""
-            # TODO slow and critical part to optimize
-            if self.is_terminal(node):
-                if not self.ignore_terminals_re.match(node):
-                    segs_sofar.append(self.simplify_terminal(node))
-                return words_sofar, segs_sofar
-
-            for child in self.tree_children(node):
-                words_sofar, segs_sofar = visit(child, words_sofar, segs_sofar)
-
-            if self.word_re.match(self.tree_label(node)) and segs_sofar != []:
-                words_sofar.append(''.join(segs_sofar))
-                segs_sofar = []
-
-            return words_sofar, segs_sofar
-
-        words_sofar, segs_sofar = visit(tree, [], [])
-        if segs_sofar:  # append any unattached segments as a word
-            words_sofar.append(''.join(segs_sofar))
-
-        return ' '.join(words_sofar).strip()
-
-    def _tree2list_aux(self, trees, s, pos=0):
-        """Recursive auxiliary method for tree2list()"""
-        # TODO slow and critical part to optimize
-        while pos < len(s):
-            closepar_mo = self._closepar_re.match(s, pos)
-            if closepar_mo:
-                return closepar_mo.end()
-            openpar_mo = self._openpar_re.match(s, pos)
-            if openpar_mo:
-                tree = [openpar_mo.group(1)]
-                trees.append(tree)
-                pos = self._tree2list_aux(tree, s, openpar_mo.end())
-            else:
-                terminal_mo = self._terminal_re.match(s, pos)
-                trees.append(terminal_mo.group(1))
-                pos = terminal_mo.end()
-        return pos
-
-    @staticmethod
-    def simplify_terminal(t):
-        """Ignore first character in `t` if it is a backslash"""
-        if len(t) > 0 and t[0] == '\\':
-            return t[1:]
-        else:
-            return t
-
-    @staticmethod
-    def is_terminal(subtree):
-        """True if this subtree consists of a single terminal node
-
-        (i.e., a word or an empty node).
-
-        """
-        return not isinstance(subtree, list)
-
-    @staticmethod
-    def tree_children(tree):
-        """Returns a list of the child subtrees of tree."""
-        if isinstance(tree, list):
-            return tree[1:]
-        else:
-            return []
-
-    @staticmethod
-    def tree_label(tree):
-        """Returns the label on the root node of tree."""
-        if isinstance(tree, list):
-            return tree[0]
-        else:
-            return tree
 
 
 class ParseCounter(object):
@@ -662,8 +545,7 @@ def yield_parses(lines, ignore_firsts=0):
         yield tree
 
 
-def postprocess(parse_counter, output_file, category, ignore_first_parses, log):
-    tokenizer = TreeTokenizer(category)
+def postprocess(parse_counter, output_file, ignore_first_parses, log):
     lines = (l.decode('utf8') for l in gzip.open(output_file, 'r'))
     nwarnings = 0
 
@@ -674,9 +556,6 @@ def postprocess(parse_counter, output_file, category, ignore_first_parses, log):
                 'ignoring incomplete parse of %d lines (must be %d): %s',
                 len(parse), parse_counter.nutts, parse)
         else:
-            # convert the PTB parentized expressions as words
-            parse = [tokenizer.tree2words(utt) for utt in parse]
-
             # count the occurences of each utt in the parse
             parse_counter.update(parse)
 
