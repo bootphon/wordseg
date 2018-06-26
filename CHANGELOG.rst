@@ -4,8 +4,8 @@
    <https://semver.org/>`_ principles.
 
 
-wordseg-0.7 (not yet released)
-------------------------------
+wordseg-0.7
+-----------
 
 * Added `tools/wordseg-qsub.sh`, a script to schedule a list of
   segmentation jobs to a cluster running Sun Grid Engine and the
