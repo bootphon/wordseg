@@ -34,7 +34,12 @@ definition is made of the following fields:
 * The `<wordseg-command>` is a usual call to a wordseg algorithm but
   with no options `<input-file>` and `<output-file>` specified.
 
-See `exemple/jobs.json` for a valid exemple.
+* `wordseg-dibs` is a special case because it requires a training
+  file. That training file must be provided as the **last argument**
+  of the command in the `<wordseg-command>` field of the job
+  definition.
+
+See `exemple/jobs.txt` for a valid exemple.
 
 
 Output folder

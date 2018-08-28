@@ -115,6 +115,17 @@ function schedule_job
     cp $gold_file $job_dir/gold.txt
     touch $job_dir/log.txt
 
+    # special case for wordseg-dibs, extract the train file as the
+    # last argument of $job_cmd
+    training_file=
+    if [[ $job_cmd == "wordseg-dibs"* ]];
+    then
+        training_file=${job_cmd##* }  # last word of job_cmd
+        job_cmd=${job_cmd% *}  # all but last word of job_cmd
+        cp $training_file $job_dir/train.txt
+        training_file=train.txt
+    fi
+
     # write the job script that will be scheduled on qsub
     job_script=$job_dir/job.sh
     cat <<EOF > $job_script
@@ -125,7 +136,7 @@ tstart=\$(date +%s.%N)
 cd $job_dir
 
 echo "Start segmentation, command is: $job_cmd" >> log.txt
-$job_cmd -o output.txt input.txt 2>> log.txt
+$job_cmd -o output.txt input.txt $training_file 2>> log.txt
 
 if [ \$? -eq 0 ]
 then
