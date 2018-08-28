@@ -1,8 +1,12 @@
 .. note::
-
    Version numbers follow the `semantic versioning
    <https://semver.org/>`_ principles.
 
+not yet released
+----------------
+
+* Bugfix in `tools/wordseg-qsub.sh`: wordseg-dibs is correctly handled
+  (was a problem with the train file)
 
 wordseg-0.7
 -----------
