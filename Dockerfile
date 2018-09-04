@@ -19,7 +19,7 @@ WORKDIR /wordseg
 
 # Install the dependencies to build wordseg
 RUN apt-get update && \
-    apt-get install -y build-essential git \
+    apt-get install -y build-essential git bsdmainutils \
        cmake libboost-program-options-dev wget
 
 # Install Python from Anaconda distribution
