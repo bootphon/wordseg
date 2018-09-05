@@ -138,6 +138,29 @@ def test_basic_5():
     _test_basic(text, gold, units, expected)
 
 
+# token evaluation is positional (see
+# https://github.com/bootphon/wordseg/issues/46)
+def test_basic_6():
+    units = ['i c e i c e c r e a m i s i c e c r e a m']
+    text = ['ice icecream is ice cream']
+    gold = ['ice ice cream is icecream']
+    expected = {
+        'token_precision': 0.4,
+        'token_recall': 0.4,
+        'token_fscore': 0.4,
+        'type_precision': 1.0,
+        'type_recall': 1.0,
+        'type_fscore': 1.0,
+        'boundary_all_precision': 0.8333333333333334,
+        'boundary_all_recall': 0.8333333333333334,
+        'boundary_all_fscore': 0.8333333333333334,
+        'boundary_noedge_precision': 0.75,
+        'boundary_noedge_recall': 0.75,
+        'boundary_noedge_fscore': 0.75,
+        'adjusted_rand_index': 0.5757575757575757}
+    _test_basic(text, gold, units, expected)
+
+
 def test_boundary_1():
     text = ['hello']
     gold = ['hello']
