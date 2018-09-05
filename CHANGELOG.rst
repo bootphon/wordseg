@@ -12,7 +12,7 @@ not yet released
 
   An easiest implementation would have been to change the
   specifications of **wordseg-eval** to take the prepared text instead
-  of the gold one, but with prefeered the optional ``--rand-index``
+  of the gold one, but we prefered the optional ``--rand-index``
   for backward compatibility.
 
 * Bugfix in ``tools/wordseg-qsub.sh``: wordseg-dibs is correctly handled
