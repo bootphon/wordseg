@@ -1,7 +1,7 @@
 """Test we have the same results from bash and python
 
 We had a bug using python 3.5 on either Linux or Mac, where the bash
-version of algorithms gave a slitly different result than the one
+version of algorithms gave a slightly different result than the one
 expected from Python. Here we make sure python and bash calls to
 wordseg lead to exactly the same result.
 
@@ -14,6 +14,7 @@ import subprocess
 params = [(a, u)
           for a in ['tp', 'dibs', 'puddle']
           for u in ['phone', 'syllable']]
+
 
 @pytest.mark.parametrize('algo, unit', params)
 def test_bash_python(algo, unit):

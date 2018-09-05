@@ -3,10 +3,8 @@
 More on the algorithms
 =======================
 
-
-
 Baseline
----------------
+--------
 
 We drew from Lignos (2012) the excellent idea of drawing baselines by
 cutting with a given probability. Using this insight, you can draw
@@ -359,14 +357,14 @@ nonterminal is not adapted.
 
   .. math::
 
-     P(x_{n+1} = k) = \\frac{n_k - a}{n + b}
+     P(x_{n+1} = k) = \frac{n_k - a}{n + b}
 
   and the probability that the n+1 sample occupies the new table m+1
   is:
 
   .. math::
 
-     P(x_{n+1} = m+1) = \\frac{m*a + b}{n + b}
+     P(x_{n+1} = m+1) = \frac{m*a + b}{n + b}
 
   The probability of a configuration in which a restaurant contains n
   customers at m tables, with n_k customers at table k is:
@@ -374,7 +372,7 @@ nonterminal is not adapted.
 
   .. math::
 
-     a^{-m} \\frac{G(m+b/a)}{G(b/a)} \\frac{G(b)}{G(n+b)} \\prod_{k=1}^m \\frac{G(n_k-a)}{G(1-a)}
+     a^{-m} \frac{G(m+b/a)}{G(b/a)} \frac{G(b)}{G(n+b)} \prod_{k=1}^m \frac{G(n_k-a)}{G(1-a)}
 
   where G is the Gamma function.
 

@@ -1,5 +1,6 @@
 .. _installation:
 
+
 ============
 Installation
 ============
@@ -12,7 +13,7 @@ instructions below.
   <https://travis-ci.org/bootphon/wordseg>`_.
 
 * **On MacOS:** two algorithms are actually unsupported on MacOS,
-  **wordseg-ag** and **wordseg-dpseg**. You can still use them with
+  ``wordseg-ag`` and ``wordseg-dpseg``. You can still use them with
   docker (see below).
 
 * **On Windows:** use docker or the `Linux subsytem for Windows
@@ -37,11 +38,19 @@ The package is implemented in Python and C++ and requires software to
 work:
 
   - **Python3** (Python2 is supported but lacks of unicode support),
+
   - a **C++ compiler** supporting the C++11 standard,
+
   - **cmake** for configuration and build (see `here <https://cmake.org/>`_),
+
   - the **boost program options** C++ library for option parsing (see `here
     <http://www.boost.org/doc/libs/1_65_1/doc/html/program_options.html>`_),
-  - the **joblib** Python package for parallel processing.
+
+  - the **joblib** Python package for parallel processing (see `here
+    <https://joblib.readthedocs.io>`_).
+
+  - the **scikit-learn** Python package for statistical analysis (see
+    `here <http://scikit-learn.org>`_).
 
 
 Install the required dependencies:
@@ -56,20 +65,23 @@ Install the required dependencies:
       brew install python3 boost cmake
 
 ------------------------------------
-Installation of the WordSeg package
+Installation of the wordseg package
 ------------------------------------
 
 There are three options:
 
-  - **System-wide**: This is the recommended installation if you want to use ``wordseg`` on
-  your personal computer (and you do not want to modify/contribute to the code).
+  - **System-wide**: This is the recommended installation if you want
+    to use ``wordseg`` on your personal computer (and you do not want
+    to modify/contribute to the code).
 
   - **In a virtual environment**: This is the recommended installation
     if you are not administrator of your machine, if you are working
     in a multi-user environment (e.g. a computing cluster) or if you
     are developing with ``wordseg``.
 
-  - **Using docker**:
+  - **Using docker**: This is the recommended installation if you are
+    working on Windows or Mac, or in a cloud infrastructure, or if you
+    want a reproducible environment.
 
 
 System-wide installation
@@ -114,7 +126,7 @@ supported by conda (but you can virtualenv_ as well).
 * Create a new Python 3 virtual environment named *wordseg* and
   install some required dependencies::
 
-    conda create --name wordseg python=3 pytest joblib
+    conda create --name wordseg python=3 pytest joblib scikit-learn
 
 * Activate your virtual environment::
 
@@ -180,7 +192,7 @@ be run on Linux, Mac and Windows.
 
 
 Optional: Build the documentation
---------------------
+---------------------------------
 
 To build the html documentation (the one you are currently reading),
 first install some dependencies.
@@ -205,9 +217,10 @@ Then from the build/ folder do::
 
 The main page is built as ``build/html/index.html``.
 
-------------
+
+------------------------------------
 Run tests to check your installation
-------------
+------------------------------------
 
 We recommend you always run this test, because that will allow you to
 make sure that all dependencies and all subparts of the package have
@@ -217,11 +230,12 @@ been appropriately installed.
 
     make test
 
+
 Further information
---------------------
+-------------------
 
 If all your tests passed, then you can skip this section. You have
-successfully installed WordSeg. If some of the tests failed, then the
+successfully installed wordseg. If some of the tests failed, then the
 package's capabilities may be reduced.
 
 * The tests are located in ``../test`` and are executed by pytest_. In

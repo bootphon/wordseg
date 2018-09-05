@@ -9,7 +9,7 @@ cat $1 | wordseg-stats --json > stats.json
 # segment the prepared text with different algorithms (we show few
 # options for them, use --help to list all of them)
 cat prepared.txt | wordseg-baseline -P 0.5 > segmented.baseline.txt
-cat prepared.txt | wordseg-tp -p forward -t relative > segmented.tp.txt
+cat prepared.txt | wordseg-tp -d ftp -t relative > segmented.tp.txt
 cat prepared.txt | wordseg-puddle -w 2 > segmented.puddle.txt
 cat prepared.txt | wordseg-dpseg -f 1 -r 1 > segmented.dpseg.txt
 cat prepared.txt | wordseg-ag --nruns 4 --njobs 4 --niterations 100 > segmented.ag.txt
@@ -20,7 +20,7 @@ cat prepared.txt | wordseg-dibs -t baseline $1 > segmented.dibs.txt
 # evaluate them against the gold file
 for algo in baseline tp puddle dpseg dibs ag
 do
-    cat segmented.$algo.txt | wordseg-eval gold.txt > eval.$algo.txt
+    cat segmented.$algo.txt | wordseg-eval gold.txt -r prepared.txt > eval.$algo.txt
 done
 
 # display the statistics computed on the input text
@@ -35,7 +35,7 @@ echo
 (
     echo "score baseline tp puddle dpseg ag dibs"
     echo "------------------ ------- ------- ------- ------- -------"
-    for i in $(seq 1 12)
+    for i in $(seq 1 13)
     do
         awk -v i=$i 'NR==i {printf $0}; END {printf " "}' eval.baseline.txt
         awk -v i=$i 'NR==i {printf $2}; END {printf " "}' eval.tp.txt

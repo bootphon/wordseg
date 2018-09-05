@@ -5,15 +5,25 @@
 not yet released
 ----------------
 
-* Bugfix in `tools/wordseg-qsub.sh`: wordseg-dibs is correctly handled
+* New evaluation metric in **wordseg-eval**: adjusted rand index. This
+  requires the prepared text to be computed (whereas the other metrics
+  only rely on segmented and gold texts), so it is implemented as an
+  option ``--rand-index <prep-file>`` in **wordseg-eval**.
+
+  An easiest implementation would have been to change the
+  specifications of **wordseg-eval** to take the prepared text instead
+  of the gold one, but with prefeered the optional ``--rand-index``
+  for backward compatibility.
+
+* Bugfix in ``tools/wordseg-qsub.sh``: wordseg-dibs is correctly handled
   (was a problem with the train file)
 
 wordseg-0.7
 -----------
 
-* Added `tools/wordseg-qsub.sh`, a script to schedule a list of
+* Added ``tools/wordseg-qsub.sh``, a script to schedule a list of
   segmentation jobs to a cluster running Sun Grid Engine and the
-  `qsub` scheduler.
+  ``qsub`` scheduler.
 
 * Added example phonological rules and updated contributong guide in
   documentation.
@@ -25,14 +35,14 @@ wordseg-0.7
   of words with no vowel, better error messages (see #35, #36).
 
 * In **wordseg-tp** add of the mutual information dependancy
-  measure. In the bash command, the argument `--probability
-  {forward,backward}` is replaced by `--dependency {ftp,btp,mi}`
+  measure. In the bash command, the argument ``--probability
+  {forward,backward}`` is replaced by ``--dependency {ftp,btp,mi}``
   (maintained for backward compatibility). See #40.
 
 * In **wordseg-ag**:
 
   * niteration is now 2000 by default (was 100),
-  * improved log of iterations with `-vv`,
+  * improved log of iterations with ``-vv``,
   * refactored postprocessing code:
 
     * parallelized
@@ -55,7 +65,7 @@ wordseg-0.6.2
   <https://github.com/alecristia/CDSwordSeg>`_ to wordseg for puddle,
   tp, dibs and dpseg.
 
-* In **wordseg-ag** the `<grammar>` and `<segment-category>`
+* In **wordseg-ag** the ``<grammar>`` and ``<segment-category>``
   parameters are now optional. When omitted a default colloc0 grammar
   is generated from the input text.
 
@@ -87,7 +97,7 @@ wordseg-0.6.2
 
 * In **wordseg-syll**
 
-  * the `--tolerant` option allows to ignore utterances where the
+  * the ``--tolerant`` option allows to ignore utterances where the
     syllabification failed (the default is to exit the program on the
     first error). See #36.
 
@@ -137,7 +147,7 @@ wordseg-0.6
   * New command **wordseg-syll** estimates syllable boundaries on a
     text using the maximal onset principle. Exemples of onsets and
     vowels files for syllabifications are given in the directory
-    `data/syllabification`.
+    ``data/syllabification``.
 
   * Support for punctuation in input of **wordseg-prep** with the
     ``--punctuation`` option (#10).

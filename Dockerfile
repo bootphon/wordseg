@@ -10,7 +10,7 @@
 # advanced usage.
 
 # Use an official Ubuntu as a parent image
-FROM ubuntu:16.04
+FROM ubuntu:18.04
 
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 
@@ -19,7 +19,7 @@ WORKDIR /wordseg
 
 # Install the dependencies to build wordseg
 RUN apt-get update && \
-    apt-get install -y build-essential git \
+    apt-get install -y build-essential git bsdmainutils \
        cmake libboost-program-options-dev wget
 
 # Install Python from Anaconda distribution
@@ -29,7 +29,7 @@ RUN wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -
 
 ENV PATH /miniconda/bin:$PATH
 
-RUN conda create --name wordseg python=3.6 pytest joblib && \
+RUN conda create --name wordseg python=3.6 pytest joblib scikit-learn && \
     /bin/bash -c "source activate wordseg"
 
 # Clone wordseg from github

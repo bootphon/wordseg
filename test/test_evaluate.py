@@ -2,10 +2,10 @@
 
 """Test of the wordseg_eval module"""
 
+import numpy as np
 import pytest
 
-from wordseg.evaluate import read_data, evaluate
-from wordseg.separator import Separator
+from wordseg.evaluate import read_data, evaluate, compute_class_labels
 
 
 def test_read_data():
@@ -22,18 +22,19 @@ def test_gold_on_gold():
 
 
 def test_ipa():
-    separator = Separator(phone=None, syllable=None, word=' ')
     text = ['juːviː mɔː kʊkɪz ']
     gold = ['juː viː mɔː kʊkɪz']
-    evaluate(text, gold, separator=separator)
+    evaluate(text, gold)
 
 
 # auxiliary function
-def _test_basic(text, gold, expected):
-    assert evaluate(text, gold) == pytest.approx(expected)
+def _test_basic(text, gold, units, expected):
+    pred = evaluate(text, gold, units=units)
+    assert pred == pytest.approx(expected)
 
 
 def test_basic_1():
+    units = ['th e d o g b i te s th e d o g']
     text = ['the dog bites thedog']
     gold = ['the dog bites the dog']
     expected = {
@@ -48,11 +49,13 @@ def test_basic_1():
         'boundary_all_recall': 0.8333333333333334,
         'boundary_noedge_fscore': 0.8571428571428571,
         'boundary_noedge_precision': 1.0,
-        'boundary_noedge_recall': 0.75}
-    _test_basic(text, gold, expected)
+        'boundary_noedge_recall': 0.75,
+        'adjusted_rand_index': 0.7845303867403315}
+    _test_basic(text, gold, units, expected)
 
 
 def test_basic_2():
+    units = ['t h e d o g b i t e s t h e d o g']
     text = ['thedog bites thedog']
     gold = ['the dog bites the dog']
     expected = {
@@ -67,11 +70,13 @@ def test_basic_2():
         'boundary_all_recall': 0.6666666666666666,
         'boundary_noedge_fscore': 0.6666666666666666,
         'boundary_noedge_precision': 1.0,
-        'boundary_noedge_recall': 0.5}
-    _test_basic(text, gold, expected)
+        'boundary_noedge_recall': 0.5,
+        'adjusted_rand_index': 0.6330935251798561}
+    _test_basic(text, gold, units, expected)
 
 
 def test_basic_3():
+    units = ['t h e d o g b i t e s t h e d o g']
     text = ['thedogbitest hedog']
     gold = ['the dog bites the dog']
     expected = {
@@ -86,11 +91,13 @@ def test_basic_3():
         'boundary_all_recall': 0.3333333333333333,
         'boundary_noedge_fscore': 0,
         'boundary_noedge_precision': 0,
-        'boundary_noedge_recall': 0}
-    _test_basic(text, gold, expected)
+        'boundary_noedge_recall': 0,
+        'adjusted_rand_index': 0.20993589743589744}
+    _test_basic(text, gold, units, expected)
 
 
 def test_basic_4():
+    units = ['t h e d o g b i t e s t h e d o g']
     text = ['th e dog bit es the d og']
     gold = ['the dog bites the dog']
     expected = {
@@ -105,11 +112,13 @@ def test_basic_4():
         'boundary_all_recall': 1.0,
         'boundary_noedge_fscore': 0.7272727272727273,
         'boundary_noedge_precision': 0.5714285714285714,
-        'boundary_noedge_recall': 1.0}
-    _test_basic(text, gold, expected)
+        'boundary_noedge_recall': 1.0,
+        'adjusted_rand_index': 0.66796875}
+    _test_basic(text, gold, units, expected)
 
 
 def test_basic_5():
+    units = ['th e b a n d a ge o f th e b a n d a ge']
     text = ['the band age of the band age']
     gold = ['the bandage of the band age']
     expected = {
@@ -124,8 +133,9 @@ def test_basic_5():
         'boundary_all_recall': 1.0,
         'boundary_noedge_fscore': 0.9090909090909091,
         'boundary_noedge_precision': 0.8333333333333334,
-        'boundary_noedge_recall': 1.0}
-    _test_basic(text, gold, expected)
+        'boundary_noedge_recall': 1.0,
+        'adjusted_rand_index': 0.7804878048780488}
+    _test_basic(text, gold, units, expected)
 
 
 def test_boundary_1():
@@ -177,3 +187,24 @@ def test_boundary_3():
 
     for k, v in expected.items():
         assert score[k] == v, k
+
+
+@pytest.mark.parametrize('words, units, expected', [
+    (['hello world', 'python'], ['h el lo wo r ld', 'py th on'],
+     [0, 0, 0, 1, 1, 1, 2, 2, 2]),
+    ([], [], [])])
+def test_compute_class_labels_good(words, units, expected):
+    assert np.array_equal(
+        compute_class_labels(words, units),
+        np.asarray(expected))
+
+
+@pytest.mark.parametrize('words, units', [
+    ([], ['a']),
+    (['a'], []),
+    (['hell'], ['hello']),
+    (['one', 'two'], ['one']),
+    (['one', 'two'], ['one', 'twos'])])
+def test_compute_class_labels_bad(words, units):
+    with pytest.raises(ValueError):
+        compute_class_labels(words, units)

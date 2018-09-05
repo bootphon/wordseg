@@ -110,3 +110,4 @@ The bash and python give the same result, it should be something like::
   boundary_noedge_precision  0.2831    0.5505    0.9059    0.5756    0.6629    0.9068
   boundary_noedge_recall     0.5267    0.6952    0.0484    0.802     0.8812    0.7762
   boundary_noedge_fscore     0.3683    0.6144    0.09189   0.6702    0.7566    0.8364
+  adjusted_rand_index        0.3974    0.6354    0.185     0.6352    0.686     0.7916

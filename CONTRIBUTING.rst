@@ -10,11 +10,11 @@ welcome all the ideas and contributions.
    familiarity with the GitHub system. For readers who do not have
    previous experience with git, we recommend the excellent
    introduction to `git offered by Software Carpentry
-   <https://swcarpentry.github.io/git-novice/>`, followed by GitHub's
+   <https://swcarpentry.github.io/git-novice/>`_, followed by GitHub's
    tutorials for `forking
-   <https://help.github.com/articles/fork-a-repo/>` and creating `pull
-   requests
-   <https://help.github.com/articles/creating-a-pull-request-from-a-fork/`.
+   <https://help.github.com/articles/fork-a-repo/>`_ and creating
+   `pull requests
+   <https://help.github.com/articles/creating-a-pull-request-from-a-fork/`_.
 
 
 Reporting bugs, issues or ideas
@@ -68,21 +68,20 @@ package follows the following conventions:
   in *reStructuredText*, a format similar to markdown (a `brief guide
   here <http://www.sphinx-doc.org/en/stable/rest.html>`_).
 
-..
 
-   Add your own segmentation algorithm
-   -----------------------------------
+Add your own segmentation algorithm
+-----------------------------------
 
-   Once you forked the project as detailed above, you are ready to
-   integrate your algorithm to the existing package. To get inspiration,
-   you can have a look to the `wordseg-baseline
-   <https://github.com/bootphon/wordseg/blob/master/wordseg/algos/baseline.py>`_
-   implementation.
+* Once you forked the project as detailed above, you are ready to
+  integrate your algorithm to the existing package. To get
+  inspiration, you can have a look to the `wordseg-baseline
+  <https://github.com/bootphon/wordseg/blob/master/wordseg/algos/baseline.py>`_
+  implementation.
 
-   Here are the minimal steps you must follow:
+* Contact us by creating an issue on github if you need help.
 
-   * Create the Python file ``wordseg/algos/new_algo.py``:
-
+* Once you are ready, you can contribute your algorithm to the project
+  by sending a pull request on github.
 
 .. _Sphinx: http://www.sphinx-doc.org
 .. _pep8: http://www.python.org/dev/peps/pep-0008/

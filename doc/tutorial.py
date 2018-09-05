@@ -41,12 +41,12 @@ model_dibs = dibs.CorpusSummary(text)
 segmented_dibs = dibs.segment(prepared, model_dibs)
 
 # evaluate them against the gold file
-eval_baseline = evaluate(segmented_baseline, gold)
-eval_tp = evaluate(segmented_tp, gold)
-eval_puddle = evaluate(segmented_puddle, gold)
-eval_dpseg = evaluate(segmented_dpseg, gold)
-eval_ag = evaluate(segmented_ag, gold)
-eval_dibs = evaluate(segmented_dibs, gold)
+eval_baseline = evaluate(segmented_baseline, gold, units=prepared)
+eval_tp = evaluate(segmented_tp, gold, units=prepared)
+eval_puddle = evaluate(segmented_puddle, gold, units=prepared)
+eval_dpseg = evaluate(segmented_dpseg, gold, units=prepared)
+eval_ag = evaluate(segmented_ag, gold, units=prepared)
+eval_dibs = evaluate(segmented_dibs, gold, units=prepared)
 
 
 # a little function to display score with 4-digits precision

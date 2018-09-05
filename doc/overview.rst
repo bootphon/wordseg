@@ -15,12 +15,43 @@ The following are the key steps in any wordseg analysis.
 1. Input corpus selection, cleaning, and phonologization
 --------------------------------------------------------
 
-** This step is not fully covered by the WordSeg package. **
+.. note::
 
-The suite does not directly support full pre-processing and phonologization of corpora yet, but we provide some pointers for users. For most researchers, the starting stage will be a CHILDES' style .cha file, which contains comments as well as transcribed content. These first stages of cleaning will be dependent on the particular corpus because they vary somewhat across CHILDES corpora, and on the research question, since researchers may want to include or exclude specific speakers. Sample scripts we have used in the past can, however, serve as inspiration (see the /data/cha/ section).  Additionally, the WordSeg suite assumes that the input has already been phonemized and syllabified. For corpora in which this has not been done, we recommend readers look into the [Phonemizer package](https://github.com/bootphon/phonemizer.git), which provides tools to convert text to phonemes. Another option is the [WebMaus automatic segmentation tool](https://www.clarin-d.net/en/webmaus-basic-), which converts text files to phonemic transcriptions based on trained statistical models. For languages with a transparent orthography, hand-crafted rules can be used to derive the phonemic representation of words. 
+   This step is not fully covered by the WordSeg package.
 
-It should be noted that we have included in the package a syllabification routine using the Maximize Onset Principle, a rule of thumb whereby a sequence of phones will be parsed such that the onset cluster will be as heavy as the language allows. For instance, the sequence /estra/ will be broken up into /es.tra/ in Spanish and /e.stra/ in English. This procedure relies on the user providing a file that lists vowels and possible syllable onsets. Examples are provided in the /data/syllabification/ section.
-For languages with a transparent orthography, hand-crafted rules can be used to derive the phonemic representation of words.  Examples are provided in the /data/phonorules/ section.
+
+The suite does not directly support full pre-processing and
+phonologization of corpora yet, but we provide some pointers for
+users. For most researchers, the starting stage will be a CHILDES'
+style .cha file, which contains comments as well as transcribed
+content. These first stages of cleaning will be dependent on the
+particular corpus because they vary somewhat across CHILDES corpora,
+and on the research question, since researchers may want to include or
+exclude specific speakers. Sample scripts we have used in the past
+can, however, serve as inspiration (see the ``/data/cha/`` section).
+Additionally, the WordSeg suite assumes that the input has already
+been phonemized and syllabified. For corpora in which this has not
+been done, we recommend readers look into the `Phonemizer package
+<https://github.com/bootphon/phonemizer>`_, which provides tools to
+convert text to phonemes. Another option is the `WebMaus automatic
+segmentation tool
+<https://clarin.phonetik.uni-muenchen.de/BASWebServices/interface/WebMAUSBasic>`_,
+which converts text files to phonemic transcriptions based on trained
+statistical models. For languages with a transparent orthography,
+hand-crafted rules can be used to derive the phonemic representation
+of words.
+
+It should be noted that we have included in the package a
+syllabification routine using the Maximize Onset Principle, a rule of
+thumb whereby a sequence of phones will be parsed such that the onset
+cluster will be as heavy as the language allows. For instance, the
+sequence */estra/* will be broken up into */es.tra/* in Spanish and
+*/e.stra/* in English. This procedure relies on the user providing a
+file that lists vowels and possible syllable onsets. Examples are
+provided in the ``/data/syllabification/`` section. For languages with
+a transparent orthography, hand-crafted rules can be used to derive
+the phonemic representation of words.  Examples are provided in the
+``/data/phonorules/`` section.
 
 --------------------
 2. Input preparation
@@ -35,29 +66,32 @@ The same can be said for phones (default is space, parameter is -p);
 and syllables (default is ";esyll", parameter is -s). So imagine the phrase
 "hello world" in FESTIVAL phonological format would look like::
 
-hh ax ;esyll l ow ;esyll ;eword w er l d ;esyll ;eword
+  hh ax ;esyll l ow ;esyll ;eword w er l d ;esyll ;eword
 
 To feed the input to subsequent analyses, the user must generate a prepared text,
 and a gold text. In the prepared text, the only boundaries correspond to tokenized
 basic units. For instance, if one wants the basic unit to be syllables, then one
 will tokenize by syllables, such that the prepared text looks like this::
 
-hhax low werld
+  hhax low werld
 
 The same input tokenized into phones looks like this::
 
-hh ax l ow w er l d
+  hh ax l ow w er l d
 
 In the gold text, the only boundaries correspond to words. For instance::
 
-hhaxlow werld
+  hhaxlow werld
+
 
 .. note::
 
-Every user should run the prepare step to make sure their input text is
-formatted correctly.
+   Every user should run the prepare step to make sure their input text is
+   formatted correctly.
 
-So to sum up:
+
+So to sum up
+------------
 
 * For all the commands, the input must be a multi-line text, one
   utterance per line, with **no punctuation** (excepted for token
@@ -91,8 +125,6 @@ So to sum up:
    ``-w`` options of the related wordseg commands.
 
 
-
-
 ---------------
 3. Segmentation
 ---------------
@@ -100,28 +132,27 @@ So to sum up:
 The next step involves modeling the segmentation process with some
 segmentation algorithm. Six families of algorithms are provided, with
 many parameters each, such that numerous combinations can be
-achieved. For more information on the algorithms, see :ref:`algorithms`:. 
-For examples of use, see :ref:`tutorial`:.
-
+achieved. For more information on the algorithms, see
+:ref:`algorithms`.  For examples of use, see :ref:`tutorial`.
 
 Individual users may need additional algorithms. We strongly encourage
 users to develop algorithms that can be reincorporated into this package!
 
 
----------------
+-------------
 4. Evaluation
----------------
+-------------
 
 Finally, the segmented output is compared agains the gold input to
 check the algorithms' performance.
 
 
------------------
-Descriptive tools
------------------
+--------------------
+5. Descriptive tools
+--------------------
 
 The WordSeg package also includes some commonly used descriptive
-statistics, which can be applied to the gold version of the input corpus, or to the
-output of segmentation. This will give users an idea of basic
-statistics (size, lexical diversity, etc.) of their corpus or the
-segmented output.
+statistics, which can be applied to the gold version of the input
+corpus, or to the output of segmentation. This will give users an idea
+of basic statistics (size, lexical diversity, etc.) of their corpus or
+the segmented output.

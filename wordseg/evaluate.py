@@ -2,20 +2,20 @@
 
 Evaluates a segmented text against it's gold version: outputs the
 precision, recall and f-score at type, token and boundary levels. We
-distinguish whether utterance edges are counted towards the boundary
-performance or not.
+distinguish whether utterance edges (begin and end of the utterance)
+are counted towards the boundary performance or not. The evaluation
+optionally computes the adjusted rank index but requires the prepared
+text to be provided.
 
 """
 
 import codecs
 import collections
+import numpy as np
+from sklearn.metrics.cluster import adjusted_rand_score
 
 from wordseg import utils
 from wordseg.separator import Separator
-
-
-_DEFAULT_SEPARATOR = Separator(None, None, ' ')
-"""Separation for space separated words only"""
 
 
 class TokenEvaluation(object):
@@ -34,12 +34,6 @@ class TokenEvaluation(object):
         return float(self.correct) / self.gold if self.gold != 0 else None
 
     def fscore(self):
-        # p = self.precision()
-        # r = self.recall()
-        # if p is None or r is None or p + r == 0:
-        #     return None
-        # else:
-        #     return 2 * p * r / (p + r)
         total = self.test + self.gold
         return float(2 * self.correct) / total if total != 0 else None
 
@@ -132,7 +126,7 @@ class _StringPos(object):
         return start, self.idx
 
 
-def read_data(text, separator=_DEFAULT_SEPARATOR):
+def read_data(text, separator=Separator(None, None, ' ')):
     """Load text data for evaluation
 
     Parameters
@@ -174,23 +168,106 @@ def read_data(text, separator=_DEFAULT_SEPARATOR):
     return words, positions, lexicon
 
 
-def evaluate(text, gold, separator=_DEFAULT_SEPARATOR):
+def compute_class_labels(words, units):
+    """Compute class labels to be used for cluster similarity measures
+
+    Each word is considered a class, and each unit is mapped to the
+    word it belongs to.
+
+    Parameters
+    ----------
+    words: list of str
+        Utterances made of space separated words.
+    units : list of str
+        Utterances made of space separated atomic units (phonemes or
+        syllables).
+
+    Returns
+    -------
+    class_labels : numpy array of int
+        Each unit mapped to the word it belongs to (with words coded
+        as integers)
+
+    Raises
+    ------
+    ValueError:
+        If `words` and `units` do not match together
+
+    Examples
+    --------
+
+      >>> from wordseg.evaluate import compute_class_labels
+      >>> words = ['hello world', 'python']
+      >>> units = ['h el lo wo r ld', 'py th on']
+      >>> compute_class_labels(words, units)
+      array([0, 0, 0, 1, 1, 1, 2, 2, 2])
+
+    """
+    # in case the inputs are generators, force them as lists
+    words, units = list(words), list(units)
+
+    # make sure we have the number of utterances in words and units
+    if not len(words) == len(units):
+        raise ValueError(
+            'words and units do not have the same number of utterances: '
+            'len(words)={}, len(units)={}'.format(len(words), len(units)))
+
+    # for each utterance, checks words and units are the same
+    nunits = 0
+    for n, (words_utt, units_utt) in enumerate(zip(words, units)):
+        words_utt = words_utt.replace(' ', '')
+        nunits += len(units_utt.split())
+        units_utt = units_utt.replace(' ', '')
+        if not words_utt == units_utt:
+            raise ValueError(
+                'utterance {}: words/units do not match: '
+                'words="{}" / units="{}"'.format(n, words_utt, units_utt))
+
+    # collapse words and units from nested lists to numpy array
+    words = np.asarray([word for utt in words for word in utt.split()])
+    units = np.asarray([unit for utt in units for unit in utt.split()])
+
+    # count the number of units in a word
+    def _word_len(word, units):
+        l, w = 0, ''
+        while w != word:
+            w += units[l]
+            l += 1
+        return l
+
+    # build the class labels
+    class_labels = np.zeros((nunits,), dtype=np.int)
+    index = 0
+    for class_id, word in enumerate(words):
+        try:
+            new_index = index + _word_len(word, units[index:])
+        except IndexError:
+            raise ValueError(
+                'word "{}" not found in "{}"'.format(word, units[index:]))
+        class_labels[index:new_index] = class_id
+        index = new_index
+
+    return class_labels
+
+
+def evaluate(text, gold, units=None):
     """Scores a segmented text against its gold version
 
     Parameters
     ----------
     text : sequence of str
-        A suite of word utterances.
+        A suite of utterances made of space separated words.
     gold : sequence of str
-        A suite of word utterances.
-    separator : Separator, optional
-        The token separation in `text` and `gold`, only word level is
-        considered, default to space separated words.
+        A suite of utterances made of space separated words.
+    units : sequence of str, optional
+        A suite of utterances made of space separated atomic units
+        (phonemes or syllables). When specified, the function also
+        computes the adjusted rand index.
 
     Returns
     -------
-    scores : dict
-        A dictionary with the following entries:
+    scores : ordered dict
+        A dictionary with the following entries in that fixed order:
 
         * 'type_fscore'
         * 'type_precision'
@@ -205,14 +282,23 @@ def evaluate(text, gold, separator=_DEFAULT_SEPARATOR):
         * 'boundary_noedge_precision'
         * 'boundary_noedge_recall'
 
+        If `units` is specified in arguments, this additional entry is
+        added:
+
+        * 'adjusted_rand_index'
+
     Raises
     ------
     ValueError
         If `gold` and `text` have different size or differ in tokens
 
     """
-    text_words, text_stringpos, text_lex = read_data(text, separator)
-    gold_words, gold_stringpos, gold_lex = read_data(gold, separator)
+    # force text and gold to be lists
+    text, gold = list(text), list(gold)
+
+    word_separator = Separator(None, None, ' ')
+    text_words, text_stringpos, text_lex = read_data(text, word_separator)
+    gold_words, gold_stringpos, gold_lex = read_data(gold, word_separator)
 
     if len(gold_words) != len(text_words):
         raise ValueError(
@@ -244,7 +330,7 @@ def evaluate(text, gold, separator=_DEFAULT_SEPARATOR):
     # return the scores in a fixed order (the default dict does not
     # repect insertion order). This is needed for python<3.6, see
     # https://docs.python.org/3.6/whatsnew/3.6.html#new-dict-implementation
-    return collections.OrderedDict((k, v) for k, v in (
+    results = collections.OrderedDict((k, v) for k, v in (
         ('token_precision', token_eval.precision()),
         ('token_recall', token_eval.recall()),
         ('token_fscore', token_eval.fscore()),
@@ -258,10 +344,30 @@ def evaluate(text, gold, separator=_DEFAULT_SEPARATOR):
         ('boundary_noedge_recall', boundary_noedge_eval.recall()),
         ('boundary_noedge_fscore', boundary_noedge_eval.fscore())))
 
+    if units:
+        labels_text = compute_class_labels(text, units)
+        labels_gold = compute_class_labels(gold, units)
+        results['adjusted_rand_index'] = adjusted_rand_score(
+            labels_gold, labels_text)
+
+    return results
+
 
 def _load_text(text):
     """Returns a list of non-empty striped lines from `text`"""
     return [l for l in (l.strip() for l in text) if l]
+
+
+def _add_arguments(parser):
+    """Defines custom command-line arguments for wordseg-eval"""
+    parser.add_argument(
+        'gold', metavar='<gold-file>',
+        help='gold file to evaluate the input data on')
+    parser.add_argument(
+        '-r', '--rand-index', metavar='<prep-file>', default=None,
+        help='Compute the adjusted rand index, requires the prepared '
+        'file as outputed by wordseg-prep (i.e. the atomic units, phonemes '
+        'or syllables, separated by spaces)')
 
 
 @utils.CatchExceptions
@@ -270,10 +376,7 @@ def main():
     streamin, streamout, separator, log, args = utils.prepare_main(
         name='wordseg-eval',
         description=__doc__,
-        separator=_DEFAULT_SEPARATOR,
-        add_arguments=lambda parser: parser.add_argument(
-            'gold', metavar='<gold-file>',
-            help='gold file to evaluate the input data on'))
+        add_arguments=_add_arguments)
 
     # load the gold text as a list of utterances, remove empty lines
     gold = _load_text(codecs.open(args.gold, 'r', encoding='utf8'))
@@ -281,8 +384,15 @@ def main():
     # load the text as a list of utterances, remove empty lines
     text = _load_text(streamin)
 
+    # load the prepared (unsegmented) text as a list of utterances,
+    # remove empty lines
+    if args.rand_index:
+        units = _load_text(codecs.open(args.rand_index, 'r', encoding='utf8'))
+    else:
+        units = None
+
     # evaluation returns a dict of 'score name' -> float
-    results = evaluate(text, gold)
+    results = evaluate(text, gold, units=units)
 
     streamout.write('\n'.join(
         # display scores with 4-digit float precision
