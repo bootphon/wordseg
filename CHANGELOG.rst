@@ -15,6 +15,9 @@ not yet released
   of the gold one, but we prefered the optional ``--rand-index``
   for backward compatibility.
 
+* In **wordseg-dibs**, renamed *baseline* algorithm to *gold*, so as
+  to avoid confusion with *wordseg-baselines*. See #48.
+
 * Bugfix in ``tools/wordseg-qsub.sh``: wordseg-dibs is correctly handled
   (was a problem with the train file)
 
