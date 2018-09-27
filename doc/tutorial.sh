@@ -15,7 +15,7 @@ cat prepared.txt | wordseg-dpseg -f 1 -r 1 > segmented.dpseg.txt
 cat prepared.txt | wordseg-ag --nruns 4 --njobs 4 --niterations 100 > segmented.ag.txt
 
 # dibs must be provided with a training file
-cat prepared.txt | wordseg-dibs -t baseline $1 > segmented.dibs.txt
+cat prepared.txt | wordseg-dibs -t gold $1 > segmented.dibs.txt
 
 # evaluate them against the gold file
 for algo in baseline tp puddle dpseg dibs ag

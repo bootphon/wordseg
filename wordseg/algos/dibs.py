@@ -1,5 +1,3 @@
-# coding: utf-8
-
 """Diphone based segmentation algorithm
 A DiBS model assigns, for each phrase-medial diphone, a value between
 0 and 1 inclusive (representing the probability the model assigns that
@@ -255,11 +253,11 @@ class AbstractSegmenter(object):
         return ' '.join(out).replace(' ', '').replace(self.wordsep, ' ')
 
 
-class BaselineSegmenter(AbstractSegmenter):
+class GoldSegmenter(AbstractSegmenter):
     def init_diphones(self):
         if self.pwb:
             self.log.warning(
-                'pwb specified at %s but unused in baseline segmenter',
+                'pwb specified at %s but unused in gold segmenter',
                 self.pwb)
 
         within = self.summary.internal_diphones
@@ -319,7 +317,7 @@ def segment(text, summary, type='phrasal', threshold=0.5, pwb=None,
     """Segment a corpus from a trained DiBS model
 
     This method is a simple wrapper on the Segmenter classes, namely
-    BaselineSegmenter, PhrasalSegmenter and LexicalSegmenter.
+    GoldSegmenter, PhrasalSegmenter and LexicalSegmenter.
 
     Parameters
     ----------
@@ -330,7 +328,7 @@ def segment(text, summary, type='phrasal', threshold=0.5, pwb=None,
     summary : CorpusSummary
         The trained DiBS model used for segmentation of `text`.
     type : str, optional
-        The type of DiBS segmenter to use, must be 'baseline',
+        The type of DiBS segmenter to use, must be 'gold',
         'phrasal' or 'lexical'. Default is 'phrasal'.
     threshold: float, optional
         Threshold on word boundary probabilities. If a diphone has a
@@ -340,7 +338,7 @@ def segment(text, summary, type='phrasal', threshold=0.5, pwb=None,
     pwb : float, optional
         Probability of word boundary, if not specified it is estimated
         from the train text as (nwords - nlines)/(nphones - nlines).
-        This option is not used in 'baseline' segmentation type. When
+        This option is not used in 'gold' segmentation type. When
         defined must in [0, 1].
     log : logging.Logger, optional
         The log instance where to send messages.
@@ -353,7 +351,7 @@ def segment(text, summary, type='phrasal', threshold=0.5, pwb=None,
     Raises
     ------
     ValueError:
-        If `type` is not 'baseline', 'phrasal' or 'lexical'. If
+        If `type` is not 'gold', 'phrasal' or 'lexical'. If
         `threshold` and `pwb` are not floats in [0, 1].
 
     """
@@ -362,10 +360,10 @@ def segment(text, summary, type='phrasal', threshold=0.5, pwb=None,
         Segmenter = {
             'phrasal': PhrasalSegmenter,
             'lexical': LexicalSegmenter,
-            'baseline': BaselineSegmenter}[type]
+            'gold': GoldSegmenter}[type]
     except KeyError:
         raise ValueError(
-            'unknown segmenter {}, must be phrasal, lexical or baseline'
+            'unknown segmenter {}, must be phrasal, lexical or gold'
             .format(type))
 
     # init the segmenter with the trained model
@@ -412,7 +410,7 @@ def _add_arguments(parser):
     group = parser.add_argument_group('testing parameters')
     group.add_argument(
         '-t', '--type',  default='phrasal',
-        choices=['baseline', 'phrasal', 'lexical'],
+        choices=['gold', 'phrasal', 'lexical'],
         help='type of DiBS segmenter')
 
     group.add_argument(
@@ -423,7 +421,7 @@ def _add_arguments(parser):
         '-b', '--pboundary', type=float, metavar='<float>',
         help='''probability of word boundary, if not specified it is
         estimated from the train text as (nwords - nlines)/(nphones - nlines).
-        This option is not used in 'baseline' segmentation type,
+        This option is not used in 'gold' segmentation type,
         must be in [0, 1]''')
 
 

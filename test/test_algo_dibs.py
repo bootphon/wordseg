@@ -16,7 +16,7 @@ from . import tags, prep, datadir
 @pytest.mark.parametrize(
     'type, threshold, pwb', [
         (t, T, p)
-        for t in ('baseline', 'phrasal', 'lexical')
+        for t in ('gold', 'phrasal', 'lexical')
         for T in (0, 0.5, 1)
         for p in (None, 0.2)])
 def test_basic(prep, tags, type, threshold, pwb):

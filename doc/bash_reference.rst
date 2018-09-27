@@ -10,13 +10,13 @@ Once wordseg is installed on your plaform, the commands are
 available from the terminal as any other command line tool. The
 commands for which we provide documentation are:
 
-* **wordseg-prep** takes as input a text in phonological-like form with tags, and preps 
-  it for segmentation by checking format, removing all tags but word boundaries to generate 
+* **wordseg-prep** takes as input a text in phonological-like form with tags, and preps
+  it for segmentation by checking format, removing all tags but word boundaries to generate
   a gold version, and all tags but the minimal unit boundaries to generate what we will call
   prepared.txt, which is the input for segmentation.
 
-* **wordseg-<algorithm>** always takes as input a prepared.txt 
-  file, outputing the same text with word boundaries added. 
+* **wordseg-<algorithm>** always takes as input a prepared.txt
+  file, outputing the same text with word boundaries added.
   Please note that some algorithms require more input than just that.
   For details, see the :ref:*overview* page. The calls for the algorithms
   are:
@@ -26,7 +26,7 @@ commands for which we provide documentation are:
   - **wordseg-tp** for the transitional probabilities,
   - **wordseg-puddle** for PUDDLE,
   - **wordseg-ag** for the adaptor grammar.
-  - **wordseg-dpseg** for the DPSeg or DMCMC (please note that this algorithm is not functional at present), 
+  - **wordseg-dpseg** for the DPSeg or DMCMC (please note that this algorithm is not functional at present),
 
 * **wordseg-eval** takes as input a segmented text and a gold version,
   to compute the precision, recall and f-score at type, token and

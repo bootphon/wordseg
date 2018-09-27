@@ -51,7 +51,7 @@ boundaries are marked. Please note we say "chunk-initial and
 chunk-final" because the precise chunk depends on the type of DiBS
 used, as follows.
 
-Three versions of DiBS are available. *DiBS-baseline* is supervised in
+Three versions of DiBS are available. *DiBS-gold* is supervised in
 that "chunks" are the gold/oracle words. It is thus supposed to
 represent the optimal performance possible. *DIBS-phrasal* uses
 phrases (sentences) as chunks. Finally, *DIBS-lexical* uses as chunks
