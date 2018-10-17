@@ -10,14 +10,13 @@ import os
 from setuptools import setup
 
 
-long_description = '''
+LONG_DESCRIPTION = '''
 Please see the online documentation at https://wordseg.readthedocs.io
 
 The wordseg package provides **a collection of tools for text based
 word segmentation** covering both text preprocessing, segmentation
 algorithms, evaluation and statistics relevant for word segmentation
 studies. It can be used from **bash** and **python**.'''
-
 
 def on_readthedocs():
     """Return True if building the online documentation on readthedocs"""
@@ -28,20 +27,20 @@ def bin_targets():
     """Return the list of binaries to be installed with wordseg"""
     if on_readthedocs():
         return []
-    else:
-        return [os.path.join(
-            '${CMAKE_CURRENT_BINARY_DIR}', 'wordseg', 'algos', algo, algo)
-                for algo in ('ag', 'dpseg')]
+
+    return [os.path.join(
+        '${CMAKE_CURRENT_BINARY_DIR}', 'wordseg', 'algos', algo, algo)
+            for algo in ('ag', 'dpseg')]
 
 
 def data_files(binary):
     """Return a list of exemple configuration files bundled with `binary`"""
     if on_readthedocs():
         return []
-    else:
-        data_dir = os.path.join(
-            '${CMAKE_CURRENT_SOURCE_DIR}', 'data', binary)
-        return [os.path.join(data_dir, f) for f in os.listdir(data_dir)]
+
+    data_dir = os.path.join(
+        '${CMAKE_CURRENT_SOURCE_DIR}', 'data', binary)
+    return [os.path.join(data_dir, f) for f in os.listdir(data_dir)]
 
 
 def requires():
@@ -52,25 +51,24 @@ def requires():
             'joblib',
             'numpydoc',
             'sphinx']
-    else:
-        return [
-            'six',
-            'joblib',
-            'numpydoc',
-            'pytest',
-            'scikit-learn',
-            'sphinx',
-            'sphinx_rtd_theme']
 
+    return [
+        'six',
+        'joblib',
+        'numpydoc',
+        'pytest',
+        'scikit-learn',
+        'sphinx',
+        'sphinx_rtd_theme']
 
-package_prefix = '' if on_readthedocs() else '${CMAKE_CURRENT_SOURCE_DIR}/'
+PACKAGE_PREFIX = '' if on_readthedocs() else '${CMAKE_CURRENT_SOURCE_DIR}/'
 
 setup(
     name='wordseg',
     version='${PROJECT_VERSION}',
     author='${PROJECT_AUTHOR}',
     description='tools for text based word segmentation',
-    long_description=long_description,
+    long_description=LONG_DESCRIPTION,
     url='https://github.com/bootphon/wordseg',
     license='GPL3',
     zip_safe=True,
@@ -78,8 +76,8 @@ setup(
     install_requires=requires(),
     packages=['wordseg', 'wordseg.algos'],
     package_dir={
-        'wordseg': package_prefix + 'wordseg',
-        'wordseg.algos': package_prefix + 'wordseg/algos'},
+        'wordseg': PACKAGE_PREFIX + 'wordseg',
+        'wordseg.algos': PACKAGE_PREFIX + 'wordseg/algos'},
 
     entry_points={'console_scripts': [
         'wordseg-prep = wordseg.prepare:main',
