@@ -3,8 +3,6 @@
 import pytest
 from wordseg import folding
 
-from . import tags
-
 
 def test_permute():
     l = list(range(5))
@@ -17,6 +15,7 @@ def test_permute():
 
 def test_flatten():
     assert folding._flatten([[0], [1], [2, 3]]) == [0, 1, 2, 3]
+
 
 def test_cumsum():
     c = folding._cumsum

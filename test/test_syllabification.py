@@ -1,9 +1,10 @@
 """Test of the wordseg_syll module"""
 
 import os
+import re
+
 import pkg_resources
 import pytest
-import re
 
 from wordseg.separator import Separator
 from wordseg.syllabification import Syllabifier

@@ -10,10 +10,9 @@ from wordseg.separator import Separator
 from wordseg.prepare import gold, prepare
 from wordseg.evaluate import evaluate
 from wordseg.algos.dpseg import segment, _dpseg_bugfix
-from . import prep, datadir
 
 
-args = [
+ARGS = [
     '',
     '--ngram 1 --a1 0 --b1 1  --a2 0 -- b2 1',
     '--ngram 1 --a1 0.1 --b1 0.9 --do-mbdp 1',
@@ -39,7 +38,7 @@ def test_dpseg_parallel_folds(prep, nfolds, njobs):
         assert len(list(segment(text, nfolds=nfolds, njobs=njobs))) == 5
 
 
-@pytest.mark.parametrize('args', args)
+@pytest.mark.parametrize('args', ARGS)
 def test_dpseg_args(prep, args):
     segmented = segment(prep[:5], nfolds=1, args=args)
     assert len(list(segmented)) == 5
@@ -47,7 +46,7 @@ def test_dpseg_args(prep, args):
 
 def test_config_files_are_here():
     confs = wordseg.utils.get_config_files('dpseg')
-    assert len(confs) > 0
+    assert confs
     for conf in confs:
         assert os.path.isfile(conf)
         assert conf[-5:] == '.conf'
@@ -64,7 +63,7 @@ def test_dpseg_from_config_file(prep, conf):
     assert len(list(segmented)) == 5
 
 
-def test_dpseg_bugfix(prep):
+def test_dpseg_bugfix():
     with pytest.raises(ValueError):
         _dpseg_bugfix(['.', '.', '.', '.'], [0, 2])
 
@@ -140,21 +139,25 @@ class DpsegTester(object):
             self.dpseg1 = utils.get_binary('dpseg')
             self.dpseg2 = os.environ['ALTERNATIVE_DPSEG']
 
-    def is_valid(self):
+    @staticmethod
+    def is_valid():
         return 'ALTERNATIVE_DPSEG' in os.environ
 
-    def run(self, text, binary, args):
+    @staticmethod
+    def run(text, binary, args):
         return list(segment(text, nfolds=1, njobs=1, args=args, binary=binary))
 
     def compare(self, text, args):
-        o1 = self.run(text, self.dpseg1, args)
-        o2 = self.run(text, self.dpseg2, args)
-        assert o1 == o2
+        out1 = self.run(text, self.dpseg1, args)
+        out2 = self.run(text, self.dpseg2, args)
+        assert out1 == out2
 
 
-tester = DpsegTester()
+TESTER = DpsegTester()
 
-@pytest.mark.skipif(not tester.is_valid(), reason='run it by specifying $ALTERNATIVE_DPSEG')
+@pytest.mark.skipif(
+    not TESTER.is_valid(),
+    reason='run it by specifying $ALTERNATIVE_DPSEG')
 @pytest.mark.parametrize('args', arguments())
 def test_replicate(args, prep):
-    tester.compare(prep[:10], args)
+    TESTER.compare(prep[:10], args)

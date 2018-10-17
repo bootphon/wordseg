@@ -8,15 +8,16 @@ wordseg lead to exactly the same result.
 """
 
 import os
-import pytest
 import subprocess
 
-params = [(a, u)
+import pytest
+
+PARAMS = [(a, u)
           for a in ['tp', 'dibs', 'puddle']
           for u in ['phone', 'syllable']]
 
 
-@pytest.mark.parametrize('algo, unit', params)
+@pytest.mark.parametrize('algo, unit', PARAMS)
 def test_bash_python(algo, unit):
     # the bash script to execute is test_bash_python.sh
     test_script = os.path.abspath(__file__).replace('.py', '.sh')

@@ -12,6 +12,7 @@ text to be provided.
 import codecs
 import collections
 import numpy as np
+import warnings
 from sklearn.metrics.cluster import adjusted_rand_score
 
 from wordseg import utils
@@ -347,8 +348,11 @@ def evaluate(text, gold, units=None):
     if units:
         labels_text = compute_class_labels(text, units)
         labels_gold = compute_class_labels(gold, units)
-        results['adjusted_rand_index'] = adjusted_rand_score(
-            labels_gold, labels_text)
+        with warnings.catch_warnings():
+            # ignore a warning issues by sklearn
+            warnings.simplefilter('ignore', category=PendingDeprecationWarning)
+            results['adjusted_rand_index'] = adjusted_rand_score(
+                labels_gold, labels_text)
 
     return results
 
@@ -373,7 +377,7 @@ def _add_arguments(parser):
 @utils.CatchExceptions
 def main():
     """Entry point of the 'wordseg-eval' command"""
-    streamin, streamout, separator, log, args = utils.prepare_main(
+    streamin, streamout, _, _, args = utils.prepare_main(
         name='wordseg-eval',
         description=__doc__,
         add_arguments=_add_arguments)

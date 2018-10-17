@@ -9,7 +9,7 @@ from wordseg.prepare import check_utterance, prepare, gold, _pairwise
 
 
 # correctly formatted phonological forms
-good_utterances = [
+GOOD_UTTERANCES = [
     'a ;eword',
     'þ ;eword',
     'a ;esyll ;eword',
@@ -18,7 +18,7 @@ good_utterances = [
     ' ;eword'.join('ʒえθãāàåå̀ã̟ʔm̄«‡§™•�Œ£±') + ' ;eword']
 
 # badly formatted phonological forms
-bad_utterances = [
+BAD_UTTERANCES = [
     '',
     ' ',
     '\n\n',
@@ -43,13 +43,13 @@ def test_paiwise():
     assert list(_pairwise([1, 2, 3])) == [(1, 2), (2, 3)]
 
 
-@pytest.mark.parametrize('utt', bad_utterances)
+@pytest.mark.parametrize('utt', BAD_UTTERANCES)
 def test_bad_utterances(utt):
     with pytest.raises(ValueError):
         check_utterance(utt, separator=Separator())
 
 
-@pytest.mark.parametrize('utt', good_utterances)
+@pytest.mark.parametrize('utt', GOOD_UTTERANCES)
 def test_good_utterances(utt):
     assert check_utterance(utt, separator=Separator())
 
@@ -76,7 +76,7 @@ def test_prepare_bad_types():
 
 
 def test_prepare_tolerant():
-    utterances = good_utterances + bad_utterances
+    utterances = GOOD_UTTERANCES + BAD_UTTERANCES
 
     # tolerant=False
     with pytest.raises(ValueError):
@@ -84,8 +84,8 @@ def test_prepare_tolerant():
 
     # tolerant=True
     prepared = list(prepare(utterances, tolerant=True))
-    assert len(prepared) == len(good_utterances)
-    assert prepared == list(prepare(good_utterances))
+    assert len(prepared) == len(GOOD_UTTERANCES)
+    assert prepared == list(prepare(GOOD_UTTERANCES))
 
 
 @pytest.mark.parametrize(

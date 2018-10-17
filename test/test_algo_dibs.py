@@ -9,8 +9,6 @@ from wordseg.prepare import gold, prepare
 from wordseg.evaluate import evaluate
 from wordseg.algos import dibs
 
-from . import tags, prep, datadir
-
 
 # make sure we have the expected result for a variety of parameters
 @pytest.mark.parametrize(

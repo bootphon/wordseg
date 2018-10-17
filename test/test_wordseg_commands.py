@@ -1,7 +1,8 @@
 """Basic test of the 'wordseg-* --help' commands"""
 
-import pytest
 import subprocess
+
+import pytest
 
 
 @pytest.mark.parametrize(

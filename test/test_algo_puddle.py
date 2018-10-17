@@ -7,9 +7,7 @@ import pytest
 from wordseg.separator import Separator
 from wordseg.prepare import gold, prepare
 from wordseg.evaluate import evaluate
-from wordseg.algos import puddle as puddle
-
-from . import prep, datadir
+from wordseg.algos import puddle
 
 
 @pytest.mark.parametrize(

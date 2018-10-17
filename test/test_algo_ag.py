@@ -2,29 +2,23 @@
 
 import codecs
 import os
-import itertools
 import joblib
 import pytest
 
 from wordseg.algos import ag
-from wordseg.separator import Separator
-from wordseg.prepare import gold, prepare
-from wordseg.evaluate import evaluate
-from wordseg import utils
-from . import prep, datadir
 
 
-test_arguments = (
+TEST_ARGUMENTS = (
     '-E -P -R -1 -n 10 -a 0.0001 -b 10000.0 '
     '-e 1.0 -f 1.0 -g 100.0 -h 0.01 -x 2')
 
-grammar_dir = os.path.dirname(ag.get_grammar_files()[0])
-grammars = [('Coll3syllfnc_enFestival.lt', 'Word'),
+GRAMMAR_DIR = os.path.dirname(ag.get_grammar_files()[0])
+GRAMMARS = [('Coll3syllfnc_enFestival.lt', 'Word'),
             ('Colloc0_enFestival.lt', 'Colloc0')]
 
 
 def test_grammar_files():
-    assert len(ag.get_grammar_files()) != 0
+    assert ag.get_grammar_files()
 
 
 def test_check_grammar():
@@ -44,10 +38,10 @@ def test_segment_single(prep):
     ag._segment_single(
         pc,
         prep,
-        os.path.join(grammar_dir, grammars[1][0]),
+        os.path.join(GRAMMAR_DIR, GRAMMARS[1][0]),
         'Colloc0',
         0,
-        args=test_arguments)
+        args=TEST_ARGUMENTS)
 
     assert len(prep) == pc.nutts == len(pc.counters)
 
@@ -92,12 +86,12 @@ def test_ignore_first_parses(prep, ignore):
     # parses, initial one and 5 each 2 iterations)
     if ignore < 6:
         segmented = ag.segment(
-            prep, args=test_arguments, nruns=1, ignore_first_parses=ignore)
+            prep, args=TEST_ARGUMENTS, nruns=1, ignore_first_parses=ignore)
         assert len(segmented) == len(prep)
     else:
         # ignoring more than the extracted parses raises an error
         with pytest.raises(RuntimeError):
-            ag.segment(prep, args=test_arguments, nruns=1,
+            ag.segment(prep, args=TEST_ARGUMENTS, nruns=1,
                        ignore_first_parses=ignore)
 
 
@@ -118,10 +112,10 @@ def test_parse_counter(njobs):
     assert counter.most_common() == ['a', 'b']
 
 
-@pytest.mark.parametrize('grammar, level', grammars)
+@pytest.mark.parametrize('grammar, level', GRAMMARS)
 def test_grammars(prep, grammar, level):
-    grammar = os.path.join(grammar_dir, grammar)
-    segmented = ag.segment(prep, grammar, level, test_arguments, nruns=1)
+    grammar = os.path.join(GRAMMAR_DIR, grammar)
+    segmented = ag.segment(prep, grammar, level, TEST_ARGUMENTS, nruns=1)
     assert len(segmented) == len(prep)
 
     segmented = ''.join(utt.replace(' ', '').strip() for utt in segmented)
@@ -130,7 +124,7 @@ def test_grammars(prep, grammar, level):
 
 
 def test_default_grammar(prep):
-    segmented = ag.segment(prep, args=test_arguments, nruns=1)
+    segmented = ag.segment(prep, args=TEST_ARGUMENTS, nruns=1)
     assert len(segmented) == len(prep)
 
     segmented = ''.join(utt.replace(' ', '').strip() for utt in segmented)

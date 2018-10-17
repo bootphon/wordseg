@@ -6,15 +6,14 @@ import pytest
 
 from wordseg.statistics import CorpusStatistics
 from wordseg.separator import Separator
-from . import tags, gold
 
 
-utts = ['i mean the cops are just looking for people that look younger',
+UTTS = ['i mean the cops are just looking for people that look younger',
         'ten people call so she\'s like it\'s easy she\'s like i get paid to']
 
 
 def test_most_common():
-    stats = CorpusStatistics(utts, separator=Separator(
+    stats = CorpusStatistics(UTTS, separator=Separator(
         phone=None, syllable=None, word=' '))
 
     top_freq = stats.most_common_tokens('word', n=4)
@@ -39,7 +38,7 @@ def test_unigram():
 
 
 def test_descibe1():
-    stats = CorpusStatistics(utts, separator=Separator(
+    stats = CorpusStatistics(UTTS, separator=Separator(
         phone=None, syllable=None, word=' ')).describe_all()
 
     assert stats['corpus'] == pytest.approx({
@@ -78,7 +77,7 @@ def test_descibe2(tags):
         'types': 24,
         'hapaxes': 19})
 
-def test_describe3(tags, gold):
+def test_describe3(tags):
     stats_tags = CorpusStatistics(
         tags,
         separator=Separator(phone=' ', syllable=';esyll', word=';eword')
@@ -91,8 +90,9 @@ def test_describe3(tags, gold):
 
     assert pytest.approx(stats_tags) == stats_gold
 
+
 def test_entropy(tags):
-    stats = CorpusStatistics(utts, separator=Separator(
+    stats = CorpusStatistics(UTTS, separator=Separator(
         phone=None, syllable=None, word=' '))
     with pytest.raises(KeyError):
         stats.normalized_segmentation_entropy()

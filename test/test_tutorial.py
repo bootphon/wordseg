@@ -2,10 +2,9 @@
 
 import codecs
 import os
-import pytest
 import subprocess
 
-from . import tags
+import pytest
 
 
 @pytest.mark.parametrize('ext', ['py', 'sh'])

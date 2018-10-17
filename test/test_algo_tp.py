@@ -9,8 +9,6 @@ from wordseg.prepare import gold, prepare
 from wordseg.evaluate import evaluate
 from wordseg.algos import tp
 
-from . import prep, datadir
-
 
 @pytest.mark.parametrize(
     'threshold, dependency',

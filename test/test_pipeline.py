@@ -16,10 +16,9 @@ import wordseg.algos.puddle
 import wordseg.algos.tp
 
 from wordseg.separator import Separator
-from . import tags
 
 
-algos = {
+ALGOS = {
     'baseline': wordseg.algos.baseline,
     'ag': wordseg.algos.ag,
     'dibs': wordseg.algos.dibs,
@@ -27,7 +26,7 @@ algos = {
     'puddle': wordseg.algos.puddle,
     'tp': wordseg.algos.tp}
 
-params = [(a, e) for a in algos.keys() for e in ('ascii', 'unicode')]
+PARAMS = [(a, e) for a in ALGOS.keys() for e in ('ascii', 'unicode')]
 
 
 def add_unicode(lines):
@@ -36,7 +35,7 @@ def add_unicode(lines):
         for line in lines]
 
 
-@pytest.mark.parametrize('algo, encoding', params)
+@pytest.mark.parametrize('algo, encoding', PARAMS)
 def test_pipeline(algo, encoding, tags, tmpdir):
     # the token separator we use in the whole pipeline
     separator = Separator(phone=' ', syllable=';esyll', word=';eword')
@@ -60,7 +59,7 @@ def test_pipeline(algo, encoding, tags, tmpdir):
     # segment it with the given algo (use default options)
     if algo in ('dpseg', 'puddle'):
         # only 1 fold for iterative algos: faster
-        segmented = list(algos[algo].segment(prepared_text, nfolds=1))
+        segmented = list(ALGOS[algo].segment(prepared_text, nfolds=1))
     elif algo == 'ag':
         # add grammar related arguments, if in unicode test adapt the
         # grammar too
@@ -73,15 +72,15 @@ def test_pipeline(algo, encoding, tags, tmpdir):
             grammar_file = os.path.join(str(tmpdir), 'grammar.lt')
             codecs.open(grammar_file, 'w', encoding='utf8').write(
                 '\n'.join(grammar_unicode))
-        segmented = list(algos[algo].segment(
+        segmented = list(ALGOS[algo].segment(
             # we just use 10 iterations here to be fast
             prepared_text, grammar_file, 'Colloc0', nruns=1, args='-n 10'))
     elif algo == 'dibs':
         # dibs need training, train of test set for the test
         dibs_model = wordseg.algos.dibs.CorpusSummary(tags, separator=separator)
-        segmented = list(algos[algo].segment(prepared_text, dibs_model))
+        segmented = list(ALGOS[algo].segment(prepared_text, dibs_model))
     else:
-        segmented = list(algos[algo].segment(prepared_text))
+        segmented = list(ALGOS[algo].segment(prepared_text))
 
     s = separator.remove
     assert len(segmented) == len(tags)
