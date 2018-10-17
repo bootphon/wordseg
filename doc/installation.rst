@@ -1,6 +1,5 @@
 .. _installation:
 
-
 ============
 Installation
 ============
@@ -126,7 +125,7 @@ supported by conda (but you can virtualenv_ as well).
 * Create a new Python 3 virtual environment named *wordseg* and
   install some required dependencies::
 
-    conda create --name wordseg python=3 pytest joblib scikit-learn
+    conda env create --name wordseg -f environment.yml
 
 * Activate your virtual environment::
 
