@@ -1,13 +1,16 @@
 wordseg-qsub.sh
 ===============
 
-A little script to launch **wordseg** segmentation jobs on qsub.
+Little scripts to launch **wordseg** segmentation jobs on SGE and
+SLURM job management systems.
 
 
 Usage
 -----
 
-    ./wordseg-qsub.sh <jobs-file> <output-directory> [<qsub-options>]
+    ./wordseg-sge.sh <jobs-file> <output-directory> [<qsub-options>]
+
+    ./wordseg-slurm.sh <jobs-file> <output-directory> [<sbatch-options>]
 
 
 Format of `<jobs-file>`
@@ -64,11 +67,6 @@ are stored in distinct folders in
 
   * `job.pid`: The PID of the job (to be used with `qstat`)
   * `job.sh`: The executed job script
-  * `qstat.txt`: Output of the `qstat` command executed at the very
-    end of the script. To see how many memory the job occupied (this
-    was an issue with `wordseg-ag`), have a:
-
-        cat qstat.txt | grep usage | sed -r 's|.*maxvmem=||'
 
 
 Exemple

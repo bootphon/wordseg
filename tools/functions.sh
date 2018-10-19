@@ -1,18 +1,15 @@
 #!/bin/bash
 #
-# Schedules a list of wordseg jobs with qsub. Have a
-# "./wordseg-qsub.sh --help" to display help.
+# Functions common to wordseg-sge.sh and wordseg-slurm.sh
 #
 # author: Mathieu Bernard <mathieu.a.bernard@inria.fr>
 
 
-######################### Functions definitions ################################
 
-
-# A usage string
+# A usage string ($backend must be defined)
 function usage
 {
-    echo "Usage: $0 <jobs-file> <output-directory> [<qsub-options>]"
+    echo "Usage: $0 <jobs-file> <output-directory> [<$backend-options>]"
     echo
     echo "Each line of the <jobs-file> must be in the format:"
     echo "  <job-name> <prepared-file> <gold-file> <wordseg-command>"
@@ -149,62 +146,54 @@ else
     echo "Segmentation failed"
 fi
 
-qstat -j \$(cat job.pid) > qstat.txt
 tend=\$(date +%s.%N)
 echo "Total time (s): \$(echo "\$tend - \$tstart" | bc)" >> log.txt
 
 EOF
 
-    # schedule the script to be executed on the cluster
-    qsub -pe openmpi $job_slots $qsub_options -j y -V -cwd -S /bin/bash \
-         -o $job_dir/log.txt -N $job_name $job_script | tee $job_dir/job.pid
-
-    # save the job PID
-    sed -i -r 's|^Your job ([0-9]+).*$|\1|' $job_dir/job.pid
+    # run the job on the backend (SLURM or SGE). Read variables from
+    # environment
+    schedule_job_backend
 }
 
 
-
-######################### Script starts here ###################################
-
-
-# make sure qsub is installed on the machine
-[ -z $(which qsub 2> /dev/null) ] && error "qsub not found"
+function main
+{
+    # # make sure the backend is installed on the machine
+    # [ -z $(which $backend 2> /dev/null) ] && error "$backend not found"
 
 
-# display usage message when required (bad arguments or --help)
-[ $# -lt 2 -o $# -gt 3 ] && usage
-[ "$1" == "-h" -o "$1" == "-help" -o "$1" == "--help" ] && usage
+    # display usage message when required (bad arguments or --help)
+    [ $# -lt 2 -o $# -gt 3 ] && usage
+    [ "$1" == "-h" -o "$1" == "-help" -o "$1" == "--help" ] && usage
 
 
-# parse input arguments
-jobs_file=$1
-! [ -f $jobs_file ] && error "file not found: $jobs file"
+    # parse input arguments
+    jobs_file=$1
+    ! [ -f $jobs_file ] && error "file not found: $jobs_file file"
 
-output_dir=$2
-[ -e $output_dir ] && error "directory already exists: $output_dir"
+    output_dir=$2
+    [ -e $output_dir ] && error "directory already exists: $output_dir"
 
-qsub_options=$3  # may be empty
-
-
-# remove any comments in the jobs file
-tmp_file=$(mktemp)
-trap "rm -f $tmp_file" EXIT
-cat $jobs_file | sed "/^\s*#/d;s/\s*#[^\"']*$//" > $tmp_file
-jobs_file=$tmp_file
+    backend_options=$3  # may be empty
 
 
-# check the job definitions are correct
-check_jobs $jobs_file
-
-echo "submitting $(cat $jobs_file | wc -l) jobs, writing to $output_dir"
-
-
-# schedule all the defined jobs
-while read job
-do
-    schedule_job "$job"
-done < $jobs_file
+    # remove any comments in the jobs file
+    tmp_file=$(mktemp)
+    trap "rm -f $tmp_file" EXIT
+    cat $jobs_file | sed "/^\s*#/d;s/\s*#[^\"']*$//" > $tmp_file
+    jobs_file=$tmp_file
 
 
-exit 0
+    # check the job definitions are correct
+    check_jobs $jobs_file
+
+    echo "submitting $(cat $jobs_file | wc -l) jobs, writing to $output_dir"
+
+
+    # schedule all the defined jobs
+    while read job
+    do
+        schedule_job "$job"
+    done < $jobs_file
+}

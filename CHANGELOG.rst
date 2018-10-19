@@ -18,8 +18,12 @@ not yet released
 * In **wordseg-dibs**, renamed *baseline* algorithm to *gold*, so as
   to avoid confusion with *wordseg-baselines*. See #48.
 
-* Bugfix in ``tools/wordseg-qsub.sh``: wordseg-dibs is correctly handled
-  (was a problem with the train file)
+* ``tools/wordseg-qsub.sh`` renamed ``tools/wordseg-sge.sh`` and new
+  ``tools/wordseg-slurm.sh`` to submit jobs on SLURM based clusters.
+
+* Bugfix in ``tools/wordseg-{sge/slurm}.sh``: wordseg-dibs is
+  correctly handled (was a problem with the train file)
+
 
 wordseg-0.7
 -----------
