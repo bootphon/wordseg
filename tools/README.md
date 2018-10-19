@@ -28,7 +28,7 @@ definition is made of the following fields:
   directory containing the `wordseg-qsub.sh` script.
 
     * `<prepared-file>` is the input text file to be segmented. It is
-      a suite of space separeted phonemes or syllables, one utterance
+      a suite of space separated phonemes or syllables, one utterance
       per line.
 
     * `<gold-file>` is the gold file to evaluate the segmented output,
@@ -65,7 +65,8 @@ are stored in distinct folders in
 
 * Job:
 
-  * `job.pid`: The PID of the job (to be used with `qstat`)
+  * `job.pid`: The PID of the job (to be used with `qstat` for SGE, or
+    `squeue` for SLURM)
   * `job.sh`: The executed job script
 
 

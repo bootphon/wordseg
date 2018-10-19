@@ -159,8 +159,8 @@ EOF
 
 function main
 {
-    # # make sure the backend is installed on the machine
-    # [ -z $(which $backend 2> /dev/null) ] && error "$backend not found"
+    # make sure the backend is installed on the machine
+    [ -z $(which $backend 2> /dev/null) ] && error "$backend not found"
 
 
     # display usage message when required (bad arguments or --help)

@@ -10,7 +10,7 @@
 . $(dirname $0)/functions.sh
 
 
-# sbatch is the job launche for SLURM
+# sbatch is the job launcher for SLURM
 backend="sbatch"
 
 
