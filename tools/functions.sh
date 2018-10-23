@@ -160,7 +160,7 @@ then
     wordseg-eval -v -o eval.txt output.txt gold.txt 2>> log.txt
     echo "Evaluation done!" >> log.txt
 else
-    echo "Segmentation failed"
+    echo "Segmentation failed" >> log.txt
 fi
 
 tend=\$(date +%s.%N)
