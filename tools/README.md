@@ -12,6 +12,8 @@ Usage
 
     ./wordseg-slurm.sh <jobs-file> <output-directory> [<sbatch-options>]
 
+    ./wordseg-bash.sh <jobs-file> <output-directory>
+
 
 Format of `<jobs-file>`
 -----------------------
@@ -19,20 +21,23 @@ Format of `<jobs-file>`
 `<jobs-file>` must contain one job definition per line. A job
 definition is made of the following fields:
 
-    <job-name> <prepared-file> <gold-file> <wordseg-command>
+    <job-name> <tags-file> <unit> <separator> <wordseg-command>
 
-* The `<job-name>` must not contain spaces. Name of the job on qsub and
-  name of the result directory in `<output-directory>`.
+* The `<job-name>` must not contain spaces. Name of the job on the
+  scheduler (SGE or SLURM) and name of the result directory in
+  `<output-directory>`.
 
-* `<prepared-file>` and `<gold-file>` are files, path expressed from the
-  directory containing the `wordseg-qsub.sh` script.
+* `<tags-file>` must be an absolute path, or a path expressed from the
+  directory containing the `wordseg-qsub.sh` script. It contains the
+  input text in a phonologized form (as a suite of phonemes,
+  syllables and word boundaries), one utterance per line.
 
-    * `<prepared-file>` is the input text file to be segmented. It is
-      a suite of space separated phonemes or syllables, one utterance
-      per line.
+* `<unit>` is either `phone` or `syllable`, this is the representation
+  level at which you want the text to be segmented.
 
-    * `<gold-file>` is the gold file to evaluate the segmented output,
-      spaces at word boundaries only.
+* `<separator>` is a string defining the token separation for phones,
+  syllables and words in the tags file. If it includes spaces it must
+  be surrounded by quotes. For exemple `"-p' ' -s';esyll' -w';eword'`.
 
 * The `<wordseg-command>` is a usual call to a wordseg algorithm but
   with no options `<input-file>` and `<output-file>` specified.
@@ -54,20 +59,22 @@ are stored in distinct folders in
 
 * Input:
 
-  * `gold.txt`: Copy of the gold text for evaluation
-  * `input.txt`: Copy of the input text for segmentation
+  * `tags.txt`: Copy of the input text file
+  * `gold.txt`: Gold text for evaluation, generated from tags
+  * `input.txt`: Prepared text for segmentation, generated from tags
 
 * Output:
 
+  * `stats.json`: Statistics on the input text, in JSON format
   * `output.txt`: The segmented text
   * `eval.txt`: Evaluation of the segmented text against the gold
   * `log.txt`: Data logged during script execution
 
 * Job:
 
-  * `job.pid`: The PID of the job (to be used with `qstat` for SGE, or
-    `squeue` for SLURM)
-  * `job.sh`: The executed job script
+  * `job.pid`: The PID of the job as executed by the scheduler
+  * `job.sh`: The executed job script (not available for
+    `wordseg-bash.sh`)
 
 
 Exemple

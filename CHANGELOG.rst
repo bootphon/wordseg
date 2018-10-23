@@ -16,13 +16,16 @@ not yet released
   for backward compatibility.
 
 * In **wordseg-dibs**, renamed *baseline* algorithm to *gold*, so as
-  to avoid confusion with *wordseg-baselines*. See #48.
+  to avoid confusion with *wordseg-baseline*. See #48.
 
 * ``tools/wordseg-qsub.sh`` renamed ``tools/wordseg-sge.sh`` and new
-  ``tools/wordseg-slurm.sh`` to submit jobs on SLURM based clusters.
+  ``tools/wordseg-{slurm, bash}.sh`` to submit jobs on SLURM based
+  clusters and locally using bash.
 
-* Bugfix in ``tools/wordseg-{sge/slurm}.sh``: wordseg-dibs is
-  correctly handled (was a problem with the train file)
+* Bugfix in ``tools/wordseg-{sge, slurm, bash}.sh``: wordseg-dibs is
+  correctly handled (was a problem with the train file). Those tools
+  now included full pipeline, including statistics and text
+  preparation.
 
 
 wordseg-0.7

@@ -12,7 +12,7 @@ function usage
     echo "Usage: $0 <jobs-file> <output-directory> [<$backend-options>]"
     echo
     echo "Each line of the <jobs-file> must be in the format:"
-    echo "  <job-name> <prepared-file> <gold-file> <wordseg-command>"
+    echo "  <job-name> <tags-file> <separator> <unit> <wordseg-command>"
     echo
     echo "See $(dirname $0)/README.md for more details"
     exit 1
@@ -49,31 +49,29 @@ function check_jobs
     do
         n=$(( n + 1 ))
 
-        # we need at least 4 arguments
-        [ "$(echo $line | wc -w)" -lt 4 ] && error "line $n: job definition invalid: $"
+        # we need at least 5 arguments
+        [ "$(echo $line | wc -w)" -lt 5 ] && error "line $n: job definition invalid: $"
 
-        # check prepared file exists
-        prepared_file=$(echo $1 | cut -d' ' -f2)
-        [ -f $prepared_file ] || error "prepared file not found: $prepared_file"
+        # check tags file exists
+        tags_file=$(echo $line | cut -d' ' -f2)
+        [ -f $tags_file ] || error "line $n: tags file not found $tags_file"
 
-        # check gold file exists
-        gold_file=$(echo $1 | cut -d' ' -f3)
-        [ -f $gold_file ] || error "gold file not found: $gold_file"
-
-        # check prepared and gold have the same number of lines
-        np=$(cat $prepared_file | wc -l)
-        ng=$(cat $gold_file | wc -l)
-        ! [ "$np" -eq "$ng" ] \
-            && error "prepared and gold files have different number of lines ($np != $ng)"
+        # check <unit> is either phone or syllable
+        unit=$(echo $line | cut -d' ' -f3)
+        ! [ "$unit" == "phone" -o "$unit" == "syllable" ] \
+            && error "line $n: unit must be 'phone' or 'syllable', it is $unit"
 
         # check wordseg command
-        binary=$(echo $line | cut -f4 -d' ')
-        [ -z $(which $binary 2> /dev/null) ] && error "line $n: binary not found: $binary"
+        [ -z "$(echo $line | grep wordseg-)" ] \
+            && error "line $n: wordseg command not found"
+        binary=wordseg-$(echo $line | sed -r 's|^.* wordseg-([a-z]+) .*$|\1|')
+        [ -z $(which $binary 2> /dev/null) ] && error "line $n: binary not found $binary"
     done < $jobs
 }
 
 
-# determine the number of slots (CPU cores) to be used by a <wordseg-command>
+# determine the number of slots (CPU cores) to be used by a
+# <wordseg-command>. Looks for -j or --njobs options in the command.
 function parse_nslots
 {
     cmd=$1
@@ -93,14 +91,28 @@ function parse_nslots
 }
 
 
+# extract the separator defined for a job
+function parse_separator
+{
+    echo $(echo $1 | cut -d' ' -f4- | sed -r 's|^(.*) wordseg.*$|\1|')
+}
+
+# extract the wordseg command defined for a job
+function parse_command
+{
+    echo wordseg-$(echo $1 | sed -r 's|^.* wordseg-(.*)$|\1|')
+}
+
+
 function schedule_job
 {
     # parse arguments
     job_name=$(echo $1 | cut -d' ' -f1)
-    job_cmd=$(echo $1 | cut -d' ' -f4-)
+    tags_file=$(echo $1 | cut -d' ' -f2)
+    unit=$(echo $1 | cut -d' ' -f3)
+    job_cmd=$(parse_command "$1")
     job_slots=$(parse_nslots "$job_cmd")
-    prepared_file=$(echo $1 | cut -d' ' -f2)
-    gold_file=$(echo $1 | cut -d' ' -f3)
+    separator=$(parse_separator "$1")
 
     # create the output directory
     job_dir=$output_dir/$job_name
@@ -108,8 +120,7 @@ function schedule_job
     job_dir=$(readlink -f $job_dir)
 
     # copy input data in the output directory
-    cp $prepared_file $job_dir/input.txt
-    cp $gold_file $job_dir/gold.txt
+    cp $tags_file $job_dir/tags.txt
     touch $job_dir/log.txt
 
     # special case for wordseg-dibs, extract the train file as the
@@ -132,6 +143,12 @@ tstart=\$(date +%s.%N)
 
 cd $job_dir
 
+echo "Extract statistics" >> log.txt
+wordseg-stats -v --json $separator -o stats.json tags.txt 2>> log.txt
+
+echo "Generate input and gold from tags" >> log.txt
+wordseg-prep -v -u $unit $separator -o input.txt -g gold.txt tags.txt 2>> log.txt
+
 echo "Start segmentation, command is: $job_cmd" >> log.txt
 $job_cmd -o output.txt input.txt $training_file 2>> log.txt
 
@@ -151,8 +168,8 @@ echo "Total time (s): \$(echo "\$tend - \$tstart" | bc)" >> log.txt
 
 EOF
 
-    # run the job on the backend (SLURM or SGE). Read variables from
-    # environment
+    # run the job on the backend (bash, SLURM or SGE). Read variables
+    # from environment
     schedule_job_backend
 }
 
