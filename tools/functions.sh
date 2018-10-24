@@ -12,7 +12,7 @@ function usage
     echo "Usage: $0 <jobs-file> <output-directory> [<$backend-options>]"
     echo
     echo "Each line of the <jobs-file> must be in the format:"
-    echo "  <job-name> <tags-file> <separator> <unit> <wordseg-command>"
+    echo "  <job-name> <tags-file> <unit> <separator> <wordseg-command>"
     echo
     echo "See $(dirname $0)/README.md for more details"
     exit 1
