@@ -55,7 +55,6 @@ def requires():
             'sphinx']
 
     return [
-        'mock',
         'six',
         'joblib',
         'numpydoc',
