@@ -186,7 +186,7 @@ https://github.com/alecristia/CDSwordSeg/tree/master/algoComp/algos/AG/grammars
 for more examples).
 
 In the simplest grammar, included with the WordSeg suite, there is one
-rewrite rule stating that ``words are one or more basic units'', and a
+rewrite rule stating that *words are one or more basic units*, and a
 set of rewrite rules the spell out basic units into all of the
 possible terminals. Imagine a simple language with only the sounds a
 and b, the rules would be:

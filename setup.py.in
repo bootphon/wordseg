@@ -18,6 +18,7 @@ word segmentation** covering both text preprocessing, segmentation
 algorithms, evaluation and statistics relevant for word segmentation
 studies. It can be used from **bash** and **python**.'''
 
+
 def on_readthedocs():
     """Return True if building the online documentation on readthedocs"""
     return os.environ.get('READTHEDOCS', None) == 'True'
@@ -47,12 +48,14 @@ def requires():
     """The python dependancies required to install wordseg"""
     if on_readthedocs():
         return [
+            'mock',
             'six',
             'joblib',
             'numpydoc',
             'sphinx']
 
     return [
+        'mock',
         'six',
         'joblib',
         'numpydoc',
@@ -61,7 +64,9 @@ def requires():
         'sphinx',
         'sphinx_rtd_theme']
 
+
 PACKAGE_PREFIX = '' if on_readthedocs() else '${CMAKE_CURRENT_SOURCE_DIR}/'
+
 
 setup(
     name='wordseg',

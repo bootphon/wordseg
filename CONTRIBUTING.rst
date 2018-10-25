@@ -14,7 +14,7 @@ welcome all the ideas and contributions.
    tutorials for `forking
    <https://help.github.com/articles/fork-a-repo/>`_ and creating
    `pull requests
-   <https://help.github.com/articles/creating-a-pull-request-from-a-fork/`_.
+   <https://help.github.com/articles/creating-a-pull-request-from-a-fork/>`_.
 
 
 Reporting bugs, issues or ideas

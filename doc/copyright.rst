@@ -10,6 +10,7 @@ work of several contributors.
 
   * Mathieu Bernard (main package development)
   * Alex Cristia (project coordination)
+  * Georgia Loukatou (evaluation, beta testing and bug reports)
   * Elin Larsen (puddle, evaluation)
 
 * Outside contributors:

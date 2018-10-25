@@ -309,7 +309,7 @@ class SegmentationSummary(object):
     def summarize(self, text, gold):
         """Computes segmentation errors on a whole text
 
-        Call :method:`summarize_utterance` on each utterance of gold
+        Call :meth:`summarize_utterance` on each utterance of gold
         and text.
 
         Parameters
@@ -324,7 +324,7 @@ class SegmentationSummary(object):
         ------
         ValueError
             If `text` and `gold` do not have the same number of
-            utterances. If :method:`summarize_utterance` raise a
+            utterances. If :meth:`summarize_utterance` raise a
             ValueError.
 
         """
@@ -339,7 +339,7 @@ class SegmentationSummary(object):
         """Computes segmentation errors on a single utterance
 
         This method returns no result but update the intern summary,
-        accessible using :method:`to_dict`.
+        accessible using :meth:`to_dict`.
 
         Parameters
         ----------
