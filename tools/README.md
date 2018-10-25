@@ -68,6 +68,7 @@ are stored in distinct folders in
   * `stats.json`: Statistics on the input text, in JSON format
   * `output.txt`: The segmented text
   * `eval.txt`: Evaluation of the segmented text against the gold
+  * `eval_summary.json`: summary of segmentation errors per word type
   * `log.txt`: Data logged during script execution
 
 * Job:
@@ -81,7 +82,7 @@ Exemple
 -------
 
 Have a look to the exemple provided, which executes six flavors of TP
-on the same input:
+and one dibs on the same input:
 
     ./wordseg-qsub.sh exemple/jobs.txt ./results
 

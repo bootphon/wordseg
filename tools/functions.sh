@@ -157,7 +157,8 @@ then
     echo "Segmentation done!" >> log.txt
 
     echo "Start evaluation" >> log.txt
-    wordseg-eval -v -o eval.txt output.txt gold.txt 2>> log.txt
+    wordseg-eval -v -r input.txt -s eval_summary.json \\
+                 -o eval.txt output.txt gold.txt 2>> log.txt
     echo "Evaluation done!" >> log.txt
 else
     echo "Segmentation failed" >> log.txt
