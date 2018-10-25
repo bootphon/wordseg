@@ -286,13 +286,25 @@ class SegmentationSummary(object):
         -------
         summary : dict
             A dictionary with the complete summary in the following
-            entries: 'over', 'under', 'mis', 'correct'.
+            entries: 'over', 'under', 'mis', 'correct'. In each entry,
+            the words are sorted by decreasing frequency, and
+            alphabetically (for equivalent frequency).
 
         """
-        return {'over': self.over_segmentation,
-                'under': self.under_segmentation,
-                'mis': self.mis_segmentation,
-                'correct': self.correct_segmentation}
+        # collapse all the dicts in a single one
+        summary = {
+            'over': self.over_segmentation,
+            'under': self.under_segmentation,
+            'mis': self.mis_segmentation,
+            'correct': self.correct_segmentation}
+
+        # sort by most frequent word decreasing order (and then
+        # alphabetically increasing order)
+        summary = {k: {w[0]: w[1] for w in sorted(
+            v.items(), key=lambda x: (-x[1], x[0]), reverse=False)}
+                   for k, v in summary.items()}
+
+        return summary
 
     def summarize(self, text, gold):
         """Computes segmentation errors on a whole text
