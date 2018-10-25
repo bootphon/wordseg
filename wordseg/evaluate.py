@@ -11,6 +11,7 @@ text to be provided.
 
 import codecs
 import collections
+import json
 import numpy as np
 import warnings
 from sklearn.metrics.cluster import adjusted_rand_score
@@ -99,6 +100,11 @@ class TypeEvaluation(TokenEvaluation):
 
 
 class BoundaryEvaluation(TokenEvaluation):
+    """Evaluation of boundary f-score, precision and recall
+
+    Includes first and last boundary of an utterance
+
+    """
     @staticmethod
     def get_boundary_positions(stringpos):
         return [{idx for pair in line for idx in pair} for line in stringpos]
@@ -110,6 +116,11 @@ class BoundaryEvaluation(TokenEvaluation):
 
 
 class BoundaryNoEdgeEvaluation(BoundaryEvaluation):
+    """Evaluation of boundary f-score, precision and recall
+
+    Excludes first and last boundary of an utterance
+
+    """
     @staticmethod
     def get_boundary_positions(stringpos):
         return [{left for left, _ in line if left > 0} for line in stringpos]
@@ -197,11 +208,11 @@ def compute_class_labels(words, units):
     Examples
     --------
 
-      >>> from wordseg.evaluate import compute_class_labels
-      >>> words = ['hello world', 'python']
-      >>> units = ['h el lo wo r ld', 'py th on']
-      >>> compute_class_labels(words, units)
-      array([0, 0, 0, 1, 1, 1, 2, 2, 2])
+    >>> from wordseg.evaluate import compute_class_labels
+    >>> words = ['hello world', 'python']
+    >>> units = ['h el lo wo r ld', 'py th on']
+    >>> compute_class_labels(words, units)
+    array([0, 0, 0, 1, 1, 1, 2, 2, 2])
 
     """
     # in case the inputs are generators, force them as lists
@@ -249,6 +260,239 @@ def compute_class_labels(words, units):
         index = new_index
 
     return class_labels
+
+
+class SegmentationSummary(object):
+    """Computes a summary of the segmentation errors
+
+    The errors can be oversegmentations, undersegmentations or
+    missegmentations. Correct segmentations are also reported.
+
+    """
+    def __init__(self):
+        # token separation on words only
+        self.separator = Separator(phone=None, syllable=None, word=' ')
+
+        # count over/under/mis/good segmentation for each word type
+        self.over_segmentation = collections.defaultdict(int)
+        self.under_segmentation = collections.defaultdict(int)
+        self.mis_segmentation = collections.defaultdict(int)
+        self.correct_segmentation = collections.defaultdict(int)
+
+    def to_dict(self):
+        """Exports the summary as a dictionary
+
+        Returns
+        -------
+        summary : dict
+            A dictionary with the complete summary in the following
+            entries: 'over', 'under', 'mis', 'correct'.
+
+        """
+        return {'over': self.over_segmentation,
+                'under': self.under_segmentation,
+                'mis': self.mis_segmentation,
+                'correct': self.correct_segmentation}
+
+    def summarize(self, text, gold):
+        """Computes segmentation errors on a whole text
+
+        Call :method:`summarize_utterance` on each utterance of gold
+        and text.
+
+        Parameters
+        ----------
+        text : list of str
+            The list of utterances for the segmented text (to be
+            evaluated)
+        gold : list of str
+            The list of utterances for the gold text
+
+        Raises
+        ------
+        ValueError
+            If `text` and `gold` do not have the same number of
+            utterances. If :method:`summarize_utterance` raise a
+            ValueError.
+
+        """
+        if not len(gold) == len(text):
+            raise ValueError(
+                'text and gold do not have the same number of utterances')
+
+        for t, g in zip(text, gold):
+            self.summarize_utterance(t, g)
+
+    def summarize_utterance(self, text, gold):
+        """Computes segmentation errors on a single utterance
+
+        This method returns no result but update the intern summary,
+        accessible using :method:`to_dict`.
+
+        Parameters
+        ----------
+        text : str
+            A segmented utterance
+        gold : str
+            A gold utterance
+
+        Raises
+        ------
+        ValueError
+            If `text` and `gold` are mismatched, i.e. they do not
+            contain the same suite of letters (once all the spaces
+            removed).
+
+        """
+        # check gold and text match (with all spaces removed)
+        if self.separator.remove(gold) != self.separator.remove(text):
+            raise ValueError(
+                'mismatch in gold and text: {} != {}'.format(gold, text))
+
+        # get text and gold as lists of words
+        gold_words = self.separator.tokenize(gold, level='word')
+        text_words = self.separator.tokenize(text, level='word')
+
+        # silly case where gold and text are identical
+        if gold_words == text_words:
+            for word in gold_words:
+                self.correct_segmentation[word] += 1
+            return
+
+        # divide gold and text in chunks, packing chunks where gold
+        # and text share a common boundary.
+        chunks = self._boundary_chunks(text_words, gold_words)
+
+        # classify each chunk as under/over/mis/good segmentation
+        for text_chunk, gold_chunk in chunks:
+            category = self._classify_chunk(text_chunk, gold_chunk)
+
+            if category == 'correct':
+                d = self.correct_segmentation
+            elif category == 'under':
+                d = self.under_segmentation
+            elif category == 'over':
+                d = self.over_segmentation
+            else:
+                d = self.mis_segmentation
+
+            # register the chunk's words into the summary for the
+            # relevant category
+            for word in gold_chunk:
+                d[word] += 1
+
+    @classmethod
+    def _boundary_chunks(cls, text, gold):
+        """Returns the list of chunks in a pair of text/gold utterance"""
+        return cls._boundary_chunks_aux(text, gold, [])
+
+    @classmethod
+    def _boundary_chunks_aux(cls, text, gold, chunks):
+        lg = len(gold)
+        lt = len(text)
+
+        # end of recursion
+        if not lg and not lt:
+            return chunks
+
+        # impossible to have one empty but not the other. Should be
+        # the case by construction, this assert is not required.
+        assert lg and lt
+
+        # compute the next chunk
+        chunk = cls._compute_chunk(text, gold)
+
+        # recursion
+        return cls._boundary_chunks_aux(
+            text[len(chunk[0]):],
+            gold[len(chunk[1]):],
+            chunks + [chunk])
+
+    @staticmethod
+    def _compute_chunk(text, gold):
+        """Find the first chunk in a pair of text/gold utterances
+
+        A chunk is a pair of lists of words sharing a common boundary
+        (begin and end of a sequence of words).
+
+        Example
+        -------
+        >>> gold = 'baby going home'.split()
+
+        >>> text = 'ba by going home'.split()
+        >> _compute_chunk(text, gold)
+        (['ba', 'by'], ['baby'])
+
+        >>> text = 'babygoinghome'.split()
+        >> _compute_chunk(text, gold)
+        (['babygoinghome'], ['baby', 'going', 'home'])
+
+        """
+        # non empty texts and same letters. This should be the case by
+        # construction, those asserts are not required.
+        assert len(gold) and len(text)
+        assert ''.join(gold) == ''.join(text)
+
+        # easy case, first word is the same
+        if gold[0] == text[0]:
+            return ([text[0]], [gold[0]])
+
+        text_concat, text_index = text[0], 0
+        gold_concat, gold_index = gold[0], 0
+        while len(gold_concat) != len(text_concat):
+            if len(gold_concat) < len(text_concat):
+                gold_index += 1
+                gold_concat = gold_concat + gold[gold_index]
+            else:
+                text_index += 1
+                text_concat = text_concat + text[text_index]
+        return (text[:text_index+1], gold[:gold_index+1])
+
+    def _classify_chunk(self, text, gold):
+        """A chunk is either over/under/mis/correct"""
+        if len(gold) == len(text):
+            if len(gold) == 1:
+                return 'correct'
+            return 'mis'
+        elif len(gold) < len(text):
+            if len(gold) == 1:
+                return 'over'
+            return 'mis'
+        else:  # len(gold) > len(text)
+            if len(text) == 1:
+                return 'under'
+            return 'mis'
+
+
+def summary(text, gold):
+    """Computes the summary of segmentation errors
+
+    This function is a simple wrapper on :class:`SegmentationSummary`
+
+    Parameters
+    ----------
+    text : list of str
+        The list of utterances for the segmented text (to be
+        evaluated)
+    gold : list of str
+        The list of utterances for the gold text
+
+    Returns
+    -------
+    summary : dict
+        A dictionary with the complete summary in the following
+        entries: 'over', 'under', 'mis', 'correct'.
+
+    Raises
+    ------
+    ValueError
+        If `text` and `gold` do not match, or something went wrong
+        during the summary computation.
+
+    """
+    s = SegmentationSummary()
+    s.summarize(text, gold)
+    return s.to_dict()
 
 
 def evaluate(text, gold, units=None):
@@ -349,7 +593,7 @@ def evaluate(text, gold, units=None):
         labels_text = compute_class_labels(text, units)
         labels_gold = compute_class_labels(gold, units)
         with warnings.catch_warnings():
-            # ignore a warning issues by sklearn
+            # ignore a warning issued by sklearn
             warnings.simplefilter('ignore', category=PendingDeprecationWarning)
             results['adjusted_rand_index'] = adjusted_rand_score(
                 labels_gold, labels_text)
@@ -369,18 +613,26 @@ def _add_arguments(parser):
         help='gold file to evaluate the input data on')
     parser.add_argument(
         '-r', '--rand-index', metavar='<prep-file>', default=None,
-        help='Compute the adjusted rand index, requires the prepared '
+        help='Computes the adjusted rand index, requires the prepared '
         'file as outputed by wordseg-prep (i.e. the atomic units, phonemes '
         'or syllables, separated by spaces)')
+    parser.add_argument(
+        '-s', '--summary', metavar='<summary-file>', default=None,
+        help='Computes a summary of the segmentation errors as '
+        'over/under/mis segmentation of word types. Write the result in '
+        '<summary-file> in a JSON format. <summuray-file> should have the '
+        '.json extension but this is not required')
 
 
 @utils.CatchExceptions
 def main():
     """Entry point of the 'wordseg-eval' command"""
-    streamin, streamout, _, _, args = utils.prepare_main(
+    streamin, streamout, _, log, args = utils.prepare_main(
         name='wordseg-eval',
         description=__doc__,
         add_arguments=_add_arguments)
+
+    log.info('loads input and gold texts')
 
     # load the gold text as a list of utterances, remove empty lines
     gold = _load_text(codecs.open(args.gold, 'r', encoding='utf8'))
@@ -396,12 +648,18 @@ def main():
         units = None
 
     # evaluation returns a dict of 'score name' -> float
+    log.info('evaluates the segmentation')
     results = evaluate(text, gold, units=units)
 
     streamout.write('\n'.join(
         # display scores with 4-digit float precision
         '{}\t{}'.format(k, '%.4g' % v if v is not None else 'None')
         for k, v in results.items()) + '\n')
+
+    if args.summary:
+        log.info('computes errors summary, writes to %s', args.summary)
+        with codecs.open(args.summary, 'w', encoding='utf8') as fsummary:
+            fsummary.write(json.dumps(summary(text, gold), indent=4))
 
 
 if __name__ == '__main__':

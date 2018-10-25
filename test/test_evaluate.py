@@ -5,7 +5,9 @@
 import numpy as np
 import pytest
 
-from wordseg.evaluate import read_data, evaluate, compute_class_labels
+from wordseg.separator import Separator
+from wordseg.evaluate import (
+    read_data, evaluate, compute_class_labels, SegmentationSummary, summary)
 
 
 def test_read_data():
@@ -216,7 +218,7 @@ def test_boundary_3():
     (['hello world', 'python'], ['h el lo wo r ld', 'py th on'],
      [0, 0, 0, 1, 1, 1, 2, 2, 2]),
     ([], [], [])])
-def test_compute_class_labels_good(words, units, expected):
+def test_compute_class_labels_correct(words, units, expected):
     assert np.array_equal(
         compute_class_labels(words, units),
         np.asarray(expected))
@@ -231,3 +233,134 @@ def test_compute_class_labels_good(words, units, expected):
 def test_compute_class_labels_bad(words, units):
     with pytest.raises(ValueError):
         compute_class_labels(words, units)
+
+
+@pytest.mark.parametrize('gold, text, expected', [
+    (['baby'], ['baby'], (['baby'], ['baby'])),
+    (['baby', 'go'], ['baby', 'go'], (['baby'], ['baby'])),
+    (['baby'], ['bab', 'y'], (['bab', 'y'], ['baby'])),
+    (['bab', 'y'], ['baby'], (['baby'], ['bab', 'y'])),
+    (['baby', 'go'], ['bab', 'y', 'go'], (['bab', 'y'], ['baby'])),
+    ('baby going home'.split(), 'ba bygoi ng home'.split(),
+     (['ba', 'bygoi', 'ng'], ['baby', 'going'])),
+    (['baby', 'going', 'home'], ['babygoinghome'],
+     (['babygoinghome'], ['baby', 'going', 'home']))
+])
+def test_summary_chunks(gold, text, expected):
+    assert SegmentationSummary._compute_chunk(text, gold) == expected
+
+
+def test_summary_mismatch():
+    summary = SegmentationSummary()
+
+    with pytest.raises(ValueError):
+        summary.summarize_utterance('a', 'b')
+
+    with pytest.raises(ValueError):
+        summary.summarize_utterance('a', 'ab')
+
+    with pytest.raises(ValueError):
+        summary.summarize_utterance('ba', 'ab')
+
+    summary.summarize_utterance('ab', 'a b')
+
+
+@pytest.mark.parametrize(
+    'text, over', [
+        ('baby going home', set()),
+        ('bab y going home', {'baby'}),
+        ('ba b y going home', {'baby'}),
+        ('ba by go ing home', {'baby', 'going'}),
+        ('baby go ing home', {'going'}),
+        ('baby goin g home', {'going'}),
+        ('baby going hom e', {'home'}),
+        ('baby going h o me', {'home'}),
+        ('ba b y going hom e', {'baby', 'home'}),
+        ('ba b y go i ng hom e', {'baby', 'going', 'home'})])
+def test_summary_over(text, over):
+    gold = 'baby going home'
+    assert gold.replace(' ', '') == text.replace(' ', '')
+
+    summary = SegmentationSummary()
+    summary.summarize_utterance(text, gold)
+
+    assert set(summary.over_segmentation.keys()) == over
+    assert set(summary.correct_segmentation.keys()) == set(
+        gold.split()) - over
+    assert not summary.under_segmentation.keys()
+    assert not summary.mis_segmentation.keys()
+
+
+@pytest.mark.parametrize(
+    'text, under', [
+        ('baby going home', set()),
+        ('babygoing home', {'baby', 'going'}),
+        ('babygoinghome', {'baby', 'going', 'home'}),
+        ('baby goinghome', {'going', 'home'})])
+def test_summary_under(text, under):
+    gold = 'baby going home'
+    assert gold.replace(' ', '') == text.replace(' ', '')
+
+    summary = SegmentationSummary()
+    summary.summarize_utterance(text, gold)
+
+    assert set(summary.under_segmentation.keys()) == under
+    assert set(summary.correct_segmentation.keys()) == set(
+        gold.split()) - under
+    assert not summary.over_segmentation.keys()
+    assert not summary.mis_segmentation.keys()
+
+
+@pytest.mark.parametrize(
+    'text, mis', [
+        ('bab ygoing home', {'baby', 'going'}),
+        ('ba bygoi ng home', {'baby', 'going'}),
+        ('baby goin ghom e', {'going', 'home'}),
+        ('baby goin ghome', {'going', 'home'}),
+        ('baby goingh ome', {'going', 'home'}),
+        ('babygoingh ome', {'baby', 'going', 'home'}),
+        ('babygo inghome', {'baby', 'going', 'home'}),
+        ('bab ygoinghome', {'baby', 'going', 'home'})])
+def test_summary_mis(text, mis):
+    gold = 'baby going home'
+    assert gold.replace(' ', '') == text.replace(' ', '')
+
+    summary = SegmentationSummary()
+    summary.summarize_utterance(text, gold)
+
+    assert set(summary.mis_segmentation.keys()) == mis
+    assert set(summary.correct_segmentation.keys()) == set(
+        gold.split()) - mis
+    assert not summary.over_segmentation.keys()
+    assert not summary.under_segmentation.keys()
+
+
+@pytest.mark.parametrize(
+    'text, under, over, mis, good', [
+        ('ba b y goinghome', {'going', 'home'}, {'baby'}, set(), set()),
+        ('ba by goin ghom e', set(), {'baby'},  {'going', 'home'}, set()),
+        ('baby goin ghom e', set(), set(),  {'going', 'home'}, {'baby'})
+        ])
+def test_summary_mixed(text, under, over, mis, good):
+    gold = 'baby going home'
+
+    s = SegmentationSummary()
+    s.summarize_utterance(text, gold)
+
+    assert set(s.under_segmentation.keys()) == under
+    assert set(s.over_segmentation.keys()) == over
+    assert set(s.correct_segmentation.keys()) == good
+    assert set(s.mis_segmentation.keys()) == mis
+
+
+def test_summary_perfect(gold):
+    d = summary(gold, gold)
+    sep = Separator(phone=None, syllable=None, word=' ')
+    nwords = sum(len(sep.tokenize(utt, level='word')) for utt in gold)
+
+    # all is in correct
+    for category in ('under', 'over', 'mis'):
+        assert not d[category]
+
+    # expected number of words in correct
+    assert sum(d['correct'].values()) == nwords
