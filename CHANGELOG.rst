@@ -2,18 +2,29 @@
    Version numbers follow the `semantic versioning
    <https://semver.org/>`_ principles.
 
-not yet released
-----------------
 
-* New evaluation metric in **wordseg-eval**: adjusted rand index. This
-  requires the prepared text to be computed (whereas the other metrics
-  only rely on segmented and gold texts), so it is implemented as an
-  option ``--rand-index <prep-file>`` in **wordseg-eval**.
+wordseg-0.7.1
+-------------
 
-  An easiest implementation would have been to change the
-  specifications of **wordseg-eval** to take the prepared text instead
-  of the gold one, but we prefered the optional ``--rand-index``
-  for backward compatibility.
+* New evaluation metrics in **wordseg-eval**:
+
+  * adjusted rand index:
+
+    This requires the prepared text to be computed (whereas the other
+    metrics only rely on segmented and gold texts), so it is
+    implemented as an option ``--rand-index <prep-file>`` in
+    **wordseg-eval**.
+
+    An easiest implementation would have been to change the
+    specifications of **wordseg-eval** to take the prepared text
+    instead of the gold one, but we prefered the optional
+    ``--rand-index`` for backward compatibility.
+
+  * segmentation errors summary:
+
+    Detailed report of segmentation errors, may be undersegmentation,
+    oversegmentation or missegmentation. Implemented as the option
+    ``--summary <json-file>`` in **wordseg-eval**.
 
 * In **wordseg-dibs**, renamed *baseline* algorithm to *gold*, so as
   to avoid confusion with *wordseg-baseline*. See #48.
