@@ -20,14 +20,14 @@
 import datetime
 import sys
 
-import mock
+try:
+    import sklearn.metrics.cluster
+except ImportError:
+    import mock
+    sys.modules['sklearn.metrics.cluster'] = mock.MagicMock()
+
 
 sys.path.insert(0, '${CMAKE_CURRENT_SOURCE_DIR}')
-
-try:
-    import sklearn
-except ImportError:
-    sys.modules['sklearn'] = mock.MagicMock()
 
 html_theme = "sphinx_rtd_theme"
 # html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
