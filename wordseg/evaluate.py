@@ -4,8 +4,9 @@ Evaluates a segmented text against it's gold version: outputs the
 precision, recall and f-score at type, token and boundary levels. We
 distinguish whether utterance edges (begin and end of the utterance)
 are counted towards the boundary performance or not. The evaluation
-optionally computes the adjusted rank index but requires the prepared
-text to be provided.
+optionally computes the adjusted rank index (requires the prepared
+text to be provided) and a summary of segmentation errors (requires an
+output JSON file to be specified).
 
 """
 
@@ -625,14 +626,14 @@ def _add_arguments(parser):
         help='gold file to evaluate the input data on')
     parser.add_argument(
         '-r', '--rand-index', metavar='<prep-file>', default=None,
-        help='Computes the adjusted rand index, requires the prepared '
+        help='computes the adjusted rand index, requires the prepared '
         'file as outputed by wordseg-prep (i.e. the atomic units, phonemes '
         'or syllables, separated by spaces)')
     parser.add_argument(
         '-s', '--summary', metavar='<summary-file>', default=None,
-        help='Computes a summary of the segmentation errors as '
+        help='computes a summary of the segmentation errors as '
         'over/under/mis segmentation of word types. Write the result in '
-        '<summary-file> in a JSON format. <summuray-file> should have the '
+        '<summary-file> in a JSON format. <summary-file> should have the '
         '.json extension but this is not required')
 
 
