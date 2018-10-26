@@ -139,33 +139,48 @@ function schedule_job
     cat <<EOF > $job_script
 #!/bin/bash
 
-tstart=\$(date +%s.%N)
+# compute the total time ellapsed in the pipeline and display it as
+# the last line of the log file
+tstart=$(date +%s)
+trap 'echo -n "Total time: " >> log.txt && \\
+      date -u -d "0 \$(date +%s) sec - \$tstart sec" +"%H:%M:%S" >> log.txt' EXIT
 
 cd $job_dir
 
-echo "Extract statistics" >> log.txt
+echo "extract statistics" >> log.txt
 wordseg-stats -v --json $separator -o stats.json tags.txt 2>> log.txt
-
-echo "Generate input and gold from tags" >> log.txt
-wordseg-prep -v -u $unit $separator -o input.txt -g gold.txt tags.txt 2>> log.txt
-
-echo "Start segmentation, command is: $job_cmd" >> log.txt
-$job_cmd -o output.txt input.txt $training_file 2>> log.txt
-
-if [ \$? -eq 0 ]
+if ! [ $? -eq 0 ]
 then
-    echo "Segmentation done!" >> log.txt
-
-    echo "Start evaluation" >> log.txt
-    wordseg-eval -v -r input.txt -s eval_summary.json \\
-                 -o eval.txt output.txt gold.txt 2>> log.txt
-    echo "Evaluation done!" >> log.txt
-else
-    echo "Segmentation failed" >> log.txt
+    echo "ERROR: wordseg-stats failed" >> log.txt
+    exit 1
 fi
 
-tend=\$(date +%s.%N)
-echo "Total time (s): \$(echo "\$tend - \$tstart" | bc)" >> log.txt
+echo "generate input and gold from tags" >> log.txt
+wordseg-prep -v -u $unit $separator -o input.txt -g gold.txt tags.txt 2>> log.txt
+if ! [ $? -eq 0 ]
+then
+    echo "ERROR: wordseg-prep failed" >> log.txt
+    exit 1
+fi
+
+echo "start segmentation, command is: $job_cmd" >> log.txt
+$job_cmd -o output.txt input.txt $training_file 2>> log.txt
+if ! [ $? -eq 0 ]
+then
+    echo "ERROR: segmentation failed" >> log.txt
+    exit 1
+fi
+
+echo "start evaluation" >> log.txt
+wordseg-eval -v -r input.txt -s eval_summary.json -o eval.txt output.txt gold.txt 2>> log.txt
+if ! [ $? -eq 0 ]
+then
+    echo "ERROR: wordseg-eval failed" >> log.txt
+    exit 1
+fi
+
+echo "evaluation done!" >> log.txt
+exit 0
 
 EOF
 
