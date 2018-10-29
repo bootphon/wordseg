@@ -206,10 +206,10 @@ def _setup_seed(args, nruns):
     for n in range(nruns):
         if '-r' in args:
             # extract the seed from the arguments string
-            seed = int(re.sub(r'^.*\-r *([0-9]+).*$', '\g<1>', args))
+            seed = int(re.sub(r'^.*\-r *([0-9]+).*$', r'\g<1>', args))
 
             # setup new seed for each run
-            new[n] = re.sub('\-r *([0-9]+)', '-r {}'.format(seed + n), args)
+            new[n] = re.sub(r'\-r *([0-9]+)', '-r {}'.format(seed + n), args)
         else:
             new[n] = args + ' -r {}'.format(random.randint(0, 2**16))
     return new
@@ -223,7 +223,7 @@ def _setup_seed(args, nruns):
 def get_grammar_files():
     """Returns a list of example grammar files bundled with wordseg
 
-    Grammar files have the \*.lt extension and are stored in the
+    Grammar files have the .lt extension and are stored in the
     directory `wordseg/data/ag`.
 
     Raises
@@ -656,9 +656,9 @@ def segment(train_text, grammar_file=None, category='Colloc0',
     # setup ignore_first_parses and make sure ignore_first_parses <=
     # niterations
     if '-n' in args:
-        nparses = int(re.sub(r'^.*\-n *([0-9]+).*$', '\g<1>', args))
+        nparses = int(re.sub(r'^.*\-n *([0-9]+).*$', r'\g<1>', args))
         if '-x' in args:
-            interval = int(re.sub(r'^.*\-x *([0-9]+).*$', '\g<1>', args))
+            interval = int(re.sub(r'^.*\-x *([0-9]+).*$', r'\g<1>', args))
             nparses = int(nparses / interval)
         nparses += 1  # include the initial one (independant of iterations)
     else:

@@ -11,8 +11,10 @@ not yet released
     precision, indicates to try recompile with quadruple precision
     instead.
 
-  * optionnally save the used grammar to a file using the option
+  * optionally save the used grammar to a file using the option
     ``--save-grammar-to <grammar-file>``.
+
+  * removed warnings with regular expressions on python-3.7.
 
 * in cluster tools: improved duration and error reporting.
 
