@@ -34,9 +34,9 @@ import threading
 from wordseg import utils
 
 
-#-------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 #  Adaptor Grammar arguments
-#-------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 
 AG_ARGUMENTS = [
@@ -215,9 +215,9 @@ def _setup_seed(args, nruns):
     return new
 
 
-#-------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 #  Grammar files and format
-#-------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 
 def get_grammar_files():
@@ -288,11 +288,13 @@ def check_grammar(grammar_file, category):
     """
     # make sure the grammar file exists
     if not os.path.isfile(grammar_file):
-        raise RuntimeError('grammar file not found: {}'.format(grammar_file))
+        raise RuntimeError(
+            'grammar file not found: {}'.format(grammar_file))
 
     # make sure the file is readable
     if not os.access(grammar_file, os.R_OK):
-        raise RuntimeError('grammar file not readable: {}'.format(grammar_file))
+        raise RuntimeError(
+            'grammar file not readable: {}'.format(grammar_file))
 
     # make sure the segment category is valid
     if not is_parent_in_grammar(grammar_file, category):
@@ -303,9 +305,9 @@ def check_grammar(grammar_file, category):
     return True
 
 
-#-------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 #  Wrapper on AG C++ program
-#-------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 
 def _segment_single(parse_counter, train_text, grammar_file,
@@ -468,7 +470,7 @@ def _segment_single(parse_counter, train_text, grammar_file,
         shutil.rmtree(temdir)
 
 
-#-------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 #  Postprocessing
 #
 # The parse trees outputed by AG need further postprocessing to
@@ -476,7 +478,7 @@ def _segment_single(parse_counter, train_text, grammar_file,
 # Treebank format). The following functions extract words from trees
 # and count the most frequent segmentation for each utterance.
 #
-#-------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 
 class ParseCounter(object):
@@ -505,8 +507,8 @@ class ParseCounter(object):
 def yield_parses(lines, ignore_firsts=0):
     """Yields parse trees, ignoring the first ones
 
-    In the raw output of AG the parse , this function yields the successive tress, ignoring the
-    first ones.
+    In the raw output of AG the parse , this function yields the
+    successive tress, ignoring the first ones.
 
     Parameters
     ----------
@@ -565,9 +567,9 @@ def postprocess(parse_counter, output_file, ignore_first_parses, log):
             nwarnings, parse_counter.nparses)
 
 
-#-------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 #  Segment function
-#-------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 
 def segment(train_text, grammar_file=None, category='Colloc0',
@@ -630,7 +632,7 @@ def segment(train_text, grammar_file=None, category='Colloc0',
     # force the train text from sequence to list
     if not isinstance(train_text, list):
         train_text = list(train_text)
-    nutts =  len(train_text)
+    nutts = len(train_text)
     log.info('train data: %s utterances loaded', nutts)
 
     # if any, force the test text from sequence to list
@@ -717,9 +719,9 @@ def segment(train_text, grammar_file=None, category='Colloc0',
         return parse_counter.most_common()
 
 
-#-------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 #  Command line arguments
-#-------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 
 def _add_arguments(parser):
@@ -761,7 +763,8 @@ def _add_arguments(parser):
 
     group.add_argument(
         '--tempdir', metavar='<directory>', default=tempfile.gettempdir(),
-        help='directory where to store temporary data, default is %(default)s.')
+        help=('directory where to store temporary data, '
+              'default is %(default)s.'))
 
     group = parser.add_argument_group('algorithm options')
     for arg in AG_ARGUMENTS:
