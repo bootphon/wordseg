@@ -317,9 +317,18 @@ F gibbs_estimate(pycfg_type& g, const Sss& trains,
 	std::cerr << ", tprob = " << tprob;
 
       if (tprob <= 0)
-	std::cerr << "\n## " << HERE << " Error in py-cfg::gibbs_estimate(), tprob = " << tprob
-		  << ", trains[" << *it << "] = " << trains[*it] << " failed to parse." << std::endl
-      		  << exit_failure;
+      {
+          std::cerr << "\n## " << HERE << " Error in py-cfg::gibbs_estimate(), tprob = "
+                    << tprob
+                    << ", trains[" << *it << "] = " << trains[*it]
+                    << " failed to parse." << std::endl;
+      #ifndef QUADPREC
+          std::cerr << "ERROR probability falls to 0 with double precision, "
+                    << "retry with quadruple precision: "
+                    << "recompile with the flag 'cmake -DAG_QUADRUPLE=ON'" << std::endl;
+      #endif
+          std::cerr << exit_failure;
+      }
 
       tps[*it] = p.random_tree();
 
