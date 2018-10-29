@@ -5,9 +5,14 @@
 not yet released
 ----------------
 
-* in **wordseg-ag**, imporved error message: when tprob == 0 on double
-  precision, indicates to try recompile with quadruple precision
-  instead.
+* in **wordseg-ag**:
+
+  * improved error message: when tprob == 0 on double
+    precision, indicates to try recompile with quadruple precision
+    instead.
+
+  * optionnally save the used grammar to a file using the option
+    ``--save-grammar-to <grammar-file>``.
 
 * in cluster tools: improved duration and error reporting.
 
