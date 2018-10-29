@@ -9,6 +9,8 @@ not yet released
   precision, indicates to try recompile with quadruple precision
   instead.
 
+* in cluster tools: improved duration and error reporting.
+
 
 wordseg-0.7.1
 -------------
