@@ -248,7 +248,7 @@ class UnicodeGenerator(object):
     def __call__(self):
         """Returns the next unicode character"""
         char = six.unichr(self.index)
-        while re.match('\s', char):
+        while re.match(r'\s', char):
             self.index += 1
             char = six.unichr(self.index)
         self.index += 1

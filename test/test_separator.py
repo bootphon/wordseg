@@ -107,7 +107,7 @@ def test_remove_re():
     assert s.remove('[ab]') == '[]'
 
     with pytest.raises(ValueError):
-        Separator('\[ab\]', None, None)
+        Separator(r'\[ab\]', None, None)
 
     with pytest.raises(ValueError):
         Separator(re.escape('[ab]'), None, None)

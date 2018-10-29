@@ -16,6 +16,9 @@ not yet released
 
   * removed warnings with regular expressions on python-3.7.
 
+* in **wordseg-dpseg**, removed a warning with regular expressions on
+  python-3.7.
+
 * in cluster tools: improved duration and error reporting.
 
 
