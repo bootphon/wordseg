@@ -3,9 +3,11 @@
 Evaluates a segmented text against it's gold version: outputs the
 precision, recall and f-score at type, token and boundary levels. We
 distinguish whether utterance edges (begin and end of the utterance)
-are counted towards the boundary performance or not. The evaluation
-optionally computes the adjusted rank index (requires the prepared
-text to be provided) and a summary of segmentation errors (requires an
+are counted towards the boundary performance or not.
+
+The evaluation optionally computes the adjusted rank index (requires
+the prepared text to be provided) and a summary of which word come to
+be correctly segmented, or else segmented incorrectly (requires an
 output JSON file to be specified).
 
 """
@@ -31,19 +33,24 @@ class TokenEvaluation(object):
         self.n_exactmatch = 0
 
     def precision(self):
+        """Returns token precision"""
         return float(self.correct) / self.test if self.test != 0 else None
 
     def recall(self):
+        """Returns token recall"""
         return float(self.correct) / self.gold if self.gold != 0 else None
 
     def fscore(self):
+        """Returns token fscore"""
         total = self.test + self.gold
         return float(2 * self.correct) / total if total != 0 else None
 
     def exact_match(self):
+        """Returns the number of exact matches"""
         return float(self.n_exactmatch) / self.n if self.n else None
 
     def update(self, test_set, gold_set):
+        """Update evaluation for a single utterance"""
         self.n += 1
 
         if test_set == gold_set:
@@ -57,6 +64,7 @@ class TokenEvaluation(object):
         self.correct += len(test_set & gold_set)
 
     def update_lists(self, test_sets, gold_sets):
+        """Update evaluation for a suite of utterances"""
         if len(test_sets) != len(gold_sets):
             raise ValueError(
                 '#words different in test and gold: {} != {}'
@@ -108,6 +116,7 @@ class BoundaryEvaluation(TokenEvaluation):
     """
     @staticmethod
     def get_boundary_positions(stringpos):
+        """Returns the positions of boundaries"""
         return [{idx for pair in line for idx in pair} for line in stringpos]
 
     def update_lists(self, text, gold):
@@ -185,7 +194,8 @@ def compute_class_labels(words, units):
     """Compute class labels to be used for cluster similarity measures
 
     Each word is considered a class, and each unit is mapped to the
-    word it belongs to.
+    word it belongs to. This function is used as a preprocessing step
+    for the Adjusted Rand Index.
 
     Parameters
     ----------
@@ -242,11 +252,11 @@ def compute_class_labels(words, units):
 
     # count the number of units in a word
     def _word_len(word, units):
-        l, w = 0, ''
+        index, w = 0, ''
         while w != word:
-            w += units[l]
-            l += 1
-        return l
+            w += units[index]
+            index += 1
+        return index
 
     # build the class labels
     class_labels = np.zeros((nunits,), dtype=np.int)
