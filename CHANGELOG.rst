@@ -5,6 +5,8 @@
 not yet released
 ----------------
 
+* in documentation: added citation information (use DOI from zenodo).
+
 * in **wordseg-ag**:
 
   * improved error message: when tprob == 0 on double
