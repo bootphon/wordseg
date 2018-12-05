@@ -46,7 +46,7 @@ install:
   - mkdir -p build
   - cd build
   - cmake ..
-  - make
+  - make -j2  # 2 cores in travis VMs
   - make install
   - cd ..
 
@@ -54,7 +54,7 @@ script:
   - pytest ./test -v
 
 after_success:
-  # build the documentation on readthedocs (only after 3.6 tests)
+  # build the documentation on readthedocs (only after 3.7 tests)
   - if [[ "$PYTHON_VERSION" == "3.7" ]]; then cd $TRAVIS_BUILD_DIR; fi
   - if [[ "$PYTHON_VERSION" == "3.7" ]]; then chmod +x .travis2readthedocs.sh; fi
   - if [[ "$PYTHON_VERSION" == "3.7" ]]; then ./.travis2readthedocs.sh; fi
