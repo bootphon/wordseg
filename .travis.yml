@@ -42,7 +42,7 @@ matrix:
 
 install:
   - pip install --upgrade pip
-  - pip install joblib pytest sphinx
+  - pip install joblib pytest pytest-cov sphinx codecov
   - mkdir -p build
   - cd build
   - cmake ..
@@ -51,9 +51,11 @@ install:
   - cd ..
 
 script:
-  - pytest ./test -v
+  - pytest --cov=./ ./test -v
 
 after_success:
+  # coverage report (only after 3.7 tests)
+  - if [[ "$PYTHON_VERSION" == "3.7" ]]; then codecov; fi
   # build the documentation on readthedocs (only after 3.7 tests)
   - if [[ "$PYTHON_VERSION" == "3.7" ]]; then cd $TRAVIS_BUILD_DIR; fi
   - if [[ "$PYTHON_VERSION" == "3.7" ]]; then chmod +x .travis2readthedocs.sh; fi
