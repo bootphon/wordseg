@@ -52,11 +52,10 @@ install:
   - cd ..
 
 script:
-  - pytest --cov=./ ./test -v
+  - pytest --cov=./wordseg ./test -v
+  - codecov
 
 after_success:
-  # coverage report (only after 3.7 tests)
-  - if [[ "$PYTHON_VERSION" == "3.7" ]]; then codecov; fi
   # build the documentation on readthedocs (only after 3.7 tests)
   - if [[ "$PYTHON_VERSION" == "3.7" ]]; then cd $TRAVIS_BUILD_DIR; fi
   - if [[ "$PYTHON_VERSION" == "3.7" ]]; then chmod +x .travis2readthedocs.sh; fi
