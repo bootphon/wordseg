@@ -13,3 +13,5 @@ test/.cache/*
 gold.txt
 prepared.txt
 stats.json
+.coverage*
+htmlcov/
