@@ -32,25 +32,38 @@ Welcome to the wordseg's documentation page
 
    **Citation information**
 
-    In order to cite the *wordseg* package in
-    your own work, please use the provided DOI. The following link
-    always resolve to the latest version:
-    https://doi.org/10.5281/zenodo.1101048. From the right panel of
-    that page, export the citation to the format of your choice. For
-    instance, *wordseg-0.7.1* is exported to BibTex as:
+    * In order to cite **wordseg** in your own work, please use the
+      following paper:
 
-    .. code-block:: none
+      .. code-block:: bibtex
 
-       @misc{mathieu_bernard_2018_1471532,
-         author       = {Mathieu Bernard and
-                         Alex Cristia and
-                         Andrew Caines},
-         title        = {bootphon/wordseg: wordseg-0.7.1},
-         month        = oct,
-         year         = 2018,
-         doi          = {10.5281/zenodo.1471532},
-         url          = {https://doi.org/10.5281/zenodo.1471532}
-       }
+         @article{bernard_brm_2019,
+           author = {Mathieu Bernard, Roland Thiolliere, Amanda
+             Saksida, Georgia R. Loukatou, Elin Larsen, Mark Johnson,
+             Laia Fibla Reixachs, Emmanuel Dupoux, Robert Daland, Xuan
+             Nga Cao, Alejandrina Cristia},
+           title = {WordSeg: Standardizing unsupervised word form
+             segmentation from text},
+           journal      = {Behavioral Research Methods},
+           year         = {2019, in press}
+         }
+
+    * To specifically cite the software, the following DOI always
+      resolve to the latest version:
+      https://doi.org/10.5281/zenodo.1101048. From the right panel of
+      that page, export the citation to the format of your choice. For
+      instance, *wordseg-0.7.1* is exported to BibTex as:
+
+      .. code-block:: bibtex
+
+         @misc{mathieu_bernard_2018_1471532,
+           author       = {Mathieu Bernard},
+           title        = {bootphon/wordseg: wordseg-0.7.1},
+           month        = oct,
+           year         = 2018,
+           doi          = {10.5281/zenodo.1471532},
+           url          = {https://doi.org/10.5281/zenodo.1471532}
+         }
 
 
 .. toctree::
