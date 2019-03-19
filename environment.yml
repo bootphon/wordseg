@@ -8,6 +8,7 @@ dependencies:
   - six
   # test
   - pytest
+  - pytest-cov
   # documentation
   - numpydoc
   - sphinx
