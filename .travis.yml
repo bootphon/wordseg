@@ -42,7 +42,7 @@ matrix:
 
 install:
   - pip install --upgrade pip
-  - if [[ "$PYTHON_VERSION" == "2.7" ]]; then pip install "scipy<1.2"; fi
+  # - if [[ "$PYTHON_VERSION" == "2.7" ]]; then pip install "scipy<1.2"; fi
   - pip install joblib pytest pytest-cov sphinx codecov
   - mkdir -p build
   - cd build
