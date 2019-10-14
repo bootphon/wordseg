@@ -7,7 +7,7 @@ dependencies:
   - scikit-learn
   - six
   # test
-  - pytest
+  - pytest>=5.0
   - pytest-cov
   # documentation
   - numpydoc

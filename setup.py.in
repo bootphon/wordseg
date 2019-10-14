@@ -58,7 +58,7 @@ def requires():
         'six',
         'joblib',
         'numpydoc',
-        'pytest',
+        'pytest>=5.0',
         'scikit-learn',
         'sphinx',
         'sphinx_rtd_theme']
