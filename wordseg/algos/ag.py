@@ -839,7 +839,7 @@ def _command_line_arguments(args):
         '{}{}'.format(k, ' ' + str(v) if k not in novalue_options else '')
         for k, v in ag_args.items())
 
-
+#inverse train and test text
 @utils.CatchExceptions
 def main():
     """Entry point of the 'wordseg-ag' command"""

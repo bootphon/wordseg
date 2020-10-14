@@ -424,7 +424,7 @@ def _add_arguments(parser):
         This option is not used in 'gold' segmentation type,
         must be in [0, 1]''')
 
-
+# dibs_summary is train_text
 @utils.CatchExceptions
 def main():
     """Entry point of the 'wordseg-dibs' command"""
