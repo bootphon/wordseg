@@ -34,7 +34,6 @@ def _threshold_relative(units, tps):
     cwords[-1].append(unit)
     return cwords
 
-
 def _threshold_absolute(units, tps):
     """Absolute threshold segmentation method"""
     last = units[0]
@@ -53,9 +52,34 @@ def _threshold_absolute(units, tps):
 
     return cwords
 
+#Add train_text
+def _train(train_units,dependency):
+    # compute and count all the unigrams and bigrams (two successive units)
+    unigrams = collections.Counter(train_units)
+    bigrams = collections.Counter(zip(train_units[0:-1], train_units[1:]))
 
-def segment(text, threshold='relative', dependency='ftp',
-            log=utils.null_logger()):
+    # compute the transitional probabilities accordoing to the given
+    # dependency measure
+    if dependency == 'ftp':
+        tps = {bigram: float(freq) / unigrams[bigram[0]]
+            for bigram, freq in bigrams.items()}
+    elif dependency == 'btp':
+        tps = {bigram: float(freq) / unigrams[bigram[1]]
+            for bigram, freq in bigrams.items()}
+    else:  # dependency == 'mi'
+        tps = {bigram: math.log(float(freq) / (
+            unigrams[bigram[0]] * unigrams[bigram[1]]), 2)
+            for bigram, freq in bigrams.items()}
+
+def _segment(test_unit,tps,threshold):
+# segment the input given the transition probalities
+    cwords = (_threshold_relative(test_unit, tps) if threshold == 'relative'
+            else _threshold_absolute(test_unit, tps))
+    segtext = ' '.join(''.join(c) for c in cwords)
+    return [utt.strip() for utt in re.sub(' +', ' ', segtext).split('UB')]
+
+def segment(text,train_text= None, threshold='relative', dependency='ftp',log=utils.null_logger()):
+    
     """Returns a word segmented version of `text` using the TP algorithm
 
     Parameters
@@ -63,7 +87,11 @@ def segment(text, threshold='relative', dependency='ftp',
     text : sequence
         A sequence of lines with syllable (or phoneme) boundaries
         marked by spaces and no word boundaries. Each line in the
-        sequence corresponds to a single and complete utterance.
+        sequence corresponds to a single and complete utterance, used for the test.
+    train_text : sequence
+        A sequence of lines with syllable (or phoneme) boundaries
+        marked by spaces and no word boundaries. Each line in the
+        sequence corresponds to a single and complete utterance, used or the training.
     threshold : str, optional
         Type of threshold to use, must be 'relative' or 'absolute'.
     dependency : str, optional
@@ -99,38 +127,20 @@ def segment(text, threshold='relative', dependency='ftp',
 
     log.info('running TP with %s threshold and %s dependency measure',
              threshold, dependency)
-
-    # join all the utterances together, seperated by ' UB '
-    units = [unit for unit in ' UB '.join(
+    
+    #calculate test_unit and train_unit
+    test_units = [unit for unit in ' UB '.join(
         line.strip() for line in text).split()]
+    train_units = [unit for unit in ' UB '.join(
+        line.strip() for line in train_text).split()]
 
-    # compute and count all the unigrams and bigrams (two successive units)
-    unigrams = collections.Counter(units)
-    bigrams = collections.Counter(zip(units[0:-1], units[1:]))
-
-    # compute the transitional probabilities accordoing to the given
-    # dependency measure
-    if dependency == 'ftp':
-        tps = {bigram: float(freq) / unigrams[bigram[0]]
-               for bigram, freq in bigrams.items()}
-    elif dependency == 'btp':
-        tps = {bigram: float(freq) / unigrams[bigram[1]]
-               for bigram, freq in bigrams.items()}
-    else:  # dependency == 'mi'
-        tps = {bigram: math.log(float(freq) / (
-            unigrams[bigram[0]] * unigrams[bigram[1]]), 2)
-               for bigram, freq in bigrams.items()}
-
-    # segment the input given the transition probalities
-    cwords = (_threshold_relative(units, tps) if threshold == 'relative'
-              else _threshold_absolute(units, tps))
-
-    # format the segment text for output (' UB ' -> '\n', remove
-    # multiple spaces)
-    segtext = ' '.join(''.join(c) for c in cwords)
-    return [utt.strip() for utt in re.sub(' +', ' ', segtext).split('UB')]
-
-
+    if train_text is None:
+        train_units = test_units
+    return _segment(test_units,_train(train_units,dependency),threshold)
+    """
+    else:
+        return _segment(test_units,_train(train_units,dependency),threshold)
+    """
 def _add_arguments(parser):
     """Add algorithm specific options to the parser"""
     group = parser.add_argument_group('algorithm parameters')
@@ -141,6 +151,12 @@ def _add_arguments(parser):
         transition probabilities. When absolute, the threshold is set
         to the mean transition probability over the entire text.
         Default is relative.''')
+
+    group.add_argument(
+        '-tt','text', type=str,
+        choices=['train_text', 'test_text'], defailt='text',
+        help='''Use just a text as a test_text if you don't want to use a train text.'''
+    )
 
     group1 = group.add_mutually_exclusive_group()
     group1.add_argument(
@@ -163,7 +179,8 @@ def _add_arguments(parser):
 def main():
     """Entry point of the 'wordseg-tp' command"""
     # command initialization
-    streamin, streamout, separator, log, args = utils.prepare_main(
+    #streamin is the test_text
+    train_text,streamin, streamout, separator, log, args = utils.prepare_main(
         name='wordseg-tp',
         description=__doc__,
         add_arguments=_add_arguments)
@@ -180,9 +197,9 @@ def main():
         else:  # 'backward'
             args.dependency = 'btp'
 
-    # segment the input text
+    # segment the input text with the train text
     text = segment(
-        streamin,
+        train_text,streamin,
         threshold=args.threshold,
         dependency=args.dependency,
         log=log)
