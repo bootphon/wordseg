@@ -80,13 +80,13 @@ def _segment(test_unit,tps,threshold):
     segtext = ' '.join(''.join(c) for c in cwords)
     return [utt.strip() for utt in re.sub(' +', ' ', segtext).split('UB')]
 
-def segment(text,train_text= None, threshold='relative', dependency='ftp',log=utils.null_logger()):
+def segment(test_text,train_text= None, threshold='relative', dependency='ftp',log=utils.null_logger()):
     
     """Returns a word segmented version of `text` using the TP algorithm
 
     Parameters
     ----------
-    text : sequence
+    test_text : sequence
         A sequence of lines with syllable (or phoneme) boundaries
         marked by spaces and no word boundaries. Each line in the
         sequence corresponds to a single and complete utterance, used for the test.
@@ -132,7 +132,7 @@ def segment(text,train_text= None, threshold='relative', dependency='ftp',log=ut
     
     #calculate test_unit and train_unit
     test_units = [unit for unit in ' UB '.join(
-        line.strip() for line in text).split()]
+        line.strip() for line in test_text).split()]
     
 
     if train_text is None:
@@ -182,7 +182,7 @@ def main():
     """Entry point of the 'wordseg-tp' command"""
     # command initialization
    
-    streamin, streamout, separator, log, args = utils.prepare_main(
+    streamin, streamout, _, log, args = utils.prepare_main(
         name='wordseg-tp',
         description=__doc__,
         add_arguments=_add_arguments)
@@ -199,17 +199,32 @@ def main():
         else:  # 'backward'
             args.dependency = 'btp'
 
-     # load thetrain text if any
+    # load the train text if any
     train_text = None
     if args.train_file is not None:
         if not os.path.isfile(args.train_file):
             raise RuntimeError(
                 'test file not found: {}'.format(args.train_file))
         train_text = codecs.open(args.train_file, 'r', encoding='utf8')
+    
+
+    #?check if test_text exist
+    """
+    test_text = None
+    if args.test_file is not None: #streamin
+        if not os.path.isfile(args.test_file):
+            raise RuntimeError(
+                'test file not found: {}'.format(args.test_file))
+        test_text = codecs.open(args.test_file, 'r', encoding='utf8')
+    """
+
+    # load train and test texts, ignore empty lines
+    train_text = (line for line in train_text if line)
+    test_text = (line for line in streamin if line)
 
     # segment the input text with the train text
     text = segment(
-        streamin,
+        test_text,
         train_text = train_text,
         threshold=args.threshold,
         dependency=args.dependency,

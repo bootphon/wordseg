@@ -1,5 +1,5 @@
-"""Diphone based segmentation algorithm
-    
+"""
+    Diphone based segmentation algorithm
     A DiBS model assigns, for each phrase-medial diphone, a value between
     0 and 1 inclusive (representing the probability the model assigns that
     there is a word-boundary there).
@@ -312,9 +312,8 @@ class LexicalSegmenter(AbstractSegmenter):
             else:
                 self.diphones[d] = num / denom
 
-#WARNING: trained_model is summary, test_text is text
 
-def segment(test_text, trained_model, type='phrasal', threshold=0.5, pwb=None,
+def segment(text, summary, type='phrasal', threshold=0.5, pwb=None,
             log=utils.null_logger()):
     """Segment a corpus from a trained DiBS model
 
@@ -323,12 +322,12 @@ def segment(test_text, trained_model, type='phrasal', threshold=0.5, pwb=None,
 
     Parameters
     ----------
-    test_text : sequence of str
+    text : sequence of str
         The input text to segment is a sequence (list or generator) of
         utterances. Each utterance is composed of space seprated
         tokens (can be phones or syllables).
-    trained_model : CorpusSummary
-        The trained DiBS model used for segmentation of `test_text`.
+    summary : CorpusSummary
+        The trained DiBS model used for segmentation of `text`.
     type : str, optional
         The type of DiBS segmenter to use, must be 'gold',
         'phrasal' or 'lexical'. Default is 'phrasal'.
@@ -369,8 +368,8 @@ def segment(test_text, trained_model, type='phrasal', threshold=0.5, pwb=None,
             .format(type))
 
     # init the segmenter with the trained model
-    segmenter = Segmenter(trained_model, pwb=pwb, threshold=threshold, log=log)
-    for utt in test_text:
+    segmenter = Segmenter(summary, pwb=pwb, threshold=threshold, log=log)
+    for utt in text:
         yield segmenter.segment(utt)
 
 
@@ -442,44 +441,39 @@ def main():
         word=args.word_separator)
 
     # ensure the train file exists
-    train_text = None
-    if args.train_file is not None:
-        if not os.path.isfile(args.train_file):
-            raise ValueError(
+    if not os.path.isfile(args.train_file):
+        raise ValueError(
                 'train file does not exist: {}'.format(args.train_file))
-        train_text = codecs.open(args.train_file, 'r', encoding='utf8')
 
     # load train and test texts, ignore empty lines
+    train_text = codecs.open(args.train_file, 'r', encoding='utf8')
     train_text = (line for line in train_text if line)
     test_text = (line for line in streamin if line)
 
     # train the model (learn diphone statistics)
-    #WARNING: trained_model := dibs_summary 
-
-    trained_model = CorpusSummary(
+    dibs_summary = CorpusSummary(
         train_text, separator=separator, level=args.unit, log=log)
 
     # segment the test text on the trained model
-    #WARNING: segmented is output
-    segmented = segment(
+    output = segment(
         test_text,
-        trained_model,#dibs_summary
+        dibs_summary,
         type=args.type,
         threshold=args.threshold,
         pwb=args.pboundary,
         log=log)
 
     # output the segmented text
-    streamout.write('\n'.join(segmented) + '\n')
+    streamout.write('\n'.join(output) + '\n')
 
     # save the computed diphones if required
     if args.diphones:
         log.info(
             'saving %s diphones to %s',
-            len(trained_model.diphones), args.diphones)
+            len(dibs_summary.diphones), args.diphones)
 
         output = ('{} {} {}'.format(v, k[0], k[1]) for k, v in sorted(
-            trained_model.diphones.items(),
+            dibs_summary.diphones.items(),
             key=operator.itemgetter(1), reverse=True))
 
         codecs.open(args.diphones, 'w', encoding='utf8').write(
