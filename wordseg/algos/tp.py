@@ -53,8 +53,9 @@ def _threshold_absolute(units, tps):
         last = unit
 
     return cwords
-
-#Add train_text
+# -----------------------------------------------------------------------------
+#  Postprocessing
+# -----------------------------------------------------------------------------
 def _train(train_units,dependency):
     # compute and count all the unigrams and bigrams (two successive units)
     unigrams = collections.Counter(train_units)
@@ -72,13 +73,19 @@ def _train(train_units,dependency):
         tps = {bigram: math.log(float(freq) / (
             unigrams[bigram[0]] * unigrams[bigram[1]]), 2)
             for bigram, freq in bigrams.items()}
+    return tps
 
 def _segment(test_unit,tps,threshold):
-# segment the input given the transition probalities
+
+    # segment the input given the transition probalities
     cwords = (_threshold_relative(test_unit, tps) if threshold == 'relative'
             else _threshold_absolute(test_unit, tps))
     segtext = ' '.join(''.join(c) for c in cwords)
     return [utt.strip() for utt in re.sub(' +', ' ', segtext).split('UB')]
+
+# -----------------------------------------------------------------------------
+#  Segment function
+# -----------------------------------------------------------------------------
 
 def segment(test_text,train_text= None, threshold='relative', dependency='ftp',log=utils.null_logger()):
     
@@ -142,7 +149,11 @@ def segment(test_text,train_text= None, threshold='relative', dependency='ftp',l
         line.strip() for line in train_text).split()]
         
     return _segment(test_units,_train(train_units,dependency),threshold)
-    
+
+# -----------------------------------------------------------------------------
+#  Command line arguments
+# -----------------------------------------------------------------------------
+   
 def _add_arguments(parser):
     """Add algorithm specific options to the parser"""
     group = parser.add_argument_group('algorithm parameters')

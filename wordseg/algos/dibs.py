@@ -312,6 +312,10 @@ class LexicalSegmenter(AbstractSegmenter):
             else:
                 self.diphones[d] = num / denom
 
+# -----------------------------------------------------------------------------
+#  Segment function
+# -----------------------------------------------------------------------------
+
 #WARNING: trained_model is summary, test_text is text
 
 def segment(test_text, trained_model, type='phrasal', threshold=0.5, pwb=None,
@@ -373,7 +377,10 @@ def segment(test_text, trained_model, type='phrasal', threshold=0.5, pwb=None,
     for utt in test_text:
         yield segmenter.segment(utt)
 
-
+# -----------------------------------------------------------------------------
+#  Command line arguments
+# -----------------------------------------------------------------------------
+   
 def _add_arguments(parser):
     """Add Dibs command specific options to the `parser`"""
     parser.add_argument(
@@ -455,7 +462,9 @@ def main():
 
     # train the model (learn diphone statistics)
     #WARNING: trained_model := dibs_summary 
-
+    #{if non give test_txt}
+    if train_text is None:
+        train_text = test_text
     trained_model = CorpusSummary(
         train_text, separator=separator, level=args.unit, log=log)
 

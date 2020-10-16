@@ -61,7 +61,7 @@ def test_replicate(datadir):
     _prepared = prepare(_tags, separator=sep)
     _gold = gold(_tags, separator=sep)
 
-    segmented = tp.segment(_prepared)
+    segmented = tp.segment(_prepared)#add the train_text
     score = evaluate(segmented, _gold)
 
     # we obtained that score from the dibs version in CDSWordSeg
@@ -81,3 +81,9 @@ def test_replicate(datadir):
         'boundary_noedge_recall': 0.685}
 
     assert score == pytest.approx(expected, rel=1e-3)
+
+#
+"""
+def test_emptyline_in_train(tags):
+    tp.segment(#TBD)
+"""

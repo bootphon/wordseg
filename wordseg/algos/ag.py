@@ -311,7 +311,7 @@ def check_grammar(grammar_file, category):
 
 def _segment_single(parse_counter, train_text, grammar_file,
                     category, ignore_first_parses, args,
-                    test_text, tempdir=tempfile.gettempdir(),
+                    test_text=None, tempdir=tempfile.gettempdir(),
                     log_level=logging.ERROR, log_name='wordseg-ag'):
     """Executes a single run of the AG program and postprocessing
 
@@ -392,7 +392,7 @@ def _segment_single(parse_counter, train_text, grammar_file,
 
         #? setup the test text as well or train text?
         if train_text is None:
-            train_file = test_file
+            train_text = test_text
         else:
             train_text = '\n'.join(utt.strip() for utt in train_text) + '\n'
             train_file = os.path.join(temdir, 'test.ylt')  #?
@@ -573,8 +573,8 @@ def postprocess(parse_counter, output_file, ignore_first_parses, log):
 # -----------------------------------------------------------------------------
 
 
-def segment(train_text, grammar_file=None, category='Colloc0',
-            args=DEFAULT_ARGS, test_text=None,
+def segment(train_text = None, grammar_file=None, category='Colloc0',
+            args=DEFAULT_ARGS, test_text,
             save_grammar_to=None, ignore_first_parses=0,
             nruns=8, njobs=1, tempdir=tempfile.gettempdir(),
             log=utils.null_logger()):
@@ -636,15 +636,14 @@ def segment(train_text, grammar_file=None, category='Colloc0',
     """
     t1 = datetime.datetime.now()
 
-    """
+    
     if train_text is None:
         train_text = test_text
     # force the train text from sequence to list
-    else:"""
-
-    if not isinstance(train_text, list):
-        train_text = list(train_text)
-        nutts = len(train_text)
+    else:
+        if not isinstance(train_text, list):
+         train_text = list(train_text)
+         nutts = len(train_text)
     log.info('train data: %s utterances loaded', nutts)
 
     #? if any, force the test text from sequence to list
@@ -714,7 +713,7 @@ def segment(train_text, grammar_file=None, category='Colloc0',
                 n_jobs=njobs, backend="threading", verbose=0)(
                     joblib.delayed(_segment_single)(
                         parse_counter,
-                        train_texts,
+                        train_text=train_text,#train_texts!
                         grammar_file,
                         category,
                         ignore_first_parses,
@@ -900,6 +899,10 @@ def main():
     train_text = (line for line in train_text if line)
     test_text = (line for line in test_text if line) #streamin
 
+    # if train text is None
+    if train_text is None :
+        train_text = test_text
+    
     # call the AG algorithm
     segmented = segment(
         train_text=train_text,#streamin
