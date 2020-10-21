@@ -32,7 +32,7 @@ def test_basic(prep, tags, type, threshold, pwb):
 
 @pytest.mark.parametrize('level', ['phone', 'syllable'])
 def test_phone_sep(level):
-    text = ['hh_ih_r_;eword ',
+    test_text = ['hh_ih_r_;eword ',
             'dh_eh_r_;eword w_iy_;eword g_ow_;eword ']
 
     sep = Separator(
@@ -40,7 +40,7 @@ def test_phone_sep(level):
         syllable='_' if level == 'syllable' else None,
         word=';eword ')
 
-    model = dibs.CorpusSummary(text, separator=sep, level=level)
+    model = dibs.CorpusSummary(test_text, separator=sep, level=level)
     assert model.summary == {'nlines': 2, 'nwords': 4, 'nphones': 10}
 
 
@@ -49,12 +49,12 @@ def test_bad_train(prep):
     with pytest.raises(ValueError):
         dibs.CorpusSummary(prep)
 
-
+#train_text is None?
 def test_emptyline_in_train(tags):
     # empty lines are ignored in train file
     dibs.CorpusSummary([''] + tags)
 
-
+#train_text is not None? from file!
 def test_replicate_cdswordseg(datadir):
     sep = Separator()
 
