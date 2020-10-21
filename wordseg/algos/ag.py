@@ -384,19 +384,17 @@ def _segment_single(parse_counter, train_text, grammar_file,
         # are copying train and test files for each run, this is
         # useless (maybe expose train_file and test_file as arguments
         # instead of train_text / test_text?).
-
-        #? on garde
         train_text = '\n'.join(utt.strip() for utt in train_text) + '\n'
         train_file = os.path.join(temdir, 'train.ylt')
         codecs.open(train_file, 'w', encoding='utf8').write(train_text)
 
-        #? setup the test text as well or train text?
-        if train_text is None:
-            train_text = test_text
+        # setup the test text as well
+        if test_text is None:
+            test_file = train_file
         else:
-            train_text = '\n'.join(utt.strip() for utt in train_text) + '\n'
-            train_file = os.path.join(temdir, 'test.ylt')  #?
-            codecs.open(train_file, 'w', encoding='utf8').write(train_text)
+            test_text = '\n'.join(utt.strip() for utt in test_text) + '\n'
+            test_file = os.path.join(temdir, 'test.ylt')
+            codecs.open(test_file, 'w', encoding='utf8').write(test_text)
 
         # create a file to store output (compressed PTB-format parse trees)
         output_file = os.path.join(temdir, 'output.gz')
@@ -573,9 +571,8 @@ def postprocess(parse_counter, output_file, ignore_first_parses, log):
 # -----------------------------------------------------------------------------
 
 
-def segment(train_text = None, grammar_file=None, category='Colloc0',
-            args=DEFAULT_ARGS, test_text,
-            save_grammar_to=None, ignore_first_parses=0,
+def segment(text, train_text=None, grammar_file=None, category='Colloc0',
+            args=DEFAULT_ARGS, save_grammar_to=None, ignore_first_parses=0,
             nruns=8, njobs=1, tempdir=tempfile.gettempdir(),
             log=utils.null_logger()):
     """Segment a text using the Adaptor Grammar algorithm
@@ -585,9 +582,12 @@ def segment(train_text = None, grammar_file=None, category='Colloc0',
 
     Parameters
     ----------
-    train_text : sequence
-        The list of utterances to train the model on, and to segment
-        if `test_text` is None.
+    text : sequence of str
+        The list of utterances to segment using the model
+        learned from `train_text`.
+    train_text : sequence, optional
+        The list of utterances to train the model on. If None train the model
+        directly on `text`.
     grammar_file : str, optional
         The path to the grammar file to use for segmentation. If not
         specified, a Colloc0 grammar is generated from the input text.
@@ -600,9 +600,6 @@ def segment(train_text = None, grammar_file=None, category='Colloc0',
         Command line options to run the AG program with, use
         'wordseg-ag --help' to have a complete list of available
         options
-    test_text : sequence, optional
-        If not None, the list of utterances to segment using the model
-        learned from `text`
     save_grammar_to : str, optional
         If defined, this is an output file where to save the grammar
         ussed for segmentation. This is usefull to keep trace of the
@@ -636,24 +633,22 @@ def segment(train_text = None, grammar_file=None, category='Colloc0',
     """
     t1 = datetime.datetime.now()
 
-    
+    # if any, force the test text from sequence to list
+    test_text = text
+    if not isinstance(test_text, list):
+        test_text = list(test_text)
+    nutts = len(test_text)
+    log.info('test data: %s utterances loaded', nutts)
+
     if train_text is None:
         train_text = test_text
-    # force the train text from sequence to list
+        log.info('not train data provided, will train model on test data')
     else:
+        # force the train text from sequence to list
         if not isinstance(train_text, list):
-         train_text = list(train_text)
-         nutts = len(train_text)
+            train_text = list(train_text)
+            nutts = len(train_text)
     log.info('train data: %s utterances loaded', nutts)
-
-    #? if any, force the test text from sequence to list
-    if test_text is not None:
-        if not isinstance(test_text, list):
-            test_text = list(test_text)
-            nutts = len(test_text)
-        log.info('test data: %s utterances loaded', nutts)
-    else:
-        log.info('no test data provided, segmentation on train data')
 
     # display the AG algorithm parameters
     log.info('parameters are: "%s"', args)
@@ -713,12 +708,12 @@ def segment(train_text = None, grammar_file=None, category='Colloc0',
                 n_jobs=njobs, backend="threading", verbose=0)(
                     joblib.delayed(_segment_single)(
                         parse_counter,
-                        train_text=train_text,#train_texts!
+                        train_text,
                         grammar_file,
                         category,
                         ignore_first_parses,
                         args[n],
-                        test_text,
+                        test_text=test_text,
                         log_level=log.getEffectiveLevel(),
                         tempdir=tempdir,
                         log_name='wordseg-ag - run {}'.format(n + 1))
@@ -752,8 +747,6 @@ def _add_arguments(parser):
     #           'for example configuration files see {}'.format(
     #               os.path.dirname(utils.get_config_files('ag')[0]))))
 
-
-
     parser.add_argument(
         '--nruns', type=int, default=8, metavar='<int>',
         help=('number of runs to execute and output parses to collapse. '
@@ -771,17 +764,12 @@ def _add_arguments(parser):
               'default is %(default)s.'))
 
     group = parser.add_argument_group('grammar arguments')
-    
-    """
-    group = parser.add_argument_group('training parameters')
-    separator = Separator()
-    """
 
-    group.add_argument(
-        'train_file', metavar='<train-file>', type=str,
-        help='Dibs requires a little train corpus to compute some statistics, '
-        'must be in phonologized from (NOT in prepared form)')
 
+    # group.add_argument(
+    #     'train_file', metavar='<train-file>', type=str,
+    #     help='Dibs requires a little train corpus to compute some statistics, '
+    #     'must be in phonologized from (NOT in prepared form)')
 
     group.add_argument(
         '--grammar', metavar='<grammar-file>', default=None,
@@ -858,7 +846,7 @@ def _command_line_arguments(args):
         '{}{}'.format(k, ' ' + str(v) if k not in novalue_options else '')
         for k, v in ag_args.items())
 
-#inverse train and test text
+
 @utils.CatchExceptions
 def main():
     """Entry point of the 'wordseg-ag' command"""
@@ -871,45 +859,22 @@ def main():
     # build the AG command line (C++ side) from the parsed arguments
     # (Python side)
     cmd_args = _command_line_arguments(args)
- 
-    # setup the separator from parsed arguments
-    """ 
-        separator = Separator(
-        phone=args.phone_separator,
-        syllable=args.syllable_separator,
-        word=args.word_separator)    
-    """
-    # check that the train file exists
+
+    # loads the train text if any
     train_text = None
-    if args.train_file is not None:
+    if args.train_file:
         if not os.path.isfile(args.train_file):
             raise ValueError(
                 'train file does not exist: {}'.format(args.train_file))
         train_text = codecs.open(args.train_file, 'r', encoding='utf8')
 
-    # check if the test text exists
-    test_text = None
-    if args.test_file is not None:
-        if not os.path.isfile(args.test_file):
-            raise RuntimeError(
-                'test file not found: {}'.format(args.test_file))
-        test_text = codecs.open(args.test_file, 'r', encoding='utf8')#test_file or streamin
-
-    # load train and test texts, ignore empty lines
-    train_text = (line for line in train_text if line)
-    test_text = (line for line in test_text if line) #streamin
-
-    # if train text is None
-    if train_text is None :
-        train_text = test_text
-    
     # call the AG algorithm
     segmented = segment(
-        train_text=train_text,#streamin
-        args.grammar,
-        args.category,
+        streamin,
+        train_text=train_text,
+        grammar_file=args.grammar,
+        category=args.category,
         args=cmd_args,
-        test_text,
         save_grammar_to=args.save_grammar_to,
         ignore_first_parses=args.ignore_first_parses,
         nruns=args.nruns,
