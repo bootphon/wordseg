@@ -155,7 +155,9 @@ def test_parse_counter(njobs):
 @pytest.mark.parametrize('grammar, level', GRAMMARS)
 def test_grammars(prep, grammar, level):
     grammar = os.path.join(GRAMMAR_DIR, grammar)
-    segmented = ag.segment(prep, grammar, level, TEST_ARGUMENTS, nruns=1)
+    segmented = ag.segment(
+        prep, grammar_file=grammar, category=level,
+        args=TEST_ARGUMENTS, nruns=1)
     assert len(segmented) == len(prep)
 
     segmented = ''.join(utt.replace(' ', '').strip() for utt in segmented)
@@ -187,15 +189,15 @@ def test_mark_jonhson(tmpdir, datadir):
         # -U "cat > {prs1}" -v {testeng2} -V "cat > {prs2}"'
         '-u {testeng1} '.format(
             testeng1=os.path.join(datadir, 'ag_testeng1.yld'),
-            testeng2=os.path.join(datadir, 'ag_testeng2.yld'),
+            # testeng2=os.path.join(datadir, 'ag_testeng2.yld'),
             trace=tmpdir.join('trace'), wlt=tmpdir.join('wlt'),
             prs=tmpdir.join('prs')
             # X1=tmpdir.join('X1'), X2=tmpdir.join('X2'),
             # prs1=tmpdir.join('prs1'), prs2=tmpdir.join('prs2')))
         ))
-    pc = ag.ParseCounter(len(text))
-    output = ag.segment(text, grammar_file, category='VP', args=arguments,
-                        ignore_first_parses=0, nruns=1)
+    # pc = ag.ParseCounter(len(text))
+    output = ag.segment(text, grammar_file=grammar_file, category='VP',
+                        args=arguments, ignore_first_parses=0, nruns=1)
     assert len(text) == len(output)
     for i in range(len(text)):
         assert text[i].strip().replace(' ', '') == output[i].replace(' ', '')

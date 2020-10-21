@@ -89,9 +89,9 @@ def test_replicate_cdswordseg(datadir):
 
     assert score == pytest.approx(expected, rel=1e-3)
 
-#Test with train_text is None
-def test_train_isNone():
-#Test with train_text=test_text
-def test_train_equal_test():
-#Test with train_text!=test_text
-def test_train_different():
+# #Test with train_text is None
+# def test_train_isNone():
+# #Test with train_text=test_text
+# def test_train_equal_test():
+# #Test with train_text!=test_text
+# def test_train_different():
