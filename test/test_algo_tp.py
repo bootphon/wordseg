@@ -82,8 +82,11 @@ def test_replicate(datadir):
 
     assert score == pytest.approx(expected, rel=1e-3)
 
-#
+
 """
 def test_emptyline_in_train(tags):
     tp.segment(#TBD)
 """
+#Test with train_text is None
+#Test with train_text=test_text
+#Test with train_text!=test_text
