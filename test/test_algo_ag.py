@@ -8,6 +8,46 @@ import pytest
 from wordseg.algos import ag
 
 
+# # this test is not stable enough, so it is commented out
+# def test_replicate_cdswordseg(datadir, tmpdir):
+#     sep = Separator()
+
+#     _tags = [utt for utt in codecs.open(
+#         os.path.join(datadir, 'tagged.txt'), 'r', encoding='utf8')
+#             if utt][:200]
+#     _prepared = list(prepare(_tags, separator=sep))
+#     _gold = gold(_tags, separator=sep)
+
+#     # build a colloc0 grammar from the list of phones
+#     phones = {p for utt in _prepared for p in utt.split(' ')}
+#     grammar = ag.build_colloc0_grammar(phones)
+#     grammar_file = tmpdir.join('grammar.lt')
+#     grammar_file.write_text(grammar, encoding='utf8')
+
+#     segmented = ag.segment(_prepared, str(grammar_file), 'Colloc0',
+#                            # log=utils.get_logger(level=logging.DEBUG),
+#                            args=test_arguments.replace('-n 10', '-n 2'),
+#                            nruns=1)
+#     score = evaluate(segmented, _gold)
+
+#     # we obtained those results from the AG version in CDSwordseg
+#     # (preparing with wordseg-prep and evaluating with wordseg-eval)
+#     expected = {
+#         'type_fscore': 0.2385,
+#         'type_precision': 0.2038,
+#         'type_recall': 0.2875,
+#         'token_fscore': 0.2642,
+#         'token_precision': 0.238,
+#         'token_recall': 0.2969,
+#         'boundary_fscore': 0.5361,
+#         'boundary_precision': 0.4754,
+#         'boundary_recall': 0.6145}
+
+#     # Because we use so few data and iterations,  the results are
+#     # not stable, we limit the precision to 0.3
+#     for k, v in score.items():
+#         assert expected[k] == pytest.approx(v, abs=0.3), k
+
 TEST_ARGUMENTS = (
     '-E -P -R -1 -n 10 -a 0.0001 -b 10000.0 '
     '-e 1.0 -f 1.0 -g 100.0 -h 0.01 -x 2')
@@ -162,42 +202,8 @@ def test_mark_jonhson(tmpdir, datadir):
 
 
 
-# # this test is not stable enough, so it is commented out
-# def test_replicate_cdswordseg(datadir, tmpdir):
-#     sep = Separator()
 
-#     _tags = [utt for utt in codecs.open(
-#         os.path.join(datadir, 'tagged.txt'), 'r', encoding='utf8')
-#             if utt][:200]
-#     _prepared = list(prepare(_tags, separator=sep))
-#     _gold = gold(_tags, separator=sep)
 
-#     # build a colloc0 grammar from the list of phones
-#     phones = {p for utt in _prepared for p in utt.split(' ')}
-#     grammar = ag.build_colloc0_grammar(phones)
-#     grammar_file = tmpdir.join('grammar.lt')
-#     grammar_file.write_text(grammar, encoding='utf8')
-
-#     segmented = ag.segment(_prepared, str(grammar_file), 'Colloc0',
-#                            # log=utils.get_logger(level=logging.DEBUG),
-#                            args=test_arguments.replace('-n 10', '-n 2'),
-#                            nruns=1)
-#     score = evaluate(segmented, _gold)
-
-#     # we obtained those results from the AG version in CDSwordseg
-#     # (preparing with wordseg-prep and evaluating with wordseg-eval)
-#     expected = {
-#         'type_fscore': 0.2385,
-#         'type_precision': 0.2038,
-#         'type_recall': 0.2875,
-#         'token_fscore': 0.2642,
-#         'token_precision': 0.238,
-#         'token_recall': 0.2969,
-#         'boundary_fscore': 0.5361,
-#         'boundary_precision': 0.4754,
-#         'boundary_recall': 0.6145}
-
-#     # Because we use so few data and iterations,  the results are
-#     # not stable, we limit the precision to 0.3
-#     for k, v in score.items():
-#         assert expected[k] == pytest.approx(v, abs=0.3), k
+#Test with train_text is None
+#Test with train_text=test_text
+#Test with train_text!=test_text
