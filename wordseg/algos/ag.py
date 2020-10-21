@@ -144,7 +144,7 @@ AG_ARGUMENTS = [
               '(default: training fraction is at front)')),
 
     utils.Argument(
-        short_name='-T', name='--tstart', type=float,
+        short_name='-U', name='--tstart', type=float,
         help='start annealing with this temperature'),
 
     utils.Argument(
@@ -765,12 +765,6 @@ def _add_arguments(parser):
 
     group = parser.add_argument_group('grammar arguments')
 
-
-    # group.add_argument(
-    #     'train_file', metavar='<train-file>', type=str,
-    #     help='Dibs requires a little train corpus to compute some statistics, '
-    #     'must be in phonologized from (NOT in prepared form)')
-
     group.add_argument(
         '--grammar', metavar='<grammar-file>', default=None,
         help=('read grammar from this file, for exemple of grammars see {}. '
@@ -833,6 +827,11 @@ def _command_line_arguments(args):
             if k == '-i':
                 k = '-h'
 
+            # special case -U -> -T conversion because -T is used to specify a
+            # train file
+            if k == '-U':
+                k = '-T'
+
             ag_args[k] = v
         except KeyError:
             pass
@@ -854,7 +853,8 @@ def main():
     streamin, streamout, _, log, args = utils.prepare_main(
         name='wordseg-ag',
         description="""Adaptor Grammar word segmentation algorithm""",
-        add_arguments=_add_arguments)
+        add_arguments=_add_arguments,
+        train_file=True)
 
     # build the AG command line (C++ side) from the parsed arguments
     # (Python side)

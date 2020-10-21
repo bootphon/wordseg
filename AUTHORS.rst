@@ -9,6 +9,7 @@ work of several contributors.
   * Alex Cristia (project coordination)
   * Georgia Loukatou (evaluation, beta testing and bug reports)
   * Elin Larsen (puddle, evaluation)
+  * Manel Khentout (wordseg-0.8)
 
 * Outside contributors:
 
@@ -21,7 +22,7 @@ work of several contributors.
   * Andrew Caines (evaluation)
 
 
-**Copyright 2015-2019 LSCP (EHESS, ENS, CNRS, PSL Research University)**
+**Copyright 2015-2021 LSCP (EHESS, ENS, CNRS, PSL Research University)**
 
 wordseg is free software: you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the

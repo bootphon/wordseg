@@ -7,6 +7,9 @@ not yet released
 
 * in documentation: added citation information (use DOI from zenodo).
 
+* added a ``--train-file/-T`` option in **wordeseg-ag** and **wordseg-tp**
+  allowing to train the model on a text different from the one being segmented.
+
 * in **wordseg-ag**:
 
   * improved error message: when tprob == 0 on double
@@ -15,6 +18,9 @@ not yet released
 
   * optionally save the used grammar to a file using the option
     ``--save-grammar-to <grammar-file>``.
+
+  * from command-line the short name for ``--tstart`` changed from ``-T`` to
+    ``-U``. The ``-T`` short name is now used for the ``--train-file`` option.
 
   * removed warnings with regular expressions on python-3.7.
 
