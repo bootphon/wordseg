@@ -1,6 +1,6 @@
 """Transitional Probabilities word segmentation"""
 
-# Author: Amanda Saksida, Mathieu Bernard
+# Author: Amanda Saksida, Mathieu Bernard, Manel Khentout
 
 import collections
 import math
@@ -36,6 +36,7 @@ def _threshold_relative(units, tps):
     cwords[-1].append(unit)
     return cwords
 
+
 def _threshold_absolute(units, tps):
     """Absolute threshold segmentation method"""
     last = units[0]
@@ -53,10 +54,13 @@ def _threshold_absolute(units, tps):
         last = unit
 
     return cwords
+
+
 # -----------------------------------------------------------------------------
-#  Postprocessing
+#  Training
 # -----------------------------------------------------------------------------
-def _train(train_units,dependency):
+
+def _train(train_units, dependency):
     # compute and count all the unigrams and bigrams (two successive units)
     unigrams = collections.Counter(train_units)
     bigrams = collections.Counter(zip(train_units[0:-1], train_units[1:]))
@@ -65,42 +69,49 @@ def _train(train_units,dependency):
     # dependency measure
     if dependency == 'ftp':
         tps = {bigram: float(freq) / unigrams[bigram[0]]
-            for bigram, freq in bigrams.items()}
+               for bigram, freq in bigrams.items()}
     elif dependency == 'btp':
         tps = {bigram: float(freq) / unigrams[bigram[1]]
-            for bigram, freq in bigrams.items()}
+               for bigram, freq in bigrams.items()}
     else:  # dependency == 'mi'
         tps = {bigram: math.log(float(freq) / (
             unigrams[bigram[0]] * unigrams[bigram[1]]), 2)
-            for bigram, freq in bigrams.items()}
+               for bigram, freq in bigrams.items()}
     return tps
 
-def _segment(test_unit,tps,threshold):
 
+# -----------------------------------------------------------------------------
+#  Segmentation
+# -----------------------------------------------------------------------------
+
+def _segment(units, tps, threshold):
     # segment the input given the transition probalities
-    cwords = (_threshold_relative(test_unit, tps) if threshold == 'relative'
-            else _threshold_absolute(test_unit, tps))
+    cwords = (_threshold_relative(units, tps) if threshold == 'relative'
+              else _threshold_absolute(units, tps))
     segtext = ' '.join(''.join(c) for c in cwords)
     return [utt.strip() for utt in re.sub(' +', ' ', segtext).split('UB')]
+
 
 # -----------------------------------------------------------------------------
 #  Segment function
 # -----------------------------------------------------------------------------
 
-def segment(test_text,train_text= None, threshold='relative', dependency='ftp',log=utils.null_logger()):
-    
+def segment(text, train_text=None, threshold='relative', dependency='ftp',
+            log=utils.null_logger()):
     """Returns a word segmented version of `text` using the TP algorithm
+
+    The parameters `text` and `train_text` must be formatted as follows: A
+        sequence of lines with syllable (or phoneme) boundaries marked by
+        spaces and no word boundaries. Each line in the sequence corresponds to
+        a single and complete utterance
 
     Parameters
     ----------
-    test_text : sequence
-        A sequence of lines with syllable (or phoneme) boundaries
-        marked by spaces and no word boundaries. Each line in the
-        sequence corresponds to a single and complete utterance, used for the test.
-    train_text : sequence
-        A sequence of lines with syllable (or phoneme) boundaries
-        marked by spaces and no word boundaries. Each line in the
-        sequence corresponds to a single and complete utterance, used to train the model on.
+    text : sequence
+        The text to segment into words
+    train_text : sequence, optional
+        The text used to train model on (estimation of transition
+        probabilities). If not specified use the `text`.
     threshold : str, optional
         Type of threshold to use, must be 'relative' or 'absolute'.
     dependency : str, optional
@@ -123,7 +134,7 @@ def segment(test_text,train_text= None, threshold='relative', dependency='ftp',l
 
     """
     # raise on invalid threshold type
-    if threshold != 'relative' and threshold != 'absolute':
+    if threshold not in ('relative', 'absolute'):
         raise ValueError(
             "invalid threshold, must be 'relative' or 'absolute', it is '{}'"
             .format(threshold))
@@ -136,24 +147,25 @@ def segment(test_text,train_text= None, threshold='relative', dependency='ftp',l
 
     log.info('running TP with %s threshold and %s dependency measure',
              threshold, dependency)
-    
-    #calculate test_unit and train_unit
-    test_units = [unit for unit in ' UB '.join(
-        line.strip() for line in test_text).split()]
-    
+
+    # calculate test_unit and train_unit
+    test_units = ' UB '.join(line.strip() for line in text).split()
 
     if train_text is None:
         train_units = test_units
     else:
-        train_units = [unit for unit in ' UB '.join(
-        line.strip() for line in train_text).split()]
-        
-    return _segment(test_units,_train(train_units,dependency),threshold)
+        train_units = ' UB '.join(line.strip() for line in train_text).split()
+
+    # estimate the transition probabilities
+    tps = _train(train_units, dependency)
+    # segment the text using those TPs
+    return _segment(test_units, tps, threshold)
+
 
 # -----------------------------------------------------------------------------
 #  Command line arguments
 # -----------------------------------------------------------------------------
-   
+
 def _add_arguments(parser):
     """Add algorithm specific options to the parser"""
     group = parser.add_argument_group('algorithm parameters')
@@ -164,12 +176,6 @@ def _add_arguments(parser):
         transition probabilities. When absolute, the threshold is set
         to the mean transition probability over the entire text.
         Default is relative.''')
-
-    group.add_argument(
-        '-tt','text', type=str,
-        choices=['train_text', 'test_text'], defailt='text',
-        help='''Use just a text as a test_text if you don't want to use a train text.'''
-    )
 
     group1 = group.add_mutually_exclusive_group()
     group1.add_argument(
@@ -192,11 +198,12 @@ def _add_arguments(parser):
 def main():
     """Entry point of the 'wordseg-tp' command"""
     # command initialization
-   
+
     streamin, streamout, _, log, args = utils.prepare_main(
         name='wordseg-tp',
         description=__doc__,
-        add_arguments=_add_arguments)
+        add_arguments=_add_arguments,
+        train_file=True)
 
     # if the deprecated --probability option is used, raise a warning
     # and convert it to the new --dependency option.
@@ -212,31 +219,21 @@ def main():
 
     # load the train text if any
     train_text = None
-    if args.train_file is not None:
+    if args.train_file:
         if not os.path.isfile(args.train_file):
             raise RuntimeError(
                 'test file not found: {}'.format(args.train_file))
         train_text = codecs.open(args.train_file, 'r', encoding='utf8')
-    
-
-    #?check if test_text exist
-    """
-    test_text = None
-    if args.test_file is not None: #streamin
-        if not os.path.isfile(args.test_file):
-            raise RuntimeError(
-                'test file not found: {}'.format(args.test_file))
-        test_text = codecs.open(args.test_file, 'r', encoding='utf8')
-    """
 
     # load train and test texts, ignore empty lines
-    train_text = (line for line in train_text if line)
     test_text = (line for line in streamin if line)
+    if train_text:
+        train_text = (line for line in train_text if line)
 
     # segment the input text with the train text
     text = segment(
         test_text,
-        train_text = train_text,
+        train_text=train_text,
         threshold=args.threshold,
         dependency=args.dependency,
         log=log)

@@ -365,7 +365,7 @@ class Argument(object):
         return re.sub('^--', '', self.name).replace('-', '_')
 
 
-def get_parser(description=None, separator=Separator()):
+def get_parser(description=None, separator=Separator(), train_file=False):
     """Returns an argument parser initiliazed with wordseg's common options
 
     Provides --verbose / --quiet options regulating the logger,
@@ -379,6 +379,8 @@ def get_parser(description=None, separator=Separator()):
     separator : wordseg.separator.Separator
         The default token separation as displayed in the parser's help
         message.
+    train_file : bool
+        When True adds a -T/--train-file option to the parser
 
     Returns
     -------
@@ -440,13 +442,19 @@ def get_parser(description=None, separator=Separator()):
         '-o', '--output', default=sys.stdout, metavar='<output-file>',
         help='output text file to write, if not specified write to stdout')
 
+    if train_file:
+        group.add_argument(
+            '-T', '--train-file', default=None, metavar='<training-file>',
+            help='input text file being use for model training')
+
     return parser
 
 
 def prepare_main(name=None,
                  description=None,
                  separator=Separator(phone=None, syllable=None, word=None),
-                 add_arguments=None):
+                 add_arguments=None,
+                 train_file=False):
     """Initialize a binary program for the wordseg package
 
     Provides an easy way to setup a command for the wordseg
@@ -467,6 +475,8 @@ def prepare_main(name=None,
     add_arguments : function
         function of prototype (argparse.ArgumentParser: None) adding
         optional arguments to the parser.
+    train_file : bool
+        When True, adds a -T/--train-file option to the parser
 
     Returns
     -------
@@ -483,7 +493,8 @@ def prepare_main(name=None,
 
     """
     # define a basic command line parser
-    parser = get_parser(description=description, separator=separator)
+    parser = get_parser(
+        description=description, separator=separator, train_file=train_file)
 
     # add any arguments to it
     if add_arguments:
