@@ -23,34 +23,33 @@ def test_tp(prep, threshold, dependency):
     for n, (a, b) in enumerate(zip(out, prep)):
         assert s(a) == s(b), 'line {}: "{}" != "{}"'.format(n+1, s(a), s(b))
 
-
+#train_text is None!
 def test_hello_world():
-    text = ['hh ax l ow w er l d']
+    test_text = ['hh ax l ow w er l d']
 
     assert list(tp.segment(
-        text, threshold='absolute', dependency='ftp')) \
+        test_text, threshold='absolute', dependency='ftp')) \
         == ['hhaxl owwerl d']
 
     assert list(tp.segment(
-        text, threshold='relative', dependency='ftp')) \
+        test_text, threshold='relative', dependency='ftp')) \
         == ['hhaxl owwerld']
 
     assert list(tp.segment(
-        text, threshold='absolute', dependency='btp')) \
+        test_text, threshold='absolute', dependency='btp')) \
         == ['hhax lowwer ld']
 
     assert list(
-        tp.segment(text, threshold='relative', dependency='btp')) \
+        tp.segment(test_text, threshold='relative', dependency='btp')) \
         == ['hhax lowwer ld']
-
 
 # was a bug on tp relative when the last utterance of the text
 # contains a single phone
+#train_text is None
 def test_last_utt_relative():
-    text = ['waed yuw waant naw', 'buwp']
+    test_text = ['waed yuw waant naw', 'buwp']
     expected = ['waedyuwwaantnaw', 'buwp']
-    assert expected == list(tp.segment(text, threshold='relative'))
-
+    assert expected == list(tp.segment(test_text, threshold='relative'))
 
 def test_replicate(datadir):
     sep = Separator()
@@ -88,5 +87,63 @@ def test_emptyline_in_train(tags):
     tp.segment(#TBD)
 """
 #Test with train_text is None
+def train_text_None():
+    train_text = ['']
+    test_text = ['hh ax l ow w er l d']
+
+    assert list(tp.segment(
+        test_text,train_text, threshold='absolute', dependency='ftp')) \
+        == ['hh ax l ow w er l d']
+
+    assert list(tp.segment(
+        test_text,train_text, threshold='relative', dependency='ftp')) \
+        == ['hhaxl owwerld']
+
+    assert list(tp.segment(
+        test_text,train_text, threshold='absolute', dependency='btp')) \
+        == ['hhax lowwer ld']
+
+    assert list(
+        tp.segment(test_text,train_text, threshold='relative', dependency='btp')) \
+        == ['hhax lowwer ld']
 #Test with train_text=test_text
+def traintext_equal_testtext():
+    train_text = ['hh ax l ow w er l d']
+    test_text = ['hh ax l ow w er l d']
+
+    assert list(tp.segment(
+        test_text,train_text, threshold='absolute', dependency='ftp')) \
+        == ['hh ax l ow w er l d']
+
+    assert list(tp.segment(
+        test_text,train_text, threshold='relative', dependency='ftp')) \
+        == ['hhaxl owwerld']
+
+    assert list(tp.segment(
+        test_text,train_text, threshold='absolute', dependency='btp')) \
+        == ['hhax lowwer ld']
+
+    assert list(
+        tp.segment(test_text,train_text, threshold='relative', dependency='btp')) \
+        == ['hhax lowwer ld']
 #Test with train_text!=test_text
+def traintext_notequal_testtext():
+    train_text = ['hh ax l ow hh ax l ow ']#hellow hellow
+    test_text = ['hh ax l ow w er l d']#hellow world
+
+
+    assert list(tp.segment(
+        test_text,train_text, threshold='absolute', dependency='ftp')) \
+        == ['hh ax l ow w er l d']
+
+    assert list(tp.segment(
+        test_text,train_text, threshold='relative', dependency='ftp')) \
+        == ['hhaxl owwerld']
+
+    assert list(tp.segment(
+        test_text,train_text, threshold='absolute', dependency='btp')) \
+        == ['hhax lowwer ld']
+
+    assert list(
+        tp.segment(test_text,train_text, threshold='relative', dependency='btp')) \
+        == ['hhax lowwer ld']
