@@ -21,6 +21,9 @@ not yet released
 * in **wordseg-dpseg**, removed a warning with regular expressions on
   python-3.7.
 
+* in **wordseg-puddle**, added an option ``--by-frequency`` to choose words
+  based on their frequencies.
+
 * in cluster tools: improved duration and error reporting.
 
 

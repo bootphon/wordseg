@@ -16,23 +16,24 @@ from wordseg import utils, folding
 
 
 class _Puddle(object):
-    def __init__(self, window=2, log=utils.null_logger()):
+    def __init__(self, window=2, by_frequency=False, log=utils.null_logger()):
         self.log = log
         self.window = window
+        self.by_frequency = by_frequency
         self.lexicon = collections.Counter()
         self.beginning = collections.Counter()
         self.ending = collections.Counter()
 
-    # def filter_by_frequency(self, phonemes, i, j):
-    #     all_candidates = []
-    #     for k in range(j, len(phonemes)):
-    #         try:
-    #              all_candidates.append(
-    #                  (k, self.lexicon[''.join(phonemes[i:k+1])]))
-    #         except KeyError:
-    #             pass
-    #     j, _ = sorted(all_candidates, key=lambda x: x[1])[-1]
-    #     return j
+    def filter_by_frequency(self, phonemes, i, j):
+        all_candidates = []
+        for k in range(j, len(phonemes)):
+            try:
+                 all_candidates.append(
+                     (k, self.lexicon[''.join(phonemes[i:k+1])]))
+            except KeyError:
+                pass
+        j, _ = sorted(all_candidates, key=lambda x: x[1])[-1]
+        return j
 
     def filter_by_boundary_condition(self, phonemes, i, j, found):
         if found:
@@ -91,7 +92,7 @@ class _Puddle(object):
 
         """
         # check if the utterance is empty
-        if not len(utterance):
+        if not utterance:
             raise ValueError('The utterance is empty')
 
         found = False
@@ -107,9 +108,10 @@ class _Puddle(object):
                 if candidate_word in self.lexicon:
                     found = True
 
-                    # choose the best candidate by looking at the
-                    # frequency of different candidates
-                    # j = filter_by_frequency(utterance,i,j)
+                    if self.by_frequency:
+                        # choose the best candidate by looking at the
+                        # frequency of different candidates
+                        j = self.filter_by_frequency(utterance, i, j)
 
                     # check if the boundary conditions are respected
                     found = self.filter_by_boundary_condition(
@@ -150,18 +152,21 @@ class _Puddle(object):
         return segmented
 
 
-def _puddle(text, window, log_level=logging.ERROR, log_name='wordseg-puddle'):
+def _puddle(text, window, by_frequency=False,
+            log_level=logging.ERROR, log_name='wordseg-puddle'):
     """Runs the puddle algorithm on the `text`"""
     # create a new puddle segmenter (with an empty lexicon)
     puddle = _Puddle(
         window=window,
+        by_frequency=by_frequency,
         log=utils.get_logger(name=log_name, level=log_level))
 
     return [' '.join(puddle.update_utterance(
         line.strip().split(), segmented=[])) for line in text]
 
 
-def segment(text, window=2, nfolds=5, njobs=1, log=utils.null_logger()):
+def segment(text, window=2, by_frequency=False, nfolds=5,
+            njobs=1, log=utils.null_logger()):
     """Returns a word segmented version of `text` using the puddle algorithm
 
     Parameters
@@ -172,6 +177,8 @@ def segment(text, window=2, nfolds=5, njobs=1, log=utils.null_logger()):
         sequence corresponds to a single and comlete utterance.
     window : int, optional
         Number of phonemes to be taken into account for boundary constraint.
+    by_frequency : bool, optional
+        When True choose the word candidates by filterring them by frequency
     nfolds : int, optional
         The number of folds to segment the `text` on.
     njobs : int, optional
@@ -200,7 +207,8 @@ def segment(text, window=2, nfolds=5, njobs=1, log=utils.null_logger()):
 
     segmented_texts = joblib.Parallel(n_jobs=njobs, verbose=0)(
         joblib.delayed(_puddle)(
-            fold, window, log_level=log.getEffectiveLevel(),
+            fold, window, by_frequency=by_frequency,
+            log_level=log.getEffectiveLevel(),
             log_name='wordseg-puddle - fold {}'.format(n+1))
         for n, fold in enumerate(folded_texts))
 
@@ -225,6 +233,11 @@ def _add_arguments(parser):
         Number of phonemes to be taken into account for boundary constraint,
         default is %(default)s.''')
 
+    parser.add_argument(
+        '-F', '--by-frequency', action='store_true',
+        help='choose word candidates based on frequency '
+        '(deactivated by default)')
+
     # parser.add_argument(
     #     '-d', '--decay', action='store_true',
     #     help='Decrease the size of lexicon, modelize memory of lexicon.')
@@ -239,7 +252,7 @@ def main():
         add_arguments=_add_arguments)
 
     segmented = segment(
-        streamin, window=args.window,
+        streamin, window=args.window, by_frequency=args.by_frequency,
         nfolds=args.nfolds, njobs=args.njobs, log=log)
     streamout.write('\n'.join(segmented) + '\n')
 
