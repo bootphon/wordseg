@@ -871,16 +871,16 @@ def main():
     # call the AG algorithm
     segmented = segment(
         streamin,
-        train_text=train_text,
-        grammar_file=args.grammar,
-        category=args.category,
-        args=cmd_args,
-        save_grammar_to=args.save_grammar_to,
+        train_text = train_text,
+        grammar_file = args.grammar,
+        category = args.category,
+        args = cmd_args,
+        save_grammar_to = args.save_grammar_to,
         ignore_first_parses=args.ignore_first_parses,
-        nruns=args.nruns,
-        njobs=args.njobs,
-        tempdir=args.tempdir,
-        log=log)
+        nruns = args.nruns,
+        njobs = args.njobs,
+        tempdir = args.tempdir,
+        log = log)
 
     # output the results
     streamout.write('\n'.join(segmented) + '\n')

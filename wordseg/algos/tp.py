@@ -233,10 +233,10 @@ def main():
     # segment the input text with the train text
     text = segment(
         test_text,
-        train_text=train_text,
-        threshold=args.threshold,
-        dependency=args.dependency,
-        log=log)
+        train_text = train_text,
+        threshold = args.threshold,
+        dependency = args.dependency,
+        log  =log)
 
     # output the result
     streamout.write('\n'.join(text) + '\n')
