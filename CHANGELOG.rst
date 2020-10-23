@@ -29,6 +29,9 @@ not yet released
 
 * in cluster tools: improved duration and error reporting.
 
+wordse-0.8
+-----------
+#TBD
 
 wordseg-0.7.1
 -------------

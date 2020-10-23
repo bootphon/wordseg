@@ -204,8 +204,22 @@ def test_mark_jonhson(tmpdir, datadir):
 
 
 
-
+'''
 
 #Test with train_text is None
+@pytest.mark.parametrize('grammar, level', GRAMMARS)
+def test_traintext_None(prep,train_text, grammar, level):
+    train_text = ''
+    grammar = os.path.join(GRAMMAR_DIR, grammar)
+    segmented = ag.segment(
+        prep, train_text,grammar_file=grammar, category=level,
+        args=TEST_ARGUMENTS, nruns=1)
+    assert len(segmented) == len(prep)
+
+    segmented = ''.join(utt.replace(' ', '').strip() for utt in segmented)
+    prep = ''.join(utt.replace(' ', '').strip() for utt in prep)
+    assert segmented == prep
+
 #Test with train_text=test_text
 #Test with train_text!=test_text
+'''
