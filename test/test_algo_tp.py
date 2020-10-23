@@ -89,19 +89,19 @@ def test_train_text_None():
     test_text = ['hh ax l ow w er l d']
 
     assert list(tp.segment(
-        test_text,train_text, threshold='absolute', dependency='ftp')) \
-        == ['hh ax l ow w er l d']
+        test_text,train_text=None, threshold='absolute', dependency='ftp')) \
+        == ['hhaxl owwerl d']
 
     assert list(tp.segment(
-        test_text,train_text, threshold='relative', dependency='ftp')) \
+        test_text,train_text=None, threshold='relative', dependency='ftp')) \
         == ['hhaxl owwerld']
 
     assert list(tp.segment(
-        test_text,train_text, threshold='absolute', dependency='btp')) \
+        test_text,train_text=None, threshold='absolute', dependency='btp')) \
         == ['hhax lowwer ld']
 
     assert list(
-        tp.segment(test_text,train_text, threshold='relative', dependency='btp')) \
+        tp.segment(test_text, train_text=None,threshold='relative', dependency='btp')) \
         == ['hhax lowwer ld']
 
 '''
