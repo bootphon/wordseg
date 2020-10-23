@@ -36,7 +36,7 @@ wordse-0.8
 wordseg-0.7.1
 -------------
 
-* Newwevaluation metrics in **wordseg-eval**:
+* New evaluation metrics in **wordseg-eval**:
 
   * adjusted rand index:
 

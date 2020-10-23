@@ -104,69 +104,67 @@ def test_train_text_None():
         tp.segment(test_text, train_text=None,threshold='relative', dependency='btp')) \
         == ['hhax lowwer ld']
 
-'''
+
 #Test with train_text=test_text
 def test_traintext_equal_testtext():
-    train_text = ['hh ax l ow w er l d']
+    #train_text = None
     test_text = ['hh ax l ow w er l d']
 
     assert list(tp.segment(
-        test_text,train_text, threshold='absolute', dependency='ftp')) \
-        == ['hh ax l ow w er l d']
+        test_text,train_text=test_text, threshold='absolute', dependency='ftp')) \
+        == ['hhaxl owwerl d']
 
     assert list(tp.segment(
-        test_text,train_text, threshold='relative', dependency='ftp')) \
+        test_text,train_text=test_text, threshold='relative', dependency='ftp')) \
         == ['hhaxl owwerld']
 
     assert list(tp.segment(
-        test_text,train_text, threshold='absolute', dependency='btp')) \
+        test_text,train_text=test_text, threshold='absolute', dependency='btp')) \
         == ['hhax lowwer ld']
 
     assert list(
-        tp.segment(test_text,train_text, threshold='relative', dependency='btp')) \
+        tp.segment(test_text, train_text=test_text,threshold='relative', dependency='btp')) \
         == ['hhax lowwer ld']
 
-#partiel test
+#partiel test => ERROR
 def test_traintext_notequal_testtext():
     train_text = ['hh ax l ow w er l d']#good morning
     test_text = ['g uh d ;eword m ao r n ax ng ;eword']#hellow world
 
     #it crash
     assert list(tp.segment(
-        test_text,train_text, threshold='absolute', dependency='ftp')) \
+        test_text,train_text=train_text, threshold='absolute', dependency='ftp')) \
         == ['g uh d ;eword m ao r n ax ng ;eword']
 
     assert list(tp.segment(
-        test_text,train_text, threshold='relative', dependency='ftp')) \
+        test_text,train_text=train_text, threshold='relative', dependency='ftp')) \
         == ['hhaxl owwerld']
 
     assert list(tp.segment(
-        test_text,train_text, threshold='absolute', dependency='btp')) \
+        test_text,train_text=train_text, threshold='absolute', dependency='btp')) \
         == ['hhax lowwer ld']
 
     assert list(
-        tp.segment(test_text,train_text, threshold='relative', dependency='btp')) \
+        tp.segment(test_text,train_text=train_text, threshold='relative', dependency='btp')) \
         == ['hhax lowwer ld']
 
-#Test with train_text!=test_text
+#partial test => ERROR
 def test_partial():
     train_text = ['hh ax l ow hh ax l ow ']#hellow world
     test_text = ['hh ax l ow hh ax l ow']#hellow hellow
 
+    assert list(tp.segment(
+        test_text,train_text=test_text, threshold='absolute', dependency='ftp')) \
+        == ['hhaxl owhhaxlo w'] 
 
     assert list(tp.segment(
-        test_text,train_text, threshold='absolute', dependency='ftp')) \
-        == ['hh ax l ow hh ax l ow']
-
-    assert list(tp.segment(
-        test_text,train_text, threshold='relative', dependency='ftp')) \
+        test_text,train_text=test_text, threshold='relative', dependency='ftp')) \
         == ['hhaxl owhhaxlow']
 
     assert list(tp.segment(
-        test_text,train_text, threshold='absolute', dependency='btp')) \
+        test_text,train_text=test_text, threshold='absolute', dependency='btp')) \
         == ['hhax lowhhaxl ow']
 
     assert list(
-        tp.segment(test_text,train_text, threshold='relative', dependency='btp')) \
+        tp.segment(test_text, train_text=test_text,threshold='relative', dependency='btp')) \
         == ['hhax lowhhaxl ow']
-'''
