@@ -2,15 +2,13 @@
 
 # Author: Amanda Saksida, Mathieu Bernard, Manel Khentout
 
+import codecs
 import collections
 import math
-import re
 import os
-import codecs
-from wordseg import utils
+import re
 
-#test
-from collections import defaultdict
+from wordseg import utils
 
 
 def _threshold_relative(units, tps):
@@ -164,6 +162,7 @@ def segment(text, train_text=None, threshold='relative', dependency='ftp',
 
     # estimate the transition probabilities
     tps = _train(train_units, dependency)
+
     # segment the text using those TPs
     return _segment(test_units, tps, threshold)
 
@@ -239,10 +238,10 @@ def main():
     # segment the input text with the train text
     text = segment(
         test_text,
-        train_text = train_text,
-        threshold = args.threshold,
-        dependency = args.dependency,
-        log  =log)
+        train_text=train_text,
+        threshold=args.threshold,
+        dependency=args.dependency,
+        log=log)
 
     # output the result
     streamout.write('\n'.join(text) + '\n')
