@@ -66,21 +66,23 @@ def _train(train_units, dependency):
     # compute and count all the unigrams and bigrams (two successive units)
     unigrams = collections.Counter(train_units)
     bigrams = collections.Counter(zip(train_units[0:-1], train_units[1:]))
-    #test
-    tps = collections.defaultdict(lambda : 0)
+
     # compute the transitional probabilities accordoing to the given
     # dependency measure
-    
+
     if dependency == 'ftp':
-        tps = {bigram: float(freq) / unigrams[bigram[0]]
-           for bigram, freq in bigrams.items()}
+        tps = collections.defaultdict(lambda: 0, {
+            bigram: float(freq) / unigrams[bigram[0]]
+            for bigram, freq in bigrams.items()})
     elif dependency == 'btp':
-        tps = {bigram: float(freq) / unigrams[bigram[1]]
-           for bigram, freq in bigrams.items()}
+        tps = collections.defaultdict(lambda: 0, {
+            bigram: float(freq) / unigrams[bigram[1]]
+            for bigram, freq in bigrams.items()})
     else:  # dependency == 'mi'
-        tps = {bigram: math.log(float(freq) / (
-            unigrams[bigram[0]] * unigrams[bigram[1]]), 2)
-               for bigram, freq in bigrams.items()}
+        tps = collections.defaultdict(lambda: 0, {
+            bigram: math.log(float(freq) / (
+                unigrams[bigram[0]] * unigrams[bigram[1]]), 2)
+            for bigram, freq in bigrams.items()})
     return tps
 
 
