@@ -230,9 +230,22 @@ def test_traintext_equal_testtext(prep, grammar, level):
     prep = ''.join(utt.replace(' ', '').strip() for utt in prep)
     assert segmented == prep
 
-#Test with <train_text!=test_text>
+
+# Test with <train_text!=test_text>
 @pytest.mark.parametrize('grammar, level', GRAMMARS)
-def test_traintext_notequal_testtext(prep,grammar, level):
-    '''
-    TBD
-    '''
+def test_traintext_notequal_testtext(grammar, level):
+    # hello world
+    train_text = ['hh ax l ow w er l d'] * 10
+
+    # good morn, that dog is big (no phones shared with train)
+    test_text = ['g uh d m ao r n', 'dh ae t d ao g ih z b ih g']
+
+    grammar = os.path.join(GRAMMAR_DIR, grammar)
+    segmented = ag.segment(
+        test_text, train_text=train_text, grammar_file=grammar, category=level,
+        args=TEST_ARGUMENTS, nruns=1)
+    assert len(segmented) == len(test_text)
+
+    segmented = ''.join(utt.replace(' ', '').strip() for utt in segmented)
+    prep = ''.join(utt.replace(' ', '').strip() for utt in test_text)
+    assert segmented == prep
