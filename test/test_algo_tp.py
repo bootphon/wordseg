@@ -128,8 +128,8 @@ def test_traintext_equal_testtext():
 
 #partiel test => ERROR
 def test_traintext_notequal_testtext():
-    test_text = ['g uh d m ao r n ax ng']#good morning
-    train_text = ['hh ax l ow w er l d']#hello world
+    train_text = ['hh ax l ow w er l d']#g uh d m ao r n ax ng good morning
+    test_text = ['g uh d m ao r n ax ng']#hello world
 
     #Failed
     assert list(tp.segment(
@@ -160,16 +160,16 @@ def test_partial():
     #it crash
     assert list(tp.segment(
         test_text,train_text=train_text, threshold='absolute', dependency='ftp')) \
-        == ['hhaxl owhhaxl ow']
+        == ['hhaxl ow']
 
     assert list(tp.segment(
         test_text,train_text=train_text, threshold='relative', dependency='ftp')) \
-        == ['hhaxl owhhaxlow']
+        == ['hhaxlow']
 
     assert list(tp.segment(
         test_text,train_text=train_text, threshold='absolute', dependency='btp')) \
-        == ['hhax lowhhawl ow']
+        == ['hhax low']
 
     assert list(
         tp.segment(test_text,train_text=train_text, threshold='relative', dependency='btp')) \
-        == ['hhax lowhhawl ow']
+        == ['hhax low']
