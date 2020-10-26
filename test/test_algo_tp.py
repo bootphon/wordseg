@@ -128,8 +128,8 @@ def test_traintext_equal_testtext():
 
 #partiel test => ERROR
 def test_traintext_notequal_testtext():
-    train_text = ['g uh d m ao r n ax ng']#good moorning
-    test_text = ['hh ax l ow w er l d']#hello world
+    test_text = ['g uh d m ao r n ax ng']#good morning
+    train_text = ['hh ax l ow w er l d']#hello world
 
     #Failed
     assert list(tp.segment(
@@ -151,7 +151,7 @@ def test_traintext_notequal_testtext():
 #partial test => ERROR
 def test_partial():
     train_text = ['hh ax l ow w er l d']#hello world
-    test_text = ['hh ax l ow hh ax l ow']#hello hello
+    test_text = ['hh ax l ow']#hello
     
     """
     with pytest.raises(RuntimeError):

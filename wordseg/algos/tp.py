@@ -82,9 +82,6 @@ def _train(train_units, dependency):
             unigrams[bigram[0]] * unigrams[bigram[1]]), 2)
                for bigram, freq in bigrams.items()}
     return tps
-    
-    
-    
 
 
 # -----------------------------------------------------------------------------
