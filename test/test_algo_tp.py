@@ -148,7 +148,7 @@ def test_traintext_notequal_testtext():
         tp.segment(test_text,train_text=train_text, threshold='relative', dependency='btp')) \
         == ['hhax lowwer ld']
 
-#partial test => ERROR
+#partial test: train with hello world and test with hello
 def test_partial():
     train_text = ['hh ax l ow w er l d']#hello world
     test_text = ['hh ax l ow']#hello
