@@ -49,12 +49,12 @@ def test_bad_train(prep):
     with pytest.raises(ValueError):
         dibs.CorpusSummary(prep)
 
-#train_text is None?
+#Dibs: <train_text is None>
 def test_emptyline_in_train(tags):
     # empty lines are ignored in train file
     dibs.CorpusSummary([''] + tags)
 
-#train_text is not None? from file!
+#Dibs: <train_text is not None>
 def test_replicate_cdswordseg(datadir):
     sep = Separator()
 
@@ -89,9 +89,3 @@ def test_replicate_cdswordseg(datadir):
 
     assert score == pytest.approx(expected, rel=1e-3)
 
-# #Test with train_text is None
-# def test_train_isNone():
-# #Test with train_text=test_text
-# def test_train_equal_test():
-# #Test with train_text!=test_text
-# def test_train_different():

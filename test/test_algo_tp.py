@@ -84,7 +84,7 @@ def test_replicate(datadir):
 
     assert score == pytest.approx(expected, rel=1e-3)
 
-
+#TP: <train_text is None>
 def test_train_text_none():
     test_text = ['hh ax l ow w er l d']
 
@@ -112,7 +112,7 @@ def test_train_text_none():
         threshold='relative',
         dependency='btp')) == ['hhax lowwer ld']
 
-
+#TP: <train_text = test_test>
 def test_traintext_equal_testtext():
     test_text = ['hh ax l ow w er l d']
 
@@ -140,7 +140,7 @@ def test_traintext_equal_testtext():
         threshold='relative',
         dependency='btp')) == ['hhax lowwer ld']
 
-
+#TP: <train_text != test_text>
 def test_traintext_notequal_testtext():
     train_text = ['hh ax l ow w er l d']  # hello world
     test_text = ['g uh d m ao r n ax ng']  # good morning
@@ -170,10 +170,7 @@ def test_traintext_notequal_testtext():
         dependency='btp')) == ['guhdmaornaxng']
 
 
-<<<<<<< HEAD
-#partial test: train with hello world and test with hello
-=======
->>>>>>> fa2210a6bb166ecc057f8246fcc708fbf85b0f51
+#TP: partial test: <train with hello world> and <test with hello>
 def test_partial():
     train_text = ['hh ax l ow w er l d']  # hello world
     test_text = ['hh ax l ow']  # hello

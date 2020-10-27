@@ -203,7 +203,7 @@ def test_mark_jonhson(tmpdir, datadir):
         assert text[i].strip().replace(' ', '') == output[i].replace(' ', '')
 
 
-# Test with train_text is None
+# AG: <train_text is None>
 @pytest.mark.parametrize('grammar, level', GRAMMARS)
 def test_traintext_None(prep, grammar, level):
     grammar = os.path.join(GRAMMAR_DIR, grammar)
@@ -217,7 +217,7 @@ def test_traintext_None(prep, grammar, level):
     assert segmented == prep
 
 
-# Test with <train_text=test_text>
+# AG: <train_text=test_text>
 @pytest.mark.parametrize('grammar, level', GRAMMARS)
 def test_traintext_equal_testtext(prep, grammar, level):
     grammar = os.path.join(GRAMMAR_DIR, grammar)
@@ -231,7 +231,7 @@ def test_traintext_equal_testtext(prep, grammar, level):
     assert segmented == prep
 
 
-# Test with <train_text!=test_text>
+# AG: <train_text!=test_text>
 @pytest.mark.parametrize('grammar, level', GRAMMARS)
 def test_traintext_notequal_testtext(grammar, level):
     # hello world
