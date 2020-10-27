@@ -476,10 +476,10 @@ def main():
     segmented = segment(
         test_text,
         trained_model,
-        type = args.type,
-        threshold = args.threshold,
-        pwb = args.pboundary,
-        log = log)
+        type=args.type,
+        threshold=args.threshold,
+        pwb=args.pboundary,
+        log=log)
 
     # output the segmented text
     streamout.write('\n'.join(segmented) + '\n')
