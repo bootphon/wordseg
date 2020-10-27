@@ -113,7 +113,7 @@ def check_utterance(utterance, separator=Separator(), check_punctuation=True):
     return True
 
 
-def prepare(text, separator=Separator(), unit='phone',
+def prepare (text, separator=Separator(), unit='phone',
             check_punctuation=True, tolerant=False,
             log=utils.null_logger()):
     """Prepares a text in phonological form for word segmentation

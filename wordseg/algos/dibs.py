@@ -19,7 +19,7 @@ import six
 
 from wordseg.separator import Separator
 from wordseg import utils
-from wordseg import prepare
+from wordseg.prepare import prepare
 
 class Counter(dict):
     """A Counter is a (key -> count) dictionnary for counting elements
@@ -460,14 +460,12 @@ def main():
     test_text = (line for line in streamin if line)
 
     #check if train_file is none if test_file has f.word else raiseERROR
-    """
+    
     if train_text is None:
         if not separator.word in test_text:  # à vérifier pour toutes les lignes de test_text
             raise('word separator missing !!')
         train_text = test_text
-        test_text = prepare(test_text,_)
-
-    """
+        test_text = prepare(test_text)
     # train the model (learn diphone statistics)
     trained_model = CorpusSummary(
         train_text, separator=separator, level=args.unit, log=log)
@@ -476,10 +474,10 @@ def main():
     segmented = segment(
         test_text,
         trained_model,
-        type=args.type,
-        threshold=args.threshold,
-        pwb=args.pboundary,
-        log=log)
+        type = args.type,
+        threshold = args.threshold,
+        pwb = args.pboundary,
+        log = log)
 
     # output the segmented text
     streamout.write('\n'.join(segmented) + '\n')
