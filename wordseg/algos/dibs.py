@@ -19,7 +19,7 @@ import six
 
 from wordseg.separator import Separator
 from wordseg import utils
-
+from wordseg import prepare
 
 class Counter(dict):
     """A Counter is a (key -> count) dictionnary for counting elements
@@ -390,12 +390,12 @@ def _add_arguments(parser):
 
     group = parser.add_argument_group('training parameters')
     separator = Separator()
-
+    """
     group.add_argument(
         'train_file', metavar='<train-file>', type=str,
         help='Dibs requires a little train corpus to compute some statistics, '
         'must be in phonologized from (NOT in prepared form)')
-
+    """
     group.add_argument(
         '-p', '--phone-separator', metavar='<str>',
         default=separator.phone,
@@ -440,7 +440,8 @@ def main():
     streamin, streamout, _, log, args = utils.prepare_main(
         name='wordseg-dibs',
         description=__doc__,
-        add_arguments=_add_arguments)
+        add_arguments=_add_arguments,
+        train_file=True)
 
     # setup the separator from parsed arguments
     separator = Separator(
@@ -458,6 +459,15 @@ def main():
     train_text = (line for line in train_text if line)
     test_text = (line for line in streamin if line)
 
+    #check if train_file is none if test_file has f.word else raiseERROR
+    """
+    if train_text is None:
+        if not separator.word in test_text:  # à vérifier pour toutes les lignes de test_text
+            raise('word separator missing !!')
+        train_text = test_text
+        test_text = prepare(test_text,_)
+
+    """
     # train the model (learn diphone statistics)
     trained_model = CorpusSummary(
         train_text, separator=separator, level=args.unit, log=log)
