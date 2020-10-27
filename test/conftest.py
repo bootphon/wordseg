@@ -22,6 +22,7 @@ w aa n t ;esyll ;eword s ax m ;esyll ;eword m ao r ;esyll ;eword
 n ow ;esyll ;eword
 '''
 
+
 @pytest.yield_fixture(scope='session')
 def datadir():
     """Returns the directory 'wordseg/data'"""
