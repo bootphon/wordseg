@@ -170,11 +170,9 @@ def test_traintext_notequal_testtext():
         dependency='btp')) == ['guhdmaornaxng']
 
 
-<<<<<<< HEAD
-#TP: partial test: <train with hello world> and <test with hello>
-=======
+
 #partial test: train with hello world and test with hello
->>>>>>> c56cffe58982751a87bc8458b7ed8999a25f922b
+
 def test_partial():
     train_text = ['hh ax l ow w er l d']  # hello world
     test_text = ['hh ax l ow']  # hello
