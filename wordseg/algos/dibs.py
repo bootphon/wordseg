@@ -423,7 +423,7 @@ def _add_arguments(parser):
         help='type of DiBS segmenter')
 
     group.add_argument(
-        '-T', '--threshold', type=float, default=0.5, metavar='<float>',
+        '-U', '--threshold', type=float, default=0.5, metavar='<float>',
         help='threshold on word boudary probabilities, must be in [0, 1]')
 
     group.add_argument(
@@ -447,23 +447,27 @@ def main():
     separator = Separator(
         phone=args.phone_separator,
         syllable=args.syllable_separator,
-        word=args.word_separator)
+        word=args.word_separator
 
-    # ensure the train file exists
-    if not os.path.isfile(args.train_file):
-        raise ValueError(
-            'train file does not exist: {}'.format(args.train_file))
-
-    # load train and test texts, ignore empty lines
-    train_text = codecs.open(args.train_file, 'r', encoding='utf8')
-    train_text = (line for line in train_text if line)
-    test_text = (line for line in streamin if line)
-
-    #check if train_file is none if test_file has f.word else raiseERROR
+    )
     
-    if train_text is None:
-        if not separator.word in test_text:  # à vérifier pour toutes les lignes de test_text
-            raise('word separator missing !!')
+    # load train and test texts, ignore empty lines
+    test_text = [line for line in streamin if line]
+
+    if args.train_file is not None:
+        # ensure the train file exists
+        if not os.path.isfile(args.train_file):
+            raise ValueError(
+                'train file specified but does not exist: {}'.format(args.train_file))
+
+        # load train and test texts, ignore empty lines
+        train_text = codecs.open(args.train_file, 'r', encoding='utf8')
+        train_text = [line for line in train_text if line]
+    else:
+        for line in test_text:
+            if separator.word not in line:
+                raise ValueError(
+                    'word separator excepted but not exists!')
         train_text = test_text
         test_text = prepare(test_text)
     # train the model (learn diphone statistics)
