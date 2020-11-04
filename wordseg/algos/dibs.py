@@ -459,7 +459,6 @@ def main():
         if not os.path.isfile(args.train_file):
             raise ValueError(
                 'train file specified but does not exist: {}'.format(args.train_file))
-
         # load train and test texts, ignore empty lines
         train_text = codecs.open(args.train_file, 'r', encoding='utf8')
         train_text = [line for line in train_text if line]
