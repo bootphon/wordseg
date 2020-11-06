@@ -1,1 +1,0 @@
-g++   -std=c++11 -Wall -O3 -DNDEBUG   CMakeFiles/ag.dir/src/sym.o CMakeFiles/ag.dir/src/gammadist.o CMakeFiles/ag.dir/src/main.o CMakeFiles/ag.dir/src/mt19937ar.o  -o ag -rdynamic -lpthread 

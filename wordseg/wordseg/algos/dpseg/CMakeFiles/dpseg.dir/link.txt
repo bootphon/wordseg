@@ -1,1 +1,0 @@
-/usr/bin/c++   -std=c++11 -DNDEBUG -O3 -DNDEBUG   CMakeFiles/dpseg.dir/src/Scoring.o CMakeFiles/dpseg.dir/src/Estimators.o CMakeFiles/dpseg.dir/src/Sentence.o CMakeFiles/dpseg.dir/src/Data.o CMakeFiles/dpseg.dir/src/dpseg.o  -o dpseg -rdynamic -lboost_program_options 
