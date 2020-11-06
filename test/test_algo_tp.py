@@ -24,32 +24,34 @@ def test_tp(prep, threshold, dependency):
         assert s(a) == s(b), 'line {}: "{}" != "{}"'.format(n+1, s(a), s(b))
 
 
+# hello world test
 def test_hello_world():
-    text = ['hh ax l ow w er l d']
+    test_text = ['hh ax l ow w er l d']
 
     assert list(tp.segment(
-        text, threshold='absolute', dependency='ftp')) \
+        test_text, threshold='absolute', dependency='ftp')) \
         == ['hhaxl owwerl d']
 
     assert list(tp.segment(
-        text, threshold='relative', dependency='ftp')) \
+        test_text, threshold='relative', dependency='ftp')) \
         == ['hhaxl owwerld']
 
     assert list(tp.segment(
-        text, threshold='absolute', dependency='btp')) \
+        test_text, threshold='absolute', dependency='btp')) \
         == ['hhax lowwer ld']
 
     assert list(
-        tp.segment(text, threshold='relative', dependency='btp')) \
+        tp.segment(test_text, threshold='relative', dependency='btp')) \
         == ['hhax lowwer ld']
 
 
 # was a bug on tp relative when the last utterance of the text
 # contains a single phone
+
 def test_last_utt_relative():
-    text = ['waed yuw waant naw', 'buwp']
+    test_text = ['waed yuw waant naw', 'buwp']
     expected = ['waedyuwwaantnaw', 'buwp']
-    assert expected == list(tp.segment(text, threshold='relative'))
+    assert expected == list(tp.segment(test_text, threshold='relative'))
 
 
 def test_replicate(datadir):
@@ -57,11 +59,11 @@ def test_replicate(datadir):
 
     _tags = [utt for utt in codecs.open(
         os.path.join(datadir, 'tagged.txt'), 'r', encoding='utf8')
-            if utt][:100]  # 100 first lines only
+             if utt][:100]  # 100 first lines only
     _prepared = prepare(_tags, separator=sep)
     _gold = gold(_tags, separator=sep)
 
-    segmented = tp.segment(_prepared)
+    segmented = tp.segment(_prepared)  # add the train_text
     score = evaluate(segmented, _gold)
 
     # we obtained that score from the dibs version in CDSWordSeg
@@ -81,3 +83,120 @@ def test_replicate(datadir):
         'boundary_noedge_recall': 0.685}
 
     assert score == pytest.approx(expected, rel=1e-3)
+
+#TP: <train_text is None>
+def test_train_text_none():
+    test_text = ['hh ax l ow w er l d']
+
+    assert list(tp.segment(
+        test_text,
+        train_text=None,
+        threshold='absolute',
+        dependency='ftp')) == ['hhaxl owwerl d']
+
+    assert list(tp.segment(
+        test_text,
+        train_text=None,
+        threshold='relative',
+        dependency='ftp')) == ['hhaxl owwerld']
+
+    assert list(tp.segment(
+        test_text,
+        train_text=None,
+        threshold='absolute',
+        dependency='btp')) == ['hhax lowwer ld']
+
+    assert list(tp.segment(
+        test_text,
+        train_text=None,
+        threshold='relative',
+        dependency='btp')) == ['hhax lowwer ld']
+
+#TP: <train_text = test_test>
+def test_traintext_equal_testtext():
+    test_text = ['hh ax l ow w er l d']
+
+    assert list(tp.segment(
+        test_text,
+        train_text=test_text,
+        threshold='absolute',
+        dependency='ftp')) == ['hhaxl owwerl d']
+
+    assert list(tp.segment(
+        test_text,
+        train_text=test_text,
+        threshold='relative',
+        dependency='ftp')) == ['hhaxl owwerld']
+
+    assert list(tp.segment(
+        test_text,
+        train_text=test_text,
+        threshold='absolute',
+        dependency='btp')) == ['hhax lowwer ld']
+
+    assert list(tp.segment(
+        test_text,
+        train_text=test_text,
+        threshold='relative',
+        dependency='btp')) == ['hhax lowwer ld']
+
+#TP: <train_text != test_text>
+def test_traintext_notequal_testtext():
+    train_text = ['hh ax l ow w er l d']  # hello world
+    test_text = ['g uh d m ao r n ax ng']  # good morning
+
+    assert list(tp.segment(
+        test_text,
+        train_text=train_text,
+        threshold='absolute',
+        dependency='ftp')) == ['g uh d m ao r n ax ng']
+
+    assert list(tp.segment(
+        test_text,
+        train_text=train_text,
+        threshold='relative',
+        dependency='ftp')) == ['guhdmaornaxng']
+
+    assert list(tp.segment(
+        test_text,
+        train_text=train_text,
+        threshold='absolute',
+        dependency='btp')) == ['g uh d m ao r n ax ng']
+
+    assert list(tp.segment(
+        test_text,
+        train_text=train_text,
+        threshold='relative',
+        dependency='btp')) == ['guhdmaornaxng']
+
+
+
+#partial test: train with hello world and test with hello
+
+def test_partial():
+    train_text = ['hh ax l ow w er l d']  # hello world
+    test_text = ['hh ax l ow']  # hello
+
+    assert list(tp.segment(
+        test_text,
+        train_text=train_text,
+        threshold='absolute',
+        dependency='ftp')) == ['hhaxl ow']
+
+    assert list(tp.segment(
+        test_text,
+        train_text=train_text,
+        threshold='relative',
+        dependency='ftp')) == ['hhaxlow']
+
+    assert list(tp.segment(
+        test_text,
+        train_text=train_text,
+        threshold='absolute',
+        dependency='btp')) == ['hhax low']
+
+    assert list(tp.segment(
+        test_text,
+        train_text=train_text,
+        threshold='relative',
+        dependency='btp')) == ['hhax low']

@@ -166,7 +166,7 @@ def prepare(text, separator=Separator(), unit='phone',
 
     """
     # raise an error if unit is not valid
-    if unit != 'phone' and unit != 'syllable':
+    if unit not in ('phone', 'syllable'):
         raise ValueError(
             "unit must be 'phone' or 'syllable', it is '{}'".format(unit))
 

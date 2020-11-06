@@ -18,7 +18,7 @@ tags=$scriptpath/data/tagged.txt
 data=$(mktemp -d)
 trap "rm -rf $data" EXIT
 
-# generate prepared and gold textn take 10 first lines only
+# generate prepared and gold texts, take 10 first lines only
 gold=$data/gold.txt
 prep=$data/prep.txt
 head -10 $tags | wordseg-prep -u $unit -g $gold -o $prep
@@ -56,6 +56,11 @@ fi
 
 # version 1: pure python
 python $data/segment.py $prep $train | wordseg-eval $gold > $data/v1
+
+if [ $algo == "dibs" ]
+then
+    train="--train-file $train"
+fi
 
 # version 2: bash, read from python
 wordseg-$algo $prep $train | wordseg-eval $gold > $data/v2

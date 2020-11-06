@@ -144,7 +144,7 @@ AG_ARGUMENTS = [
               '(default: training fraction is at front)')),
 
     utils.Argument(
-        short_name='-T', name='--tstart', type=float,
+        short_name='-U', name='--tstart', type=float,
         help='start annealing with this temperature'),
 
     utils.Argument(
@@ -308,7 +308,6 @@ def check_grammar(grammar_file, category):
 # -----------------------------------------------------------------------------
 #  Wrapper on AG C++ program
 # -----------------------------------------------------------------------------
-
 
 def _segment_single(parse_counter, train_text, grammar_file,
                     category, ignore_first_parses, args,
@@ -572,9 +571,8 @@ def postprocess(parse_counter, output_file, ignore_first_parses, log):
 # -----------------------------------------------------------------------------
 
 
-def segment(train_text, grammar_file=None, category='Colloc0',
-            args=DEFAULT_ARGS, test_text=None,
-            save_grammar_to=None, ignore_first_parses=0,
+def segment(text, train_text=None, grammar_file=None, category='Colloc0',
+            args=DEFAULT_ARGS, save_grammar_to=None, ignore_first_parses=0,
             nruns=8, njobs=1, tempdir=tempfile.gettempdir(),
             log=utils.null_logger()):
     """Segment a text using the Adaptor Grammar algorithm
@@ -584,9 +582,12 @@ def segment(train_text, grammar_file=None, category='Colloc0',
 
     Parameters
     ----------
-    train_text : sequence
-        The list of utterances to train the model on, and to segment
-        if `test_text` is None.
+    text : sequence of str
+        The list of utterances to segment using the model
+        learned from `train_text`.
+    train_text : sequence, optional
+        The list of utterances to train the model on. If None train the model
+        directly on `text`.
     grammar_file : str, optional
         The path to the grammar file to use for segmentation. If not
         specified, a Colloc0 grammar is generated from the input text.
@@ -599,9 +600,6 @@ def segment(train_text, grammar_file=None, category='Colloc0',
         Command line options to run the AG program with, use
         'wordseg-ag --help' to have a complete list of available
         options
-    test_text : sequence, optional
-        If not None, the list of utterances to segment using the model
-        learned from `text`
     save_grammar_to : str, optional
         If defined, this is an output file where to save the grammar
         ussed for segmentation. This is usefull to keep trace of the
@@ -635,20 +633,22 @@ def segment(train_text, grammar_file=None, category='Colloc0',
     """
     t1 = datetime.datetime.now()
 
-    # force the train text from sequence to list
-    if not isinstance(train_text, list):
-        train_text = list(train_text)
-    nutts = len(train_text)
-    log.info('train data: %s utterances loaded', nutts)
-
     # if any, force the test text from sequence to list
-    if test_text is not None:
-        if not isinstance(test_text, list):
-            test_text = list(test_text)
-            nutts = len(test_text)
-        log.info('test data: %s utterances loaded', nutts)
+    test_text = text
+    if not isinstance(test_text, list):
+        test_text = list(test_text)
+    nutts = len(test_text)
+    log.info('test data: %s utterances loaded', nutts)
+
+    if train_text is None:
+        train_text = test_text
+        log.info('not train data provided, will train model on test data')
     else:
-        log.info('no test data provided, segmentation on train data')
+        # force the train text from sequence to list
+        if not isinstance(train_text, list):
+            train_text = list(train_text)
+            nutts = len(train_text)
+    log.info('train data: %s utterances loaded', nutts)
 
     # display the AG algorithm parameters
     log.info('parameters are: "%s"', args)
@@ -764,6 +764,7 @@ def _add_arguments(parser):
               'default is %(default)s.'))
 
     group = parser.add_argument_group('grammar arguments')
+
     group.add_argument(
         '--grammar', metavar='<grammar-file>', default=None,
         help=('read grammar from this file, for exemple of grammars see {}. '
@@ -826,6 +827,11 @@ def _command_line_arguments(args):
             if k == '-i':
                 k = '-h'
 
+            # special case -U -> -T conversion because -T is used to specify a
+            # train file
+            if k == '-U':
+                k = '-T'
+
             ag_args[k] = v
         except KeyError:
             pass
@@ -847,33 +853,34 @@ def main():
     streamin, streamout, _, log, args = utils.prepare_main(
         name='wordseg-ag',
         description="""Adaptor Grammar word segmentation algorithm""",
-        add_arguments=_add_arguments)
+        add_arguments=_add_arguments,
+        train_file=True)
 
     # build the AG command line (C++ side) from the parsed arguments
     # (Python side)
     cmd_args = _command_line_arguments(args)
 
-    # load the test text if any
-    test_text = None
-    if args.test_file is not None:
-        if not os.path.isfile(args.test_file):
-            raise RuntimeError(
-                'test file not found: {}'.format(args.test_file))
-        test_text = codecs.open(args.test_file, 'r', encoding='utf8')
+    # loads the train text if any
+    train_text = None
+    if args.train_file:
+        if not os.path.isfile(args.train_file):
+            raise ValueError(
+                'train file does not exist: {}'.format(args.train_file))
+        train_text = codecs.open(args.train_file, 'r', encoding='utf8')
 
     # call the AG algorithm
     segmented = segment(
         streamin,
-        args.grammar,
-        args.category,
-        args=cmd_args,
-        test_text=test_text,
-        save_grammar_to=args.save_grammar_to,
+        train_text = train_text,
+        grammar_file = args.grammar,
+        category = args.category,
+        args = cmd_args,
+        save_grammar_to = args.save_grammar_to,
         ignore_first_parses=args.ignore_first_parses,
-        nruns=args.nruns,
-        njobs=args.njobs,
-        tempdir=args.tempdir,
-        log=log)
+        nruns = args.nruns,
+        njobs = args.njobs,
+        tempdir = args.tempdir,
+        log = log)
 
     # output the results
     streamout.write('\n'.join(segmented) + '\n')

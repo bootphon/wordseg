@@ -1,10 +1,25 @@
 """Diphone based segmentation algorithm
-A DiBS model assigns, for each phrase-medial diphone, a value between
-0 and 1 inclusive (representing the probability the model assigns that
-there is a word-boundary there).
 
-For details, see Daland, R., Pierrehumbert, J.B., "Learning
-diphone-based segmentation". Cognitive science 35(1), 119-155 (2011).
+    A DiBS model assigns, for each phrase-medial diphone, a value between
+    0 and 1 inclusive (representing the probability the model assigns that
+    there is a word-boundary there).
+
+    The particularity of DiBS, with repect to the other segmentation algorithms
+    in wordseg, is that it requires a little training test with word boundaries
+    (ie. in phonologized form, not in prepared form). User has two choices:
+
+    - Train and segment on the same text:
+      Specify <input-text> only, <input-text> must be in phonologized form. The
+      algorithm will the provided word boundaries to train the model and will
+      remove them to generate the text to segment.
+
+    - Train and segment on different texts:
+      Specify <input-text> AND --train-file <training-file>. Here <input-text>
+      must be in prepared form (without word boundaries) whereas
+      <training-file> must contain word boundaries.
+
+    For details, see Daland, R., Pierrehumbert, J.B., "Learning
+    diphone-based segmentation". Cognitive science 35(1), 119-155 (2011).
 
 """
 
@@ -18,6 +33,7 @@ import six
 
 from wordseg.separator import Separator
 from wordseg import utils
+from wordseg.prepare import prepare
 
 
 class Counter(dict):
@@ -273,7 +289,7 @@ class PhrasalSegmenter(AbstractSegmenter):
         pxy = self._norm2pdf(self.summary.diphones)
 
         pwb = self.pwb or self._pwb()
-        self.log.info('phrasal pwb = ' + str(pwb))
+        self.log.info('phrasal pwb = %s', pwb)
 
         for d in self.summary.diphones:
             x = (d[0],)
@@ -299,7 +315,7 @@ class LexicalSegmenter(AbstractSegmenter):
         pxy = self._norm2pdf(self.summary.diphones)
 
         pwb = self.pwb or self._pwb()
-        self.log.info('lexical pwb = ' + str(pwb))
+        self.log.info('lexical pwb = %s', pwb)
 
         for d in self.summary.diphones:
             x = (d[0],)
@@ -312,7 +328,11 @@ class LexicalSegmenter(AbstractSegmenter):
                 self.diphones[d] = num / denom
 
 
-def segment(text, summary, type='phrasal', threshold=0.5, pwb=None,
+# -----------------------------------------------------------------------------
+#  Segment function
+# -----------------------------------------------------------------------------
+
+def segment(test_text, trained_model, type='phrasal', threshold=0.5, pwb=None,
             log=utils.null_logger()):
     """Segment a corpus from a trained DiBS model
 
@@ -321,12 +341,12 @@ def segment(text, summary, type='phrasal', threshold=0.5, pwb=None,
 
     Parameters
     ----------
-    text : sequence of str
+    test_text : sequence of str
         The input text to segment is a sequence (list or generator) of
         utterances. Each utterance is composed of space seprated
         tokens (can be phones or syllables).
-    summary : CorpusSummary
-        The trained DiBS model used for segmentation of `text`.
+    trained_model : CorpusSummary
+        The trained DiBS model used for segmentation of `test_text`.
     type : str, optional
         The type of DiBS segmenter to use, must be 'gold',
         'phrasal' or 'lexical'. Default is 'phrasal'.
@@ -357,7 +377,7 @@ def segment(text, summary, type='phrasal', threshold=0.5, pwb=None,
     """
     # retrieve the segmenter from the 'type' argument
     try:
-        Segmenter = {
+        segmenter = {
             'phrasal': PhrasalSegmenter,
             'lexical': LexicalSegmenter,
             'gold': GoldSegmenter}[type]
@@ -367,10 +387,14 @@ def segment(text, summary, type='phrasal', threshold=0.5, pwb=None,
             .format(type))
 
     # init the segmenter with the trained model
-    segmenter = Segmenter(summary, pwb=pwb, threshold=threshold, log=log)
-    for utt in text:
+    segmenter = segmenter(trained_model, pwb=pwb, threshold=threshold, log=log)
+    for utt in test_text:
         yield segmenter.segment(utt)
 
+
+# -----------------------------------------------------------------------------
+#  Command line arguments
+# -----------------------------------------------------------------------------
 
 def _add_arguments(parser):
     """Add Dibs command specific options to the `parser`"""
@@ -381,11 +405,6 @@ def _add_arguments(parser):
 
     group = parser.add_argument_group('training parameters')
     separator = Separator()
-
-    group.add_argument(
-        'train_file', metavar='<train-file>', type=str,
-        help='Dibs requires a little train corpus to compute some statistics, '
-        'must be in phonologized from (NOT in prepared form)')
 
     group.add_argument(
         '-p', '--phone-separator', metavar='<str>',
@@ -414,7 +433,7 @@ def _add_arguments(parser):
         help='type of DiBS segmenter')
 
     group.add_argument(
-        '-T', '--threshold', type=float, default=0.5, metavar='<float>',
+        '-U', '--threshold', type=float, default=0.5, metavar='<float>',
         help='threshold on word boudary probabilities, must be in [0, 1]')
 
     group.add_argument(
@@ -424,14 +443,15 @@ def _add_arguments(parser):
         This option is not used in 'gold' segmentation type,
         must be in [0, 1]''')
 
-
+# dibs_summary is train_text
 @utils.CatchExceptions
 def main():
     """Entry point of the 'wordseg-dibs' command"""
     streamin, streamout, _, log, args = utils.prepare_main(
         name='wordseg-dibs',
         description=__doc__,
-        add_arguments=_add_arguments)
+        add_arguments=_add_arguments,
+        train_file=True)
 
     # setup the separator from parsed arguments
     separator = Separator(
@@ -439,40 +459,61 @@ def main():
         syllable=args.syllable_separator,
         word=args.word_separator)
 
-    # ensure the train file exists
-    if not os.path.isfile(args.train_file):
-        raise ValueError(
-                'train file does not exist: {}'.format(args.train_file))
+    # load test text as a list of utterances, ignore empty lines
+    test_text = [line for line in streamin if line]
+    log.info('loaded %s utterances as test data', len(test_text))
 
-    # load train and test texts, ignore empty lines
-    train_text = codecs.open(args.train_file, 'r', encoding='utf8')
-    train_text = (line for line in train_text if line)
-    test_text = (line for line in streamin if line)
+    # user provided a train text, ensure it is valid and that test_text does
+    # not include word separators
+    if args.train_file:
+        if not os.path.isfile(args.train_file):
+            raise ValueError(
+                'train file specified but does not exist: {}'.format(
+                    args.train_file))
+
+        # make sure test_text is in prepared form
+        for n, line in enumerate(test_text):
+            if separator.word in line:
+                raise ValueError(
+                    f'word separator found in test text (line {n+1})')
+
+        # load train and test texts, ignore empty lines
+        train_text = codecs.open(args.train_file, 'r', encoding='utf8')
+        train_text = [line for line in train_text if line]
+        log.info('loaded %s utterances as train data', len(train_text))
+    else:
+        log.info('using test data for training')
+        # the presence of word separator in train utterance will be checked
+        # during training
+        train_text = test_text
+
+        # remove the word separators for testing
+        test_text = prepare(test_text)
 
     # train the model (learn diphone statistics)
-    dibs_summary = CorpusSummary(
+    trained_model = CorpusSummary(
         train_text, separator=separator, level=args.unit, log=log)
 
     # segment the test text on the trained model
-    output = segment(
+    segmented = segment(
         test_text,
-        dibs_summary,
+        trained_model,
         type=args.type,
         threshold=args.threshold,
         pwb=args.pboundary,
         log=log)
 
     # output the segmented text
-    streamout.write('\n'.join(output) + '\n')
+    streamout.write('\n'.join(segmented) + '\n')
 
     # save the computed diphones if required
     if args.diphones:
         log.info(
             'saving %s diphones to %s',
-            len(dibs_summary.diphones), args.diphones)
+            len(trained_model.diphones), args.diphones)
 
         output = ('{} {} {}'.format(v, k[0], k[1]) for k, v in sorted(
-            dibs_summary.diphones.items(),
+            trained_model.diphones.items(),
             key=operator.itemgetter(1), reverse=True))
 
         codecs.open(args.diphones, 'w', encoding='utf8').write(

@@ -3,8 +3,11 @@
 More on the algorithms
 =======================
 
+Algorithms
+----------
+
 Baseline
---------
+~~~~~~~~
 
 We drew from Lignos (2012) the excellent idea of drawing baselines by
 cutting with a given probability. Using this insight, you can draw
@@ -34,7 +37,7 @@ Conference on Formal Linguistics (Vol. 30, pp. 13-15).
 
 
 Diphone Based Segmenter (DiBS)
-------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A DiBS model is any model which assigns, for each phrase-medial
 diphone, a value between 0 and 1 inclusive, representing the
@@ -77,7 +80,7 @@ Laia Fibla on
 https://docs.google.com/document/d/1tmw3S-bsecrMR6IokKEwR6rRReWknnbviQMW2o0D5rM/edit?usp=sharing.
 
 Transitional probabilities
----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In conceptual terms, we can say that such algorithms assume that
 infants are looking for words defined as internally cohesive
@@ -117,7 +120,7 @@ https://docs.google.com/document/d/1RdMlU-5qM22Qnv7u_h5xA4ST5M00et0_HfSuF8bbLsI/
 
 
 Phonotactics from Utterances Determine Distributional Lexical Elements (PUDDLE)
--------------------------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This algorithm was proposed by Monaghan and Christiansen (2010), who
 kindly shared their awk code with us. It was reimplemented in python
@@ -172,7 +175,7 @@ https://docs.google.com/document/d/1OQg1Vg1dvbfz8hX_GlWVqqfQxLya6CStJorVQG19IpE/
 
 
 Adaptor grammar
----------------
+~~~~~~~~~~~~~~~
 
 In the adaptor grammar framework, parsing a corpus involves inferring
 the probabilities with which a set of rewrite rules (a "grammar") may
@@ -257,7 +260,7 @@ annotated example produced by Elin Larsen on
 https://docs.google.com/document/d/1NZq-8vOroO7INZolrQ5OsKTo0WMB7HUatNtDGbd24Bo/edit?usp=sharing
 
 Bayesian Segmentor aka DPSEG aka DMCMC (currently broken)
----------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Please note that we have found a bug in this system and thus
 it is not fully functional at present.
@@ -281,6 +284,21 @@ evidence in modeling speech segmentation. University of California,
 Irvine. and Pearl, L., Goldwater, S. and Steyvers, M. (2011). Online
 learning mechanisms for Bayesian models of word segmentation. Research
 on Language and Computation, 8(2):107–132.
+
+
+Unsupervised vs. supervised learning
+------------------------------------
+
+* DiBS only works in supervised context, as it requires a training text
+  (including word boundaries)
+
+* The other algorithms natively work in unsupervised context, some of them using
+  a batch learning, other with iterative learning).
+
+* *TP* and *Adaptor Grammar* also accept a ``train_text`` option allowing them
+  to train their internal model on data distinct from the text being segmented.
+  If that option is used, the provided training text must NOT have word
+  boundaries.
 
 
 Additional information

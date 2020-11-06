@@ -2,29 +2,50 @@
    Version numbers follow the `semantic versioning
    <https://semver.org/>`_ principles.
 
+
 not yet released
 ----------------
 
-* in documentation: added citation information (use DOI from zenodo).
+* In documentation: added citation information (use DOI from zenodo).
 
-* in **wordseg-ag**:
+* Added a ``--train-file/-T`` option in **wordseg-ag**, **wordseg-dibs** and
+  **wordseg-tp** allowing to train the model on a text different from the one
+  being segmented.
 
-  * improved error message: when tprob == 0 on double
+* In **wordseg-dibs**
+
+  * Due to the new option ``--train-file/-T``, the short name for the option
+    ``--threshold`` has been renamed from ``-T`` to ``-U``.
+
+  * The training text is now optional and, if not provided by the user, the input
+    text will be used both for training and testing (to be consistent with other
+    algorithms).
+
+* In **wordseg-ag**:
+
+  * Improved error message: when tprob == 0 on double
     precision, indicates to try recompile with quadruple precision
     instead.
 
-  * optionally save the used grammar to a file using the option
+  * Optionally save the used grammar to a file using the option
     ``--save-grammar-to <grammar-file>``.
 
-  * removed warnings with regular expressions on python-3.7.
+  * From command-line the short name for ``--tstart`` changed from ``-T`` to
+    ``-U``. The ``-T`` short name is now used for the ``--train-file`` option.
 
-* in **wordseg-dpseg**, removed a warning with regular expressions on
+  * Removed warnings with regular expressions on python-3.7.
+
+* In **wordseg-dpseg**, removed a warning with regular expressions on
   python-3.7.
 
+<<<<<<< HEAD
 * in **wordseg-puddle**, added an option ``--by-frequency`` to choose words
   based on their frequencies.
 
 * in cluster tools: improved duration and error reporting.
+=======
+* In cluster tools: improved duration and error reporting.
+>>>>>>> c673eaabf20729c6d516a1cc6cc8e839c48ee55f
 
 
 wordseg-0.7.1
