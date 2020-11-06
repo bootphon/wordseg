@@ -2,36 +2,44 @@
    Version numbers follow the `semantic versioning
    <https://semver.org/>`_ principles.
 
+
 not yet released
 ----------------
 
-* in documentation: added citation information (use DOI from zenodo).
+* In documentation: added citation information (use DOI from zenodo).
 
-* added a ``--train-file/-T`` option in **wordeseg-ag** and **wordseg-tp**
-  allowing to train the model on a text different from the one being segmented.
+* Added a ``--train-file/-T`` option in **wordseg-ag**, **wordseg-dibs** and
+  **wordseg-tp** allowing to train the model on a text different from the one
+  being segmented.
 
-* in **wordseg-ag**:
+* In **wordseg-dibs**
 
-  * improved error message: when tprob == 0 on double
+  * Due to the new option ``--train-file/-T``, the short name for the option
+    ``--threshold`` has been renamed from ``-T`` to ``-U``.
+
+  * The training text is now optional and, if not provided by the user, the input
+    text will be used both for training and testing (to be consistent with other
+    algorithms).
+
+* In **wordseg-ag**:
+
+  * Improved error message: when tprob == 0 on double
     precision, indicates to try recompile with quadruple precision
     instead.
 
-  * optionally save the used grammar to a file using the option
+  * Optionally save the used grammar to a file using the option
     ``--save-grammar-to <grammar-file>``.
 
-  * from command-line the short name for ``--tstart`` changed from ``-T`` to
+  * From command-line the short name for ``--tstart`` changed from ``-T`` to
     ``-U``. The ``-T`` short name is now used for the ``--train-file`` option.
 
-  * removed warnings with regular expressions on python-3.7.
+  * Removed warnings with regular expressions on python-3.7.
 
-* in **wordseg-dpseg**, removed a warning with regular expressions on
+* In **wordseg-dpseg**, removed a warning with regular expressions on
   python-3.7.
 
-* in cluster tools: improved duration and error reporting.
+* In cluster tools: improved duration and error reporting.
 
-wordse-0.8
------------
-#TBD
 
 wordseg-0.7.1
 -------------

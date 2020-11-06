@@ -113,7 +113,7 @@ def check_utterance(utterance, separator=Separator(), check_punctuation=True):
     return True
 
 
-def prepare (text, separator=Separator(), unit='phone',
+def prepare(text, separator=Separator(), unit='phone',
             check_punctuation=True, tolerant=False,
             log=utils.null_logger()):
     """Prepares a text in phonological form for word segmentation
@@ -166,7 +166,7 @@ def prepare (text, separator=Separator(), unit='phone',
 
     """
     # raise an error if unit is not valid
-    if unit != 'phone' and unit != 'syllable':
+    if unit not in ('phone', 'syllable'):
         raise ValueError(
             "unit must be 'phone' or 'syllable', it is '{}'".format(unit))
 

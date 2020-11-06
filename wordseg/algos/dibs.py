@@ -4,6 +4,20 @@
     0 and 1 inclusive (representing the probability the model assigns that
     there is a word-boundary there).
 
+    The particularity of DiBS, with repect to the other segmentation algorithms
+    in wordseg, is that it requires a little training test with word boundaries
+    (ie. in phonologized form, not in prepared form). User has two choices:
+
+    - Train and segment on the same text:
+      Specify <input-text> only, <input-text> must be in phonologized form. The
+      algorithm will the provided word boundaries to train the model and will
+      remove them to generate the text to segment.
+
+    - Train and segment on different texts:
+      Specify <input-text> AND --train-file <training-file>. Here <input-text>
+      must be in prepared form (without word boundaries) whereas
+      <training-file> must contain word boundaries.
+
     For details, see Daland, R., Pierrehumbert, J.B., "Learning
     diphone-based segmentation". Cognitive science 35(1), 119-155 (2011).
 
@@ -20,6 +34,7 @@ import six
 from wordseg.separator import Separator
 from wordseg import utils
 from wordseg.prepare import prepare
+
 
 class Counter(dict):
     """A Counter is a (key -> count) dictionnary for counting elements
@@ -390,12 +405,7 @@ def _add_arguments(parser):
 
     group = parser.add_argument_group('training parameters')
     separator = Separator()
-    """
-    group.add_argument(
-        'train_file', metavar='<train-file>', type=str,
-        help='Dibs requires a little train corpus to compute some statistics, '
-        'must be in phonologized from (NOT in prepared form)')
-    """
+
     group.add_argument(
         '-p', '--phone-separator', metavar='<str>',
         default=separator.phone,
@@ -447,28 +457,39 @@ def main():
     separator = Separator(
         phone=args.phone_separator,
         syllable=args.syllable_separator,
-        word=args.word_separator
+        word=args.word_separator)
 
-    )
-    
-    # load train and test texts, ignore empty lines
+    # load test text as a list of utterances, ignore empty lines
     test_text = [line for line in streamin if line]
+    log.info('loaded %s utterances as test data', len(test_text))
 
-    if args.train_file is not None:
-        # ensure the train file exists
+    # user provided a train text, ensure it is valid and that test_text does
+    # not include word separators
+    if args.train_file:
         if not os.path.isfile(args.train_file):
             raise ValueError(
-                'train file specified but does not exist: {}'.format(args.train_file))
+                'train file specified but does not exist: {}'.format(
+                    args.train_file))
+
+        # make sure test_text is in prepared form
+        for n, line in enumerate(test_text):
+            if separator.word in line:
+                raise ValueError(
+                    f'word separator found in test text (line {n+1})')
+
         # load train and test texts, ignore empty lines
         train_text = codecs.open(args.train_file, 'r', encoding='utf8')
         train_text = [line for line in train_text if line]
+        log.info('loaded %s utterances as train data', len(train_text))
     else:
-        for line in test_text:
-            if separator.word not in line:
-                raise ValueError(
-                    'word separator excepted but not exists!')
+        log.info('using test data for training')
+        # the presence of word separator in train utterance will be checked
+        # during training
         train_text = test_text
+
+        # remove the word separators for testing
         test_text = prepare(test_text)
+
     # train the model (learn diphone statistics)
     trained_model = CorpusSummary(
         train_text, separator=separator, level=args.unit, log=log)
@@ -477,10 +498,10 @@ def main():
     segmented = segment(
         test_text,
         trained_model,
-        type = args.type,
-        threshold = args.threshold,
-        pwb = args.pboundary,
-        log = log)
+        type=args.type,
+        threshold=args.threshold,
+        pwb=args.pboundary,
+        log=log)
 
     # output the segmented text
     streamout.write('\n'.join(segmented) + '\n')
