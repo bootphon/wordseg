@@ -149,7 +149,7 @@ class _Puddle(object):
 
         return segmented
 
-
+#if train is None test=train
 def _puddle(text, window, log_level=logging.ERROR, log_name='wordseg-puddle'):
     """Runs the puddle algorithm on the `text`"""
     # create a new puddle segmenter (with an empty lexicon)
@@ -160,8 +160,8 @@ def _puddle(text, window, log_level=logging.ERROR, log_name='wordseg-puddle'):
     return [' '.join(puddle.update_utterance(
         line.strip().split(), segmented=[])) for line in text]
 
-
-def segment(text, window=2, nfolds=5, njobs=1, log=utils.null_logger()):
+#text
+def segment(text,train_text=None, window=2, nfolds=5, njobs=1, log=utils.null_logger()):
     """Returns a word segmented version of `text` using the puddle algorithm
 
     Parameters
@@ -170,6 +170,11 @@ def segment(text, window=2, nfolds=5, njobs=1, log=utils.null_logger()):
         A sequence of lines with syllable (or phoneme) boundaries
         marked by spaces and no word boundaries. Each line in the
         sequence corresponds to a single and comlete utterance.
+    //Add it
+    train_text : sequence, optional
+        The list of utterances to train the model on. If None train the model
+        directly on `text`.
+
     window : int, optional
         Number of phonemes to be taken into account for boundary constraint.
     nfolds : int, optional
@@ -194,12 +199,29 @@ def segment(text, window=2, nfolds=5, njobs=1, log=utils.null_logger()):
     """
     # force the text to be a list of utterances
     text = list(text)
+    
+    if not isinstance(test_text, list):
+        test_text = list(test_text)
+    nutts = len(test_text)
+    log.info('test data: %s utterances loaded', nutts)
+
+    if train_text is None:
+        train_text = test_text
+        log.info('not train data provided, will train model on test data')
+    else:
+        # force the train text from sequence to list
+        if not isinstance(train_text, list):
+            train_text = list(train_text)
+            nutts = len(train_text)
+    log.info('train data: %s utterances loaded', nutts)
+//end of add
 
     log.debug('building %s folds', nfolds)
     folded_texts, fold_index = folding.fold(text, nfolds)
 
     segmented_texts = joblib.Parallel(n_jobs=njobs, verbose=0)(
         joblib.delayed(_puddle)(
+            //train_text,test_text=test_text,
             fold, window, log_level=log.getEffectiveLevel(),
             log_name='wordseg-puddle - fold {}'.format(n+1))
         for n, fold in enumerate(folded_texts))
