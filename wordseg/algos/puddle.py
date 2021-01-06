@@ -233,14 +233,28 @@ def _add_arguments(parser):
 @utils.CatchExceptions
 def main():
     """Entry point of the 'wordseg-puddle' command"""
-    streamin, streamout, _, log, args = utils.prepare_main(
+    train_text,test_text, streamout, _, log, args = utils.prepare_main(
+        //streamin
         name='wordseg-puddle',
         description=__doc__,
         add_arguments=_add_arguments)
+        
+# loads the train text if any
+    train_text = None
+    if args.train_file:
+        if not os.path.isfile(args.train_file):
+            raise ValueError(
+                'train file does not exist: {}'.format(args.train_file))
+        train_text = codecs.open(args.train_file, 'r', encoding='utf8')
+
 
     segmented = segment(
-        streamin, window=args.window,
-        nfolds=args.nfolds, njobs=args.njobs, log=log)
+       //streamin, window=args.window,
+         streamin,
+        train_text = train_text,
+
+       window=args.window,
+       nfolds=args.nfolds, njobs=args.njobs, log=log)
     streamout.write('\n'.join(segmented) + '\n')
 
 
