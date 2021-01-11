@@ -16,23 +16,24 @@ from wordseg import utils, folding
 
 
 class _Puddle(object):
-    def __init__(self, window=2, log=utils.null_logger()):
+    def __init__(self, window=2, by_frequency=False, log=utils.null_logger()):
         self.log = log
         self.window = window
+        self.by_frequency = by_frequency
         self.lexicon = collections.Counter()
         self.beginning = collections.Counter()
         self.ending = collections.Counter()
 
-    # def filter_by_frequency(self, phonemes, i, j):
-    #     all_candidates = []
-    #     for k in range(j, len(phonemes)):
-    #         try:
-    #              all_candidates.append(
-    #                  (k, self.lexicon[''.join(phonemes[i:k+1])]))
-    #         except KeyError:
-    #             pass
-    #     j, _ = sorted(all_candidates, key=lambda x: x[1])[-1]
-    #     return j
+    def filter_by_frequency(self, phonemes, i, j):
+        all_candidates = []
+        for k in range(j, len(phonemes)):
+            try:
+                 all_candidates.append(
+                     (k, self.lexicon[''.join(phonemes[i:k+1])]))
+            except KeyError:
+                pass
+        j, _ = sorted(all_candidates, key=lambda x: x[1])[-1]
+        return j
 
     def filter_by_boundary_condition(self, phonemes, i, j, found):
         if found:
@@ -91,7 +92,7 @@ class _Puddle(object):
 
         """
         # check if the utterance is empty
-        if not len(utterance):
+        if not utterance:
             raise ValueError('The utterance is empty')
 
         found = False
@@ -107,9 +108,10 @@ class _Puddle(object):
                 if candidate_word in self.lexicon:
                     found = True
 
-                    # choose the best candidate by looking at the
-                    # frequency of different candidates
-                    # j = filter_by_frequency(utterance,i,j)
+                    if self.by_frequency:
+                        # choose the best candidate by looking at the
+                        # frequency of different candidates
+                        j = self.filter_by_frequency(utterance, i, j)
 
                     # check if the boundary conditions are respected
                     found = self.filter_by_boundary_condition(
@@ -149,19 +151,41 @@ class _Puddle(object):
 
         return segmented
 
-#if train is None test=train
-def _puddle(text, window, log_level=logging.ERROR, log_name='wordseg-puddle'):
-    """Runs the puddle algorithm on the `text`"""
-    # create a new puddle segmenter (with an empty lexicon)
-    puddle = _Puddle(
+def _puddle_train(puddle,text,train_text, window, by_frequency=False,
+            log_level=logging.ERROR, log_name='wordseg-puddle'):
+    
+
+        return [' '.join(puddle.update_utterance(
+        line.strip().split(), segmented=[])) for line in text]#Q: text or train_text!
+
+
+def _puddle_test(puddle,text,train_text, window, by_frequency=False,
+            log_level=logging.ERROR, log_name='wordseg-puddle'):
+    
+    return  #TBD: seg Q: update_counters
+
+def _puddle(text,train_text, window, by_frequency=False,#Q:train_text=None
+            log_level=logging.ERROR, log_name='wordseg-puddle'):
+        """Runs the puddle algorithm on the `text`"""
+        # create a new puddle segmenter (with an empty lexicon) 
+        puddle = _Puddle(
         window=window,
+        by_frequency=by_frequency,
         log=utils.get_logger(name=log_name, level=log_level))
+  
+        if train_text is not None:
+            #Q:train_text=train_text & puddle on _puddle or in each puddle
+            _puddle_train(puddle,text,train_text,window,by_frequency=False,
+                     log_level=logging.ERROR,log_name='wordseg_puddle')
+        else:
+            #Q:train_text is None
+            _puddle_test(puddle,text,train_text,window,by_frequency=False,
+                     log_level=logging.ERROR,log_name='wordseg_puddle')
 
-    return [' '.join(puddle.update_utterance(
-        line.strip().split(), segmented=[])) for line in text]
-
-#text
-def segment(text,train_text=None, window=2, nfolds=5, njobs=1, log=utils.null_logger()):
+    
+#Q;train_text=None
+def segment(text,train_text=None, window=2, by_frequency=False, nfolds=5,
+            njobs=1, log=utils.null_logger()):
     """Returns a word segmented version of `text` using the puddle algorithm
 
     Parameters
@@ -170,13 +194,15 @@ def segment(text,train_text=None, window=2, nfolds=5, njobs=1, log=utils.null_lo
         A sequence of lines with syllable (or phoneme) boundaries
         marked by spaces and no word boundaries. Each line in the
         sequence corresponds to a single and comlete utterance.
-    //Add it
-    train_text : sequence, optional
+
+    train_text: #TBD
         The list of utterances to train the model on. If None train the model
         directly on `text`.
 
     window : int, optional
         Number of phonemes to be taken into account for boundary constraint.
+    by_frequency : bool, optional
+        When True choose the word candidates by filterring them by frequency
     nfolds : int, optional
         The number of folds to segment the `text` on.
     njobs : int, optional
@@ -199,14 +225,9 @@ def segment(text,train_text=None, window=2, nfolds=5, njobs=1, log=utils.null_lo
     """
     # force the text to be a list of utterances
     text = list(text)
-    
-    if not isinstance(test_text, list):
-        test_text = list(test_text)
-    nutts = len(test_text)
-    log.info('test data: %s utterances loaded', nutts)
-
+    #Q:Add this part of test
     if train_text is None:
-        train_text = test_text
+        train_text = text
         log.info('not train data provided, will train model on test data')
     else:
         # force the train text from sequence to list
@@ -214,15 +235,15 @@ def segment(text,train_text=None, window=2, nfolds=5, njobs=1, log=utils.null_lo
             train_text = list(train_text)
             nutts = len(train_text)
     log.info('train data: %s utterances loaded', nutts)
-//end of add
+    #end
 
     log.debug('building %s folds', nfolds)
     folded_texts, fold_index = folding.fold(text, nfolds)
-
+#Q: how to add the train text on the fold
     segmented_texts = joblib.Parallel(n_jobs=njobs, verbose=0)(
         joblib.delayed(_puddle)(
-            //train_text,test_text=test_text,
-            fold, window, log_level=log.getEffectiveLevel(),
+            fold, window, by_frequency=by_frequency,
+            log_level=log.getEffectiveLevel(),
             log_name='wordseg-puddle - fold {}'.format(n+1))
         for n, fold in enumerate(folded_texts))
 
@@ -247,6 +268,11 @@ def _add_arguments(parser):
         Number of phonemes to be taken into account for boundary constraint,
         default is %(default)s.''')
 
+    parser.add_argument(
+        '-F', '--by-frequency', action='store_true',
+        help='choose word candidates based on frequency '
+        '(deactivated by default)')
+
     # parser.add_argument(
     #     '-d', '--decay', action='store_true',
     #     help='Decrease the size of lexicon, modelize memory of lexicon.')
@@ -255,28 +281,17 @@ def _add_arguments(parser):
 @utils.CatchExceptions
 def main():
     """Entry point of the 'wordseg-puddle' command"""
-    train_text,test_text, streamout, _, log, args = utils.prepare_main(
-        //streamin
+    streamin, streamout, _, log, args = utils.prepare_main(
         name='wordseg-puddle',
         description=__doc__,
         add_arguments=_add_arguments)
-        
-# loads the train text if any
-    train_text = None
-    if args.train_file:
-        if not os.path.isfile(args.train_file):
-            raise ValueError(
-                'train file does not exist: {}'.format(args.train_file))
-        train_text = codecs.open(args.train_file, 'r', encoding='utf8')
-
+    #Q: add domme verification on the train_text
+    train_text=None
 
     segmented = segment(
-       //streamin, window=args.window,
-         streamin,
-        train_text = train_text,
-
-       window=args.window,
-       nfolds=args.nfolds, njobs=args.njobs, log=log)
+        streamin,train_text=train_text,#Q
+        window=args.window, by_frequency=args.by_frequency,
+        nfolds=args.nfolds, njobs=args.njobs, log=log)
     streamout.write('\n'.join(segmented) + '\n')
 
 
