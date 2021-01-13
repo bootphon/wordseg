@@ -28,8 +28,8 @@ class _Puddle(object):
         all_candidates = []
         for k in range(j, len(phonemes)):
             try:
-                 all_candidates.append(
-                     (k, self.lexicon[''.join(phonemes[i:k+1])]))
+                all_candidates.append(
+                    (k, self.lexicon[''.join(phonemes[i:k+1])]))
             except KeyError:
                 pass
         j, _ = sorted(all_candidates, key=lambda x: x[1])[-1]
@@ -50,6 +50,7 @@ class _Puddle(object):
                 return False
 
             return True
+        return None
 
     def update_counters(self, segmented, phonemes, i, j):
         self.lexicon.update([''.join(phonemes[i:j+1])])
@@ -151,40 +152,30 @@ class _Puddle(object):
 
         return segmented
 
-def _puddle_train(puddle,text,train_text, window, by_frequency=False,
+
+def _puddle_train(model, text):
+    return [' '.join(model.update_utterance(
+        line.strip().split(), segmented=[])) for line in text]
+
+
+def _puddle_test(model, text):
+    return [' '.join(model.segment_utterance(
+        line.strip().split(), segmented=[])) for line in text]
+
+
+def _puddle(text, window, by_frequency=False,
             log_level=logging.ERROR, log_name='wordseg-puddle'):
-    
-
-        return [' '.join(puddle.update_utterance(
-        line.strip().split(), segmented=[])) for line in text]#Q: text or train_text!
-
-
-def _puddle_test(puddle,text,train_text, window, by_frequency=False,
-            log_level=logging.ERROR, log_name='wordseg-puddle'):
-    
-    return  #TBD: seg Q: update_counters
-
-def _puddle(text,train_text, window, by_frequency=False,#Q:train_text=None
-            log_level=logging.ERROR, log_name='wordseg-puddle'):
-        """Runs the puddle algorithm on the `text`"""
-        # create a new puddle segmenter (with an empty lexicon) 
-        puddle = _Puddle(
+    """Runs the puddle algorithm on the `text`"""
+    # create a new puddle segmenter (with an empty lexicon)
+    model = _Puddle(
         window=window,
         by_frequency=by_frequency,
         log=utils.get_logger(name=log_name, level=log_level))
-  
-        if train_text is not None:
-            #Q:train_text=train_text & puddle on _puddle or in each puddle
-            _puddle_train(puddle,text,train_text,window,by_frequency=False,
-                     log_level=logging.ERROR,log_name='wordseg_puddle')
-        else:
-            #Q:train_text is None
-            _puddle_test(puddle,text,train_text,window,by_frequency=False,
-                     log_level=logging.ERROR,log_name='wordseg_puddle')
 
-    
-#Q;train_text=None
-def segment(text,train_text=None, window=2, by_frequency=False, nfolds=5,
+    return _puddle_train(model, text)
+
+
+def segment(text, train_text=None, window=2, by_frequency=False, nfolds=5,
             njobs=1, log=utils.null_logger()):
     """Returns a word segmented version of `text` using the puddle algorithm
 
@@ -225,32 +216,43 @@ def segment(text,train_text=None, window=2, by_frequency=False, nfolds=5,
     """
     # force the text to be a list of utterances
     text = list(text)
-    #Q:Add this part of test
+
     if train_text is None:
-        train_text = text
         log.info('not train data provided, will train model on test data')
+
+        log.debug('building %s folds', nfolds)
+        folded_texts, fold_index = folding.fold(text, nfolds)
+
+        segmented_texts = joblib.Parallel(n_jobs=njobs, verbose=0)(
+            joblib.delayed(_puddle)(
+                fold, window, by_frequency=by_frequency,
+                log_level=log.getEffectiveLevel(),
+                log_name='wordseg-puddle - fold {}'.format(n+1))
+            for n, fold in enumerate(folded_texts))
+
+        log.debug('unfolding the %s folds', nfolds)
+        output_text = folding.unfold(segmented_texts, fold_index)
+
+        return (utt for utt in output_text if utt)
+
     else:
         # force the train text from sequence to list
         if not isinstance(train_text, list):
             train_text = list(train_text)
             nutts = len(train_text)
-    log.info('train data: %s utterances loaded', nutts)
-    #end
+        log.info('train data: %s utterances loaded', nutts)
 
-    log.debug('building %s folds', nfolds)
-    folded_texts, fold_index = folding.fold(text, nfolds)
-#Q: how to add the train text on the fold
-    segmented_texts = joblib.Parallel(n_jobs=njobs, verbose=0)(
-        joblib.delayed(_puddle)(
-            fold, window, by_frequency=by_frequency,
-            log_level=log.getEffectiveLevel(),
-            log_name='wordseg-puddle - fold {}'.format(n+1))
-        for n, fold in enumerate(folded_texts))
+        # init a puddle model
+        model = _Puddle(
+            window=window,
+            by_frequency=by_frequency,
+            log=log)
 
-    log.debug('unfolding the %s folds', nfolds)
-    output_text = folding.unfold(segmented_texts, fold_index)
+        # train it from train_text
+        _puddle_train(model, train_text)
 
-    return (utt for utt in output_text if utt)
+        # segment test_text
+        return (utt for utt in _puddle_test(model, text) if utt)
 
 
 def _add_arguments(parser):
