@@ -51,7 +51,7 @@ def test_replicate(datadir):
         'boundary_noedge_recall': 0.01423}
 
     assert score == pytest.approx(expected, rel=1e-3)
-    
+
 '''TBD
 def test_train_text_exist(window,frequency,):
     train_text =
@@ -71,4 +71,7 @@ def test_train_text_none(window,frequency,nfolds,njobs):
         train_text=train_text,
         window=window, by_frequency=frequency,nfolds=nfolds,njobs=njobs
         )
+def test_before_after():
+    train_text =
+    test_text = 
 '''
