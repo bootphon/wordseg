@@ -167,9 +167,6 @@ class _Puddle(object):
 
         if len(phonemes[i:j+1]) >= 2:
             w = self.window
-           
-            #self.beginning.update([''.join(phonemes[i:i+w])])
-            #self.ending.update([''.join(phonemes[j+1-w:j+1])])
 
             self.log.debug(
                 'biphones %s added in beginning', ''.join(phonemes[i:i+w]))
@@ -224,8 +221,7 @@ class _Puddle(object):
                     if found:
                         self.log.info('match found : %s', candidate_word)
                         if i != 0:
-                            # add the word preceding the word found in
-        
+                           
                             # counters and segment
                             segmented = self.segment_counters(
                                 segmented, utterance, 0, i-1)
@@ -290,7 +286,7 @@ def segment(text, train_text=None, window=2, by_frequency=False, nfolds=5,
     train_text: #TBD
         The list of utterances to train the model on. If None train the model
         directly on `text`.
-        no need to the nfolds,njobs when we have a train_text.
+        No need to enter nfolds and njobs when we have a train_text.
 
     window : int, optional
         Number of phonemes to be taken into account for boundary constraint.
@@ -410,7 +406,6 @@ def main():
     if train_text:
         train_text = (line for line in train_text if line)
 
-    #Now: add verification of the file train as tp algo
     segmented = segment(
         test_text,train_text=train_text,
         window=args.window, by_frequency=args.by_frequency,
