@@ -77,7 +77,7 @@ class _Puddle(object):
 
         return segmented
 
-    def update_utterance(self, utterance, segmented=[]):
+    def update_utterance(self, utterance, segmented=[],update=True):
         """Recursive function implementing puddle
 
         Parameters
@@ -126,18 +126,27 @@ class _Puddle(object):
                             # add the word preceding the word found in
                             # lexicon; update beginning and ending
                             # counters and segment
-                            segmented = self.update_counters(
-                                segmented, utterance, 0, i-1)
+                            if update :
+                                segmented = self.update_counters(
+                                    segmented, utterance, 0, i-1)
+                            else:
+                                segmented = self.segment_counters(
+                                    segmented, utterance, 0, i-1)
 
                         # update the lexicon, beginning and ending counters
-                        segmented = self.update_counters(
-                            segmented, utterance, i, j)
+                            if update :
+                                segmented = self.update_counters(
+                                    segmented, utterance, i, j)
+                            else:
+                                segmented = self.segment_counters(
+                                    segmented, utterance, i, j)
 
                         if j != len(utterance) - 1:
                             # recursion
+                           
                             return self.update_utterance(
-                                utterance[j+1:], segmented=segmented)
-
+                                utterance[j+1:], segmented=segmented,update=update)
+                    
                         # go to the next chunk and apply the same condition
                         self.log.info(
                             'go to next chunk : %s ', utterance[j+1:])
@@ -155,110 +164,19 @@ class _Puddle(object):
         return segmented
 
     def segment_counters(self, segmented, phonemes, i, j):
-        self.lexicon.update([''.join(phonemes[i:j+1])])
         segmented.append(''.join(phonemes[i:j+1]))
-
-        if len(phonemes[i:j+1]) == len(phonemes):
-            self.log.debug(
-                'utterance %s added in lexicon', ''.join(phonemes[i:j+1]))
-        else:
-            self.log.debug(
-                'match %s added in lexicon', ''.join(phonemes[i:j+1]))
-
-        if len(phonemes[i:j+1]) >= 2:
-            w = self.window
-
-            self.log.debug(
-                'biphones %s added in beginning', ''.join(phonemes[i:i+w]))
-            self.log.debug(
-                'biphones %s added in ending', ''.join(phonemes[j+1-w:j+1]))
-
         return segmented
 
-    def segment_utterance(self, utterance, segmented=[]):
-        """Recursive function implementing puddle
-
-        Parameters
-        ----------
-        utterance : list
-            A non-empty list of phonological symbols (phones or syllables)
-            corresponding to an utterance.
-        segmented : list
-            Recursively build lexicon of pseudo words.
-
-        Raises
-        ------
-        ValueError
-            If `phonemes` is empty.
-
-        """
-        # check if the utterance is empty
-        if not utterance:
-            raise ValueError('The utterance is empty')
-
-        found = False
-
-        # index of start of word candidate
-        i = 0
-        while i < len(utterance):
-            j = i
-            while j < len(utterance):
-                candidate_word = ''.join(utterance[i:j+1])
-                self.log.debug('word candidate: %s', candidate_word)
-
-                if candidate_word in self.lexicon:
-                    found = True
-
-                    if self.by_frequency:
-                        # choose the best candidate by looking at the
-                        # frequency of different candidates
-                        j = self.filter_by_frequency(utterance, i, j)
-
-                    # check if the boundary conditions are respected
-                    found = self.filter_by_boundary_condition(
-                        utterance, i, j, found)
-
-                    if found:
-                        self.log.info('match found : %s', candidate_word)
-                        if i != 0:
-                           
-                            # counters and segment
-                            segmented = self.segment_counters(
-                                segmented, utterance, 0, i-1)
-
-                        # seg
-                        segmented = self.segment_counters(
-                            segmented, utterance, i, j)
-
-                        if j != len(utterance) - 1:
-                            # recursion
-                            return self.segment_utterance(
-                                utterance[j+1:], segmented=segmented)
-
-                        # go to the next chunk and apply the same condition
-                        self.log.info(
-                         'go to next chunk : %s ', utterance[j+1:])
-                        break
-
-                    else:
-                        j += 1
-                else:
-                    j += 1
-            i += 1  # or go to the next phoneme
-
-        if not found:
-            self.segment_counters(segmented, utterance, 0, len(utterance) - 1)
-
-        return segmented
+    
 
 def _puddle_train(model, text):
     return [' '.join(model.update_utterance(
-        line.strip().split(), segmented=[])) for line in text]
+        line.strip().split(), segmented=[]),update=True) for line in text]
 
 
 def _puddle_test(model, text):
     return [' '.join(model.segment_utterance(
-        line.strip().split(), segmented=[])) for line in text]
+        line.strip().split(), segmented=[]),update=False) for line in text]
 
 
 def _puddle(text, window, by_frequency=False,
