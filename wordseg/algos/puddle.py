@@ -143,12 +143,12 @@ class _Puddle(object):
                                     segmented, utterance, 0, i-1)
 
                         # update the lexicon, beginning and ending counters
-                            if update :
-                                segmented = self.update_counters(
-                                    segmented, utterance, i, j)
-                            else:
-                                segmented = self.segment_counters(
-                                    segmented, utterance, i, j)
+                        if update :
+                            segmented = self.update_counters(
+                                segmented, utterance, i, j)
+                        else:
+                            segmented = self.segment_counters(
+                                segmented, utterance, i, j)
 
                         if j != len(utterance) - 1:
                             # recursion
@@ -169,7 +169,8 @@ class _Puddle(object):
 
         if not found:
             self.update_counters(segmented, utterance, 0, len(utterance) - 1)
-
+        else:
+            self.segment_counters(segmented, utterance, 0, len(utterance) - 1)
         return segmented
 
     def segment_counters(self, segmented, phonemes, i, j):
@@ -180,12 +181,12 @@ class _Puddle(object):
 
 def _puddle_train(model, text):
     return [' '.join(model.update_utterance(
-        line.strip().split(), segmented=[]),update=True) for line in text]
+        line.strip().split(), segmented=[],update=True)) for line in text]
 
 
 def _puddle_test(model, text):
-    return [' '.join(model.segment_utterance(
-        line.strip().split(), segmented=[]),update=False) for line in text]
+    return [' '.join(model.update_utterance(
+        line.strip().split(), segmented=[],update=False)) for line in text]
 
 
 def _puddle(text, window, by_frequency=False,
