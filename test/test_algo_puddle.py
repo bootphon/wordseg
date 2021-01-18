@@ -1,6 +1,7 @@
 """Test of the wordseg.algos.puddle module"""
 
 import codecs
+import copy
 import os
 import pytest
 
@@ -52,26 +53,34 @@ def test_replicate(datadir):
 
     assert score == pytest.approx(expected, rel=1e-3)
 
-'''TBD
-def test_train_text_exist(window,frequency,):
-    train_text =
-    test_text =
 
-    segmented = segment(
-        test_text,
-        train_text=train_text,
-        window=window, by_frequency=frequency,
-        )
-def test_train_text_none(window,frequency,nfolds,njobs):
-    train_text = none
-    test_text =
+def test_train_text(prep):
+    train_text = prep[:10]
+    test_text = prep[10:]
 
-    segmented = segment(
-        test_text,
-        train_text=train_text,
-        window=window, by_frequency=frequency,nfolds=nfolds,njobs=njobs
-        )
-def test_before_after():
-    train_text =
-    test_text = 
-'''
+    # offline learning on train_text
+    segmented1 = list(puddle.segment(test_text, train_text=train_text))
+
+    # online learning
+    segmented2 = list(puddle.segment(test_text, nfolds=1))
+
+    def join(s):
+        return ''.join(s).replace(' ', '')
+
+    assert len(test_text) == len(segmented1) == len(segmented2)
+    assert join(test_text) == join(segmented1) == join(segmented2)
+
+
+def test_segment_only(prep):
+    train_text = prep[:10]
+    test_text = prep[10:]
+
+    # train a model on train_text
+    model = puddle._Puddle()
+    puddle._puddle_train(model, train_text)
+
+    # ensure the model is not updated during segmentation
+    model_backup = copy.deepcopy(model)
+    segmented = puddle._puddle_test(model, test_text)
+    assert len(segmented) == len(test_text)
+    assert model == model_backup

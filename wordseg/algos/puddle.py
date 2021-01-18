@@ -9,10 +9,11 @@ segmentation. Journal of child language, 37(03), 545-564."
 """
 
 import collections
-import joblib
+import codecs
 import logging
 import os
-import codecs
+
+import joblib
 
 from wordseg import utils, folding
 
@@ -25,6 +26,14 @@ class _Puddle(object):
         self.lexicon = collections.Counter()
         self.beginning = collections.Counter()
         self.ending = collections.Counter()
+
+    def __eq__(self, other):
+        return (
+            self.window == other.window and
+            self.by_frequency == other.by_frequency and
+            self.lexicon == other.lexicon and
+            self.beginning == other.beginning and
+            self.ending == other.ending)
 
     def filter_by_frequency(self, phonemes, i, j):
         all_candidates = []
@@ -337,7 +346,7 @@ def segment(text, train_text=None, window=2, by_frequency=False, nfolds=5,
         # force the train text from sequence to list
         if not isinstance(train_text, list):
             train_text = list(train_text)
-            nutts = len(train_text)
+        nutts = len(train_text)
         log.info('train data: %s utterances loaded', nutts)
 
         # init a puddle model
