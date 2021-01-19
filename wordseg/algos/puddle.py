@@ -168,9 +168,10 @@ class _Puddle(object):
             i += 1  # or go to the next phoneme
 
         if not found:
-            self.update_counters(segmented, utterance, 0, len(utterance) - 1)
-        else:
-            self.segment_counters(segmented, utterance, 0, len(utterance) - 1)
+            if update :
+                self.update_counters(segmented, utterance, 0, len(utterance) - 1)
+            else:
+                self.segment_counters(segmented, utterance, 0, len(utterance) - 1)
         return segmented
 
     def segment_counters(self, segmented, phonemes, i, j):

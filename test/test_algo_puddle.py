@@ -78,9 +78,12 @@ def test_segment_only(prep):
     # train a model on train_text
     model = puddle._Puddle()
     puddle._puddle_train(model, train_text)
-
+    
     # ensure the model is not updated during segmentation
-    model_backup = copy.deepcopy(model)
+    
+    model_backup = copy.deepcopy(model) #copy.deepcopy(model)
+    
     segmented = puddle._puddle_test(model, test_text)
     assert len(segmented) == len(test_text)
     assert model == model_backup
+    
