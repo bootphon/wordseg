@@ -12,15 +12,24 @@ from wordseg.algos import puddle
 
 
 @pytest.mark.parametrize(
-    'window, nfolds, njobs',
-    [(w, f, j) for w in (1, 5) for f in (1, 5) for j in (3, 10)])
-def test_puddle(prep, window, nfolds, njobs):
-    out = list(puddle.segment(prep, window=window, nfolds=nfolds, njobs=njobs))
+    'window, nfolds, njobs, by_frequency',
+    [(w, f, j, b)
+     for w in (1, 3) for f in (1, 3) for j in (3, 5) for b in (True, False)])
+def test_puddle(prep, window, nfolds, njobs, by_frequency):
+    out = list(puddle.segment(
+        prep, window=window, by_frequency=by_frequency,
+        nfolds=nfolds, njobs=njobs))
     s = Separator().remove
 
     assert len(out) == len(prep)
     for n, (a, b) in enumerate(zip(out, prep)):
         assert s(a) == s(b), 'line {}: "{}" != "{}"'.format(n+1, s(a), s(b))
+
+
+def test_empty_line(prep):
+    with pytest.raises(ValueError) as err:
+        puddle.segment(prep[:2] + [''] + prep[4:])
+    assert 'utterance is empty' in str(err)
 
 
 def test_replicate(datadir):
@@ -76,14 +85,16 @@ def test_segment_only(prep):
     test_text = prep[10:]
 
     # train a model on train_text
-    model = puddle._Puddle()
-    puddle._puddle_train(model, train_text)
-    
+    model = puddle.Puddle()
+    model.train(train_text)
+    model_backup = copy.deepcopy(model)
+
     # ensure the model is not updated during segmentation
-    
-    model_backup = copy.deepcopy(model) #copy.deepcopy(model)
-    
-    segmented = puddle._puddle_test(model, test_text)
+    segmented = list(model.segment(test_text, update_model=False))
     assert len(segmented) == len(test_text)
     assert model == model_backup
-    
+
+    # ensure the model is updated during segmentation
+    segmented = list(model.segment(test_text, update_model=True))
+    assert len(segmented) == len(test_text)
+    assert model != model_backup

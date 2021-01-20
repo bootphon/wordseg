@@ -2,15 +2,14 @@
 
 Implementation of the puddle philosophy developped by P. Monaghan.
 
-See "Monaghan, P., & Christiansen, M. H. (2010). Words in
-puddles of sound: modelling psycholinguistic effects in speech
-segmentation. Journal of child language, 37(03), 545-564."
+See "Monaghan, P., & Christiansen, M. H. (2010). Words in puddles of sound:
+modelling psycholinguistic effects in speech segmentation. Journal of child
+language, 37(03), 545-564."
 
 """
 
-import collections
 import codecs
-import logging
+import collections
 import os
 
 import joblib
@@ -18,75 +17,123 @@ import joblib
 from wordseg import utils, folding
 
 
-class _Puddle(object):
+class Puddle:
+    """Train and segmenttext with a PUDDLE modelling
+
+    Implementation of a PUDDLE model with `train()` and `segment()` methods.
+
+    Parameters
+    ----------
+    window : int, optional
+        Number of phonemes to be taken into account for boundary constraint.
+        Default to 2.
+    by_frequency : bool, optional
+        When True choose the word candidates by filterring them by frequency.
+        Default to False.
+    log : logging.Logger, optional
+        The logger instance where to send messages.
+
+    """
     def __init__(self, window=2, by_frequency=False, log=utils.null_logger()):
-        self.log = log
+        self._log = log
         self.window = window
         self.by_frequency = by_frequency
-        self.lexicon = collections.Counter()
-        self.beginning = collections.Counter()
-        self.ending = collections.Counter()
+
+        self._lexicon = collections.Counter()
+        self._beginning = collections.Counter()
+        self._ending = collections.Counter()
 
     def __eq__(self, other):
         return (
             self.window == other.window and
             self.by_frequency == other.by_frequency and
-            self.lexicon == other.lexicon and
-            self.beginning == other.beginning and
-            self.ending == other.ending)
+            self._lexicon == other._lexicon and
+            self._beginning == other._beginning and
+            self._ending == other._ending)
 
-    def filter_by_frequency(self, phonemes, i, j):
+    def train(self, text):
+        """Train a PUDDLE model from `text`
+
+        `text` must be a sequence of strings, each one considered as an
+        utterance.
+
+        """
+        for utterance in text:
+            self._process_utterance(
+                utterance.strip().split(),
+                segmented=[],
+                do_update=True)
+
+    def segment(self, text, update_model=True):
+        """Segments a `text` using the trained PUDDLE model
+
+        `text` must be a sequence of strings, each one considered as an
+        utterance.
+
+        If `update_model` is True, the model is trained online during
+        segmentation. Otherwise it stays constant.
+
+        Yields the segmented utterances.
+
+        """
+        for utterance in text:
+            yield ' '.join(
+                self._process_utterance(
+                    utterance.strip().split(),
+                    segmented=[], do_update=update_model))
+
+    def _filter_by_frequency(self, utterance, i, j):
         all_candidates = []
-        for k in range(j, len(phonemes)):
+        for k in range(j, len(utterance)):
             try:
                 all_candidates.append(
-                    (k, self.lexicon[''.join(phonemes[i:k+1])]))
+                    (k, self._lexicon[''.join(utterance[i:k+1])]))
             except KeyError:
                 pass
         j, _ = sorted(all_candidates, key=lambda x: x[1])[-1]
         return j
 
-    def filter_by_boundary_condition(self, phonemes, i, j, found):
-        if found:
-            previous_biphone = ''.join(phonemes[i - self.window:i])
-            # previous must be word-end
-            if i != 0 and previous_biphone not in self.ending:
-                return False
+    def _filter_by_boundary_condition(self, utterance, i, j):
+        # previous must be word-end
+        prev_biphone = ''.join(utterance[i - self.window:i])
+        if i != 0 and prev_biphone not in self._ending:
+            return False
 
-            following_biphone = ''.join(phonemes[j + 1:j + 1 + self.window])
-            if (
-                    len(phonemes) != j - i
-                    and following_biphone not in self.beginning
-            ):
-                return False
+        next_biphone = ''.join(utterance[j + 1:j + 1 + self.window])
+        if len(utterance) != j - i and next_biphone not in self._beginning:
+            return False
 
-            return True
-        return None
+        return True
 
-    def update_counters(self, segmented, phonemes, i, j):
-        self.lexicon.update([''.join(phonemes[i:j+1])])
-        segmented.append(''.join(phonemes[i:j+1]))
+    def _update_candidate(self, segmented, utterance, i, j):
+        self._lexicon.update([''.join(utterance[i:j+1])])
+        segmented += [''.join(utterance[i:j+1])]
 
-        if len(phonemes[i:j+1]) == len(phonemes):
-            self.log.debug(
-                'utterance %s added in lexicon', ''.join(phonemes[i:j+1]))
+        if len(utterance[i:j+1]) == len(utterance):
+            self._log.debug(
+                'utterance %s added in lexicon', ''.join(utterance[i:j+1]))
         else:
-            self.log.debug(
-                'match %s added in lexicon', ''.join(phonemes[i:j+1]))
+            self._log.debug(
+                'match %s added in lexicon', ''.join(utterance[i:j+1]))
 
-        if len(phonemes[i:j+1]) >= 2:
-            w = self.window
-            self.beginning.update([''.join(phonemes[i:i+w])])
-            self.ending.update([''.join(phonemes[j+1-w:j+1])])
+        if len(utterance[i:j+1]) >= 2:
+            self._beginning.update([''.join(utterance[i:i+self.window])])
+            self._ending.update([''.join(utterance[j+1-self.window:j+1])])
 
-            self.log.debug(
-                'biphones %s added in beginning', ''.join(phonemes[i:i+w]))
-            self.log.debug(
-                'biphones %s added in ending', ''.join(phonemes[j+1-w:j+1]))
+            self._log.debug(
+                'biphones %s added in beginning',
+                ''.join(utterance[i:i+self.window]))
+            self._log.debug(
+                'biphones %s added in ending',
+                ''.join(utterance[j+1-self.window:j+1]))
 
         return segmented
 
-    def update_utterance(self, utterance, segmented=[],update=True):
+    @staticmethod
+    def _segment_candidate(segmented, utterance, i, j):
+        return segmented.append(''.join(utterance[i:j+1]))
+
+    def _process_utterance(self, utterance, segmented, do_update):
         """Recursive function implementing puddle
 
         Parameters
@@ -96,16 +143,23 @@ class _Puddle(object):
             corresponding to an utterance.
         segmented : list
             Recursively build lexicon of pseudo words.
+        do_update : bool
+            When True, update the model while segmenting
 
         Raises
         ------
         ValueError
-            If `phonemes` is empty.
+            If `utterance` is empty.
 
         """
-        # check if the utterance is empty
         if not utterance:
             raise ValueError('The utterance is empty')
+
+        # select the right method for segmenting pseudo words with respect to
+        # `do_update`
+        process_candidate = (
+            self._update_candidate if do_update else
+            self._segment_candidate)
 
         found = False
 
@@ -115,119 +169,89 @@ class _Puddle(object):
             j = i
             while j < len(utterance):
                 candidate_word = ''.join(utterance[i:j+1])
-                self.log.debug('word candidate: %s', candidate_word)
+                # self._log.debug('word candidate: %s', candidate_word)
 
-                if candidate_word in self.lexicon:
-                    found = True
-
+                if candidate_word in self._lexicon:
                     if self.by_frequency:
                         # choose the best candidate by looking at the
                         # frequency of different candidates
-                        j = self.filter_by_frequency(utterance, i, j)
+                        j = self._filter_by_frequency(utterance, i, j)
 
                     # check if the boundary conditions are respected
-                    found = self.filter_by_boundary_condition(
-                        utterance, i, j, found)
+                    found = self._filter_by_boundary_condition(utterance, i, j)
 
                     if found:
-                        self.log.info('match found : %s', candidate_word)
+                        self._log.info('match found : %s', candidate_word)
                         if i != 0:
                             # add the word preceding the word found in
                             # lexicon; update beginning and ending
                             # counters and segment
-                            if update :
-                                segmented = self.update_counters(
-                                    segmented, utterance, 0, i-1)
-                            else:
-                                segmented = self.segment_counters(
-                                    segmented, utterance, 0, i-1)
+                            segmented = process_candidate(
+                                segmented, utterance, 0, i-1)
 
                         # update the lexicon, beginning and ending counters
-                        if update :
-                            segmented = self.update_counters(
-                                segmented, utterance, i, j)
-                        else:
-                            segmented = self.segment_counters(
-                                segmented, utterance, i, j)
+                        segmented = process_candidate(
+                            segmented, utterance, i, j)
 
                         if j != len(utterance) - 1:
                             # recursion
-                           
-                            return self.update_utterance(
-                                utterance[j+1:], segmented=segmented,update=update)
-                    
+                            return self._process_utterance(
+                                utterance[j+1:],
+                                segmented=segmented,
+                                do_update=do_update)
+
                         # go to the next chunk and apply the same condition
-                        self.log.info(
-                            'go to next chunk : %s ', utterance[j+1:])
+                        self._log.info(
+                            'go to next chunk : %s', utterance[j+1:])
                         break
 
-                    else:
-                        j += 1
-                else:
-                    j += 1
+                j += 1
             i += 1  # or go to the next phoneme
 
         if not found:
-            if update :
-                self.update_counters(segmented, utterance, 0, len(utterance) - 1)
-            else:
-                self.segment_counters(segmented, utterance, 0, len(utterance) - 1)
+            process_candidate(segmented, utterance, 0, len(utterance) - 1)
+
         return segmented
 
-    def segment_counters(self, segmented, phonemes, i, j):
-        segmented.append(''.join(phonemes[i:j+1]))
-        return segmented
 
-    
-
-def _puddle_train(model, text):
-    return [' '.join(model.update_utterance(
-        line.strip().split(), segmented=[],update=True)) for line in text]
-
-
-def _puddle_test(model, text):
-    return [' '.join(model.update_utterance(
-        line.strip().split(), segmented=[],update=False)) for line in text]
-
-
-def _puddle(text, window, by_frequency=False,
-            log_level=logging.ERROR, log_name='wordseg-puddle'):
-    """Runs the puddle algorithm on the `text`"""
-    # create a new puddle segmenter (with an empty lexicon)
-    model = _Puddle(
+def _do_puddle(text, window, by_frequency, log_level, log_name):
+    """Auxiliary function to segment"""
+    model = Puddle(
         window=window,
         by_frequency=by_frequency,
         log=utils.get_logger(name=log_name, level=log_level))
 
-    return _puddle_train(model, text)
+    return list(model.segment(text, update_model=True))
 
 
 def segment(text, train_text=None, window=2, by_frequency=False, nfolds=5,
             njobs=1, log=utils.null_logger()):
     """Returns a word segmented version of `text` using the puddle algorithm
+
     Parameters
     ----------
-    text : sequence
+    text : sequence of str
         A sequence of lines with syllable (or phoneme) boundaries
         marked by spaces and no word boundaries. Each line in the
-        sequence corresponds to a single and comlete utterance.
-
-    train_text: #TBD
-        The list of utterances to train the model on. If None train the model
-        directly on `text`.
-        No need to enter nfolds and njobs when we have a train_text.
-
+        sequence corresponds to a single and complete utterance.
+    train_text : sequence of str
+        The list of utterances to train the model on. If None (default) the
+        model is trained online during segmentation. When `train_text` is
+        specified, the options `nfolds` and `njobs` are ignored.
     window : int, optional
         Number of phonemes to be taken into account for boundary constraint.
+        Default to 2.
     by_frequency : bool, optional
-        When True choose the word candidates by filterring them by frequency
+        When True choose the word candidates by filterring them by frequency.
+        Default to False.
     nfolds : int, optional
-        The number of folds to segment the `text` on.
+        The number of folds to segment the `text` on. This option is ignored if
+        a `train_text` is provided.
     njobs : int, optional
         The number of subprocesses to run in parallel. The folds are
-        independant of each others and can be computed in
-        parallel. Requesting a number of jobs greater then `nfolds`
-        have no effect.
+        independant of each others and can be computed in parallel. Requesting
+        a number of jobs greater then `nfolds` have no effect. This option is
+        ignored if a `train_text` is provided.
     log : logging.Logger, optional
         The logger instance where to send messages.
 
@@ -244,17 +268,18 @@ def segment(text, train_text=None, window=2, by_frequency=False, nfolds=5,
     # force the text to be a list of utterances
     text = list(text)
 
-    if train_text is None:
+    if not train_text:
         log.info('not train data provided, will train model on test data')
 
         log.debug('building %s folds', nfolds)
         folded_texts, fold_index = folding.fold(text, nfolds)
 
+        # segment the folds in parallel
         segmented_texts = joblib.Parallel(n_jobs=njobs, verbose=0)(
-            joblib.delayed(_puddle)(
-                fold, window, by_frequency=by_frequency,
-                log_level=log.getEffectiveLevel(),
-                log_name='wordseg-puddle - fold {}'.format(n+1))
+            joblib.delayed(_do_puddle)(
+                fold, window, by_frequency,
+                log.getEffectiveLevel(),
+                f'wordseg-puddle - fold {n+1}')
             for n, fold in enumerate(folded_texts))
 
         log.debug('unfolding the %s folds', nfolds)
@@ -262,35 +287,29 @@ def segment(text, train_text=None, window=2, by_frequency=False, nfolds=5,
 
         return (utt for utt in output_text if utt)
 
-    else:
-        # force the train text from sequence to list
-        if not isinstance(train_text, list):
-            train_text = list(train_text)
-        nutts = len(train_text)
-        log.info('train data: %s utterances loaded', nutts)
+    # force the train text from sequence to list
+    train_text = list(train_text)
+    log.info('train data: %s utterances loaded', len(train_text))
 
-        # init a puddle model
-        model = _Puddle(
-            window=window,
-            by_frequency=by_frequency,
-            log=log)
+    # init a puddle model and train it
+    model = Puddle(window=window, by_frequency=by_frequency, log=log)
+    model.train(train_text)
 
-        # train it from train_text
-        _puddle_train(model, train_text)
-
-        # segment test_text
-        return (utt for utt in _puddle_test(model, text) if utt)
+    # segmentation of the test text, keeping the model constant
+    return (utt for utt in model.segment(text, update_model=False) if utt)
 
 
 def _add_arguments(parser):
     """Add algorithm specific options to the parser"""
     parser.add_argument(
         '-f', '--nfolds', type=int, metavar='<int>', default=5,
-        help='number of folds to segment the text on, default is %(default)s')
+        help='number of folds to segment the text on, default is %(default)s, '
+        'ignored if <training-file> specified.')
 
     parser.add_argument(
         '-j', '--njobs', type=int, metavar='<int>', default=1,
-        help='number of parallel jobs to use, default is %(default)s')
+        help='number of parallel jobs to use, default is %(default)s, '
+        'ignored if <training-file> specified.')
 
     parser.add_argument(
         '-w', '--window', type=int, default=2, metavar='<int>', help='''
@@ -302,17 +321,6 @@ def _add_arguments(parser):
         help='choose word candidates based on frequency '
         '(deactivated by default)')
 
-    #TBD: add when train no folds and no njobs
-    '''
-    parser.add_argument(
-        '-t', '--train-text', type= ,action='store_true',
-        help='train_text')
-    '''
-
-    # parser.add_argument(
-    #     '-d', '--decay', action='store_true',
-    #     help='Decrease the size of lexicon, modelize memory of lexicon.')
-
 
 @utils.CatchExceptions
 def main():
@@ -320,14 +328,15 @@ def main():
     streamin, streamout, _, log, args = utils.prepare_main(
         name='wordseg-puddle',
         description=__doc__,
-        add_arguments=_add_arguments)
+        add_arguments=_add_arguments,
+        train_file=True)
 
     # load the train text if any
-    train_text=None
+    train_text = None
     if args.train_file:
         if not os.path.isfile(args.train_file):
             raise RuntimeError(
-                'test file not found: {}'.format(args.train_file))
+                f'test file not found: {args.train_file}')
         train_text = codecs.open(args.train_file, 'r', encoding='utf8')
 
     # load train and test texts, ignore empty lines
@@ -336,7 +345,7 @@ def main():
         train_text = (line for line in train_text if line)
 
     segmented = segment(
-        test_text,train_text=train_text,
+        test_text, train_text=train_text,
         window=args.window, by_frequency=args.by_frequency,
         nfolds=args.nfolds, njobs=args.njobs, log=log)
     streamout.write('\n'.join(segmented) + '\n')
