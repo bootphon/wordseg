@@ -52,6 +52,9 @@ documentation:
   script:
     - module load texlive/2018
     - conda activate wordseg-ci
+    - mkdir build
     - cd build
+    - cmake ..
+    - make -j4
     - make html
     - scp -r html/* cognitive-ml.fr:/var/www/docs.cognitive-ml.fr/wordseg
