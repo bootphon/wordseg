@@ -83,7 +83,16 @@ def test_segment_only(prep):
     
     model_backup = copy.deepcopy(model) #copy.deepcopy(model)
     
+    """
+    lexion_backup = copy.deepcopy(model.lexicon)
+    begging_backup = copy.deepcopy(model.beginning)
+    ending_backup = copy.deepcopy(model.ending)
+    """
     segmented = puddle._puddle_test(model, test_text)
     assert len(segmented) == len(test_text)
     assert model == model_backup
-    
+    """
+    assert model.lexicon == lexion_backup
+    assert model.beginning == begging_backup
+    assert model.ending == ending_backup
+    """
