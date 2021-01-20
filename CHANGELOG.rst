@@ -6,11 +6,13 @@
 not yet released
 ----------------
 
+* New documentation URL: https://docs.cognitive-ml.fr/wordseg.
+
 * In documentation: added citation information (use DOI from zenodo).
 
-* Added a ``--train-file/-T`` option in **wordseg-ag**, **wordseg-dibs** and
-  **wordseg-tp** allowing to train the model on a text different from the one
-  being segmented.
+* Added a ``--train-file/-T`` option in **wordseg-ag**, **wordseg-dibs**,
+  **wordseg-puddle** and **wordseg-tp** allowing to train the model on a text
+  different from the one being segmented.
 
 * In **wordseg-dibs**
 

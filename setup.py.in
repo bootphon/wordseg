@@ -59,6 +59,7 @@ def requires():
         'joblib',
         'numpydoc',
         'pytest>=5.0',
+        'pytest-coverage',
         'scikit-learn',
         'sphinx',
         'sphinx_rtd_theme']
