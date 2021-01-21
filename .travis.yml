@@ -1,5 +1,8 @@
-# This will run on Travis' 'new' container-based infrastructure
-sudo: false
+dist: focal
+language: python
+python:
+  - "3.7"
+  - "3.8"
 
 # no need of git history
 git:
@@ -10,34 +13,18 @@ branches:
   only:
   - master
 
-env:
-  global:
-    - GH_REPO_NAME: wordseg
-    - GH_REPO_REF: github.com/bootphon/wordseg.git
-
 # install boost and cmake
 addons:
   apt:
+    update: true
     packages:
       - cmake
       - libboost-program-options-dev
 
-matrix:
-  include:
-    - os: linux
-      dist: xenial
-      language: python
-      python: "3.6"
-      env: PYTHON_VERSION=3.6
-    - os: linux
-      dist: xenial
-      language: python
-      python: "3.7"
-      env: PYTHON_VERSION=3.7
 
 install:
   - pip install --upgrade pip
-  - pip install joblib pytest pytest-cov sphinx codecov
+  - pip install --upgrade joblib pytest pytest-cov codecov coverage numpy
   - mkdir -p build
   - cd build
   - cmake ..
@@ -46,7 +33,10 @@ install:
   - cd ..
 
 script:
-  - pytest --cov=./wordseg ./test -v
+  - pytest -v ./test
+
+after_success:
+  - coverage run
   - codecov
 
 cache:
