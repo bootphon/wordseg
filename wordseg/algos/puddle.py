@@ -131,7 +131,8 @@ class Puddle:
 
     @staticmethod
     def _segment_candidate(segmented, utterance, i, j):
-        return segmented.append(''.join(utterance[i:j+1]))
+        segmented.append(''.join(utterance[i:j+1]))
+        return segmented
 
     def _process_utterance(self, utterance, segmented, do_update):
         """Recursive function implementing puddle
