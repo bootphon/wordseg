@@ -392,7 +392,7 @@ def get_parser(description=None, separator=Separator(), train_file=False):
     parser = argparse.ArgumentParser(
         description=description,
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog='see the online documentation at https://wordseg.readthedocs.io'
+        epilog='see the online documentation at https://docs.cognitive-ml.fr/wordseg'
     )
 
     # add verbose/quiet options to control log level

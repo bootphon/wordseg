@@ -11,7 +11,7 @@ from setuptools import setup
 
 
 LONG_DESCRIPTION = '''
-Please see the online documentation at https://wordseg.readthedocs.io
+Please see the online documentation at https://docs.cognitive-ml.fr/wordseg.
 
 The wordseg package provides **a collection of tools for text based
 word segmentation** covering both text preprocessing, segmentation
@@ -19,16 +19,8 @@ algorithms, evaluation and statistics relevant for word segmentation
 studies. It can be used from **bash** and **python**.'''
 
 
-def on_readthedocs():
-    """Return True if building the online documentation on readthedocs"""
-    return os.environ.get('READTHEDOCS', None) == 'True'
-
-
 def bin_targets():
     """Return the list of binaries to be installed with wordseg"""
-    if on_readthedocs():
-        return []
-
     return [os.path.join(
         '${CMAKE_CURRENT_BINARY_DIR}', 'wordseg', 'algos', algo, algo)
             for algo in ('ag', 'dpseg')]
@@ -36,35 +28,12 @@ def bin_targets():
 
 def data_files(binary):
     """Return a list of exemple configuration files bundled with `binary`"""
-    if on_readthedocs():
-        return []
-
     data_dir = os.path.join(
         '${CMAKE_CURRENT_SOURCE_DIR}', 'data', binary)
     return [os.path.join(data_dir, f) for f in os.listdir(data_dir)]
 
 
-def requires():
-    """The python dependancies required to install wordseg"""
-    if on_readthedocs():
-        return [
-            'mock',
-            'six',
-            'joblib',
-            'numpydoc',
-            'sphinx']
-
-    return [
-        'six',
-        'joblib',
-        'numpydoc',
-        'pytest>=5.0',
-        'scikit-learn',
-        'sphinx',
-        'sphinx_rtd_theme']
-
-
-PACKAGE_PREFIX = '' if on_readthedocs() else '${CMAKE_CURRENT_SOURCE_DIR}/'
+PACKAGE_PREFIX = '${CMAKE_CURRENT_SOURCE_DIR}/'
 
 
 setup(
@@ -77,7 +46,15 @@ setup(
     license='GPL3',
     zip_safe=True,
 
-    install_requires=requires(),
+    install_requires=[
+        'six',
+        'joblib',
+        'numpydoc',
+        'pytest>=5.0',
+        'pytest-coverage',
+        'scikit-learn',
+        'sphinx',
+        'sphinx_rtd_theme'],
     packages=['wordseg', 'wordseg.algos'],
     package_dir={
         'wordseg': PACKAGE_PREFIX + 'wordseg',

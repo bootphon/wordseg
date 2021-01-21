@@ -1,9 +1,10 @@
 name: wordseg
 dependencies:
   # package
+  - cmake
   - cloudpickle=0.5.6  # avoid a warning in wordseg-eval
   - joblib
-  - python=3.7
+  - python>=3.7
   - scikit-learn
   - six
   # test
