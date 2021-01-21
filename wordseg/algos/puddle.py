@@ -6,6 +6,20 @@ See "Monaghan, P., & Christiansen, M. H. (2010). Words in puddles of sound:
 modelling psycholinguistic effects in speech segmentation. Journal of child
 language, 37(03), 545-564."
 
+The algorithm has two modes of operation:
+
+- Segmentation and online learning on the same text:
+  Specify <input-text> only, <input-text> must be in phonologized form. The
+  PUDDLE model is updated line per line and so segmentation performances are
+  better at the end. Use --nfolds and --njobs options to run the segmentation
+  in several folds in parallel.
+
+- Training ans segmentation on separate files:
+  Specify <input-text> and --train-file <training-file>. Both texts must be in
+  phonologized form. The PUDDLE model is trained offline on <training-file>,
+  before the segmentation of <input-text>. In this mode --nfolds and --njobs
+  options are not valid.
+
 """
 
 import codecs
@@ -303,13 +317,13 @@ def segment(text, train_text=None, window=2, by_frequency=False, nfolds=5,
 def _add_arguments(parser):
     """Add algorithm specific options to the parser"""
     parser.add_argument(
-        '-f', '--nfolds', type=int, metavar='<int>', default=5,
-        help='number of folds to segment the text on, default is %(default)s, '
+        '-f', '--nfolds', type=int, metavar='<int>', default=None,
+        help='number of folds to segment the text on, default is 5, '
         'ignored if <training-file> specified.')
 
     parser.add_argument(
-        '-j', '--njobs', type=int, metavar='<int>', default=1,
-        help='number of parallel jobs to use, default is %(default)s, '
+        '-j', '--njobs', type=int, metavar='<int>', default=None,
+        help='number of parallel jobs to use, default is 1, '
         'ignored if <training-file> specified.')
 
     parser.add_argument(
@@ -335,6 +349,13 @@ def main():
         description=__doc__,
         add_arguments=_add_arguments,
         train_file=True)
+
+    # post-process arguments
+    if args.train_file and (args.njobs or args.nfolds):
+        raise ValueError(
+            '--train-file option is incompatible with --njobs and --nfolds')
+    args.njobs = args.njobs or 1
+    args.nfolds = args.nfolds or 5
 
     # load the train text if any
     train_text = None
