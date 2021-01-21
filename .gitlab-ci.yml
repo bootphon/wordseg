@@ -46,9 +46,9 @@ wordseg-deploy:
 # documentation is available on https://docs.cognitive-ml.fr/wordseg
 documentation:
   stage: deploy
-  # only:
-  #   refs:
-  #     - master
+  only:
+    refs:
+      - master
   script:
     - module load texlive/2018
     - conda activate wordseg-ci
