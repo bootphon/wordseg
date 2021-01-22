@@ -10,33 +10,35 @@
 # advanced usage.
 
 # Use an official Ubuntu as a parent image
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
-ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+ENV TZ=America/New_York \
+    DEBIAN_FRONTEND=noninteractive \
+    LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    NCORES=4
 
 # Set the working directory to /wordseg
 WORKDIR /wordseg
 
 # Install the dependencies to build wordseg
-RUN apt-get update && \
-    apt-get install -y build-essential git bsdmainutils \
-       cmake libboost-program-options-dev wget
+RUN apt-get update && apt-get install --no-install-recommends -y -qq \
+  bsdmainutils \
+  cmake \
+  g++ \
+  git \
+  libboost-program-options-dev \
+  make \
+  python3 \
+  python3-pip && \
+  rm -rf /var/lib/apt/lists/*
 
-# Install Python from Anaconda distribution
-RUN wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
-    bash ~/miniconda.sh -b -p /miniconda && \
-    rm ~/miniconda.sh
+# tests expect python to be available as executable 'python' not 'python3'
+RUN ln -s /usr/bin/python3 /usr/bin/python && \
+  pip3 install pytest pytest-cov
 
-ENV PATH /miniconda/bin:$PATH
+# Copy wordseg project to container
+COPY . /wordseg
 
-RUN conda create --name wordseg python=3.8 pytest joblib scikit-learn && \
-    /bin/bash -c "source activate wordseg"
-
-# Clone wordseg from github
-RUN git clone https://github.com/bootphon/wordseg.git .
-
-# Install wordseg
-RUN python setup.py install
-
-# Test the installation
-RUN pytest -v test/
+# Install wordseg and test it
+RUN make clean && make install && make test

@@ -85,9 +85,6 @@ setuptools.setup(
 
     python_requires='>=3.7',
 
-    setup_requires=[
-        'pytest-runner'],
-
     tests_require=[
         'pytest>=5.0',
         'pytest-cov'],

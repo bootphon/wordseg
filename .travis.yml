@@ -25,15 +25,10 @@ addons:
 install:
   - pip install --upgrade pip
   - pip install --upgrade joblib pytest pytest-cov codecov coverage numpy
-  - mkdir -p build
-  - cd build
-  - cmake ..
-  - make -j2  # 2 cores in travis VMs
   - make install
-  - cd ..
 
 script:
-  - pytest -v ./test
+  - make test
 
 after_success:
   - coverage run
