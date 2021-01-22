@@ -1,7 +1,7 @@
 """Baseline algorithm for word segmentation
 
 This algorithm randomly adds word boundaries after the input tokens
-with a given probability. 
+with a given probability.
 
 """
 
@@ -21,7 +21,7 @@ def segment(text, probability=0.5, log=utils.null_logger()):
 
     .. math::
 
-        P(t_i) = P(X < p), X \sim \mathcal{U}(0, 1).
+        P(t_i) = P(X < p), X \\sim \\mathcal{U}(0, 1).
 
     Parameters
     ----------
@@ -172,7 +172,7 @@ def main():
         # load the oracle text
         if not os.path.isfile(args.oracle):
             raise ValueError('oracle file not found: {}'.format(args.oracle))
-        oracle_text = [utt for utt in codecs.open(args.oracle, 'r')]
+        oracle_text = list(codecs.open(args.oracle, 'r'))
         log.info('loaded %s utterances from oracle text', len(oracle_text))
 
         # init the oracle tokens separator

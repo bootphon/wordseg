@@ -29,14 +29,14 @@ RUN wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -
 
 ENV PATH /miniconda/bin:$PATH
 
-RUN conda create --name wordseg python=3.6 pytest joblib scikit-learn && \
+RUN conda create --name wordseg python=3.8 pytest joblib scikit-learn && \
     /bin/bash -c "source activate wordseg"
 
 # Clone wordseg from github
 RUN git clone https://github.com/bootphon/wordseg.git .
 
 # Install wordseg
-RUN mkdir -p build && cd build && cmake .. && make && make install
+RUN python setup.py install
 
 # Test the installation
 RUN pytest -v test/

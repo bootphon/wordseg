@@ -10,7 +10,7 @@ separators (see the token separation arguments below).
 
 import collections
 import json
-from math import log
+import math
 
 from wordseg import utils
 from wordseg.separator import Separator
@@ -255,7 +255,7 @@ class CorpusStatistics(object):
 
         .. math::
 
-            NSE = -\sum_i P_ilog_2(P_i) / (N-1),
+            NSE = -\\sum_i P_ilog_2(P_i) / (N-1),
 
         where :math:`P_i` is the probability of the word :math:`i` and
         :math:`N` the number of phonemes in the text.
@@ -276,7 +276,7 @@ class CorpusStatistics(object):
         probs = (P[word] for utt in self.tokens['word'] for word in utt)
 
         # compute the entropy
-        return -1 * sum(p * log(p, 2) / float(N - 1) for p in probs)
+        return -1 * sum(p * math.log(p, 2) / float(N - 1) for p in probs)
 
 
 @utils.CatchExceptions

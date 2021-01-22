@@ -4,10 +4,12 @@ import argparse
 import codecs
 import logging
 import os
-import pkg_resources
 import re
 import sys
 
+import pkg_resources
+
+from wordseg import version_long
 from wordseg.separator import Separator
 
 
@@ -112,7 +114,7 @@ def get_logger(name=None, level=logging.WARNING):
     return log
 
 
-class CountingIterator(object):
+class CountingIterator:
     """A class for counting elements in a generator
 
     Usefull because this avoid to convert a generator to list
@@ -153,7 +155,7 @@ class CountingIterator(object):
     next = __next__
 
 
-class CatchExceptions(object):
+class CatchExceptions:
     """Decorator wrapping a function in a try/except block
 
     When an exception occurs, display a user friendly message on
@@ -228,7 +230,7 @@ def get_binary(binary):
     try:
         # case of 'make install'
         binary_path = pkg_resources.resource_filename(
-            pkg, 'bin/{}'.format(binary))
+            pkg, f'bin/{binary}')
     except KeyError:
         pass
 
@@ -236,17 +238,17 @@ def get_binary(binary):
         # case of 'make develop'
         if not os.path.isfile(binary_path):
             binary_path = pkg_resources.resource_filename(
-                pkg, 'build/wordseg/algos/{}/{}'.format(binary, binary))
+                pkg, f'build/bin/{binary}')
     except KeyError:
         pass
 
     if not os.path.isfile(binary_path):
         raise RuntimeError(
-            'binary file "{}" not found: {}'.format(binary, binary_path))
+            f'binary file "{binary}" not found: {binary_path}')
 
     if not os.access(binary_path, os.X_OK):
         raise RuntimeError(
-            'binary file "{}" not executable: {}'.format(binary_path))
+            f'binary file "{binary}" not executable: {binary_path}')
 
     return binary_path
 
@@ -296,7 +298,7 @@ def get_config_files(algorithm, extension=None):
     if not os.path.isdir(config_dir):
         raise RuntimeError('directory not found: {}'.format(config_dir))
 
-    config_files = [f for f in os.listdir(config_dir)]
+    config_files = os.listdir(config_dir)
     if extension:
         config_files = [f for f in config_files if f.endswith(extension)]
 
@@ -307,7 +309,7 @@ def get_config_files(algorithm, extension=None):
     return [os.path.join(config_dir, f) for f in config_files]
 
 
-class Argument(object):
+class Argument:
     """Command line argument adapter class"""
     def __init__(self, short_name=None, name=None, type=None,
                  default=None, help=''):
@@ -392,8 +394,7 @@ def get_parser(description=None, separator=Separator(), train_file=False):
     parser = argparse.ArgumentParser(
         description=description,
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog='see the online documentation at https://docs.cognitive-ml.fr/wordseg'
-    )
+        epilog=version_long())
 
     # add verbose/quiet options to control log level
     group = parser.add_mutually_exclusive_group()

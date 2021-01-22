@@ -14,7 +14,11 @@
 # along with wordseg. If not, see <http://www.gnu.org/licenses/>.
 
 
-# Building script for the dpseg program
+cmake_minimum_required(VERSION 3.10)
+project(wordseg-dpeseg)
+
+message(STATUS "Setting build type to ${CMAKE_BUILD_TYPE}")
+
 
 # looking for boost libraries
 find_package(Boost REQUIRED COMPONENTS program_options)
