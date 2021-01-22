@@ -9,34 +9,25 @@
 # You can then use wordseg within docker. See the docker doc for
 # advanced usage.
 
-# Use an official Ubuntu as a parent image
-FROM ubuntu:18.04
+# Use an official miniconda as a parent image
+FROM continuumio/miniconda
 
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 
-# Set the working directory to /wordseg
-WORKDIR /wordseg
-
 # Install the dependencies to build wordseg
 RUN apt-get update && \
-    apt-get install -y build-essential git bsdmainutils \
-       cmake libboost-program-options-dev wget
+  apt-get install -y build-essential git bsdmainutils \
+  cmake libboost-program-options-dev
 
-# Install Python from Anaconda distribution
-RUN wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
-    bash ~/miniconda.sh -b -p /miniconda && \
-    rm ~/miniconda.sh
+RUN conda install python=3.8 pytest joblib scikit-learn
 
-ENV PATH /miniconda/bin:$PATH
+# Clone wordseg from github, install and test it
+RUN git clone https://github.com/bootphon/wordseg.git && \
+  cd wordseg && \
+  mkdir -p build && \
+  cd build && \
+  cmake .. && \
+  make && \
+  make install
 
-RUN conda create --name wordseg python=3.6 pytest joblib scikit-learn && \
-    /bin/bash -c "source activate wordseg"
-
-# Clone wordseg from github
-RUN git clone https://github.com/bootphon/wordseg.git .
-
-# Install wordseg
-RUN mkdir -p build && cd build && cmake .. && make && make install
-
-# Test the installation
-RUN pytest -v test/
+RUN cd /wordseg && pytest -v test
