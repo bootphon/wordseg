@@ -21,6 +21,7 @@ class CMakeExtension(setuptools.Extension):
 
 
 class CMakeBuild(setuptools.command.build_ext.build_ext):
+    """CMakeExtension build command"""
     def run(self):
         try:
             subprocess.check_output(['cmake', '--version'])
@@ -52,14 +53,20 @@ class CMakeBuild(setuptools.command.build_ext.build_ext):
             os.makedirs(build_dir)
 
         print(f'CMake configure {ext.name}')
-        subprocess.check_call(
-            ['cmake', ext.sourcedir] + cmake_args,
-            cwd=build_dir, env=os.environ)
+        try:
+            subprocess.check_call(
+                ['cmake', ext.sourcedir] + cmake_args,
+                cwd=build_dir, env=os.environ)
+        except subprocess.CalledProcessError:
+            print(f'Error: CMake configure {ext.name} failed')
 
         print(f'CMake build {ext.name}')
-        subprocess.check_call(
-            ['cmake', '--build', '.'] + build_args,
-            cwd=build_dir)
+        try:
+            subprocess.check_call(
+                ['cmake', '--build', '.'] + build_args,
+                cwd=build_dir)
+        except subprocess.CalledProcessError:
+            print(f'Error: CMake build {ext.name} failed')
 
 
 def data_files(directory):
@@ -79,7 +86,6 @@ setuptools.setup(
     python_requires='>=3.7',
 
     setup_requires=[
-        'cmake',
         'pytest-runner'],
 
     tests_require=[
