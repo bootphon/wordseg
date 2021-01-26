@@ -1,8 +1,9 @@
 name: wordseg
 dependencies:
-  # package
+  # installation
+  - boost
   - cmake
-  - cloudpickle=0.5.6  # avoid a warning in wordseg-eval
+  # package
   - joblib
   - python>=3.7
   - scikit-learn
@@ -10,7 +11,3 @@ dependencies:
   # test
   - pytest>=5.0
   - pytest-cov
-  # documentation
-  - numpydoc
-  - sphinx
-  - sphinx_rtd_theme

@@ -23,25 +23,25 @@ n ow ;esyll ;eword
 '''
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.fixture(scope='session')
 def datadir():
     """Returns the directory 'wordseg/data'"""
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.fixture(scope='session')
 def tags():
     """Returns some prerecorded tags"""
     return TAGS.strip().split('\n')
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.fixture(scope='session')
 def prep(tags):
     """Returns some prepared utterances from the `tags` fixture"""
     return list(wordseg.prepare.prepare(tags, wordseg.separator.Separator()))
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.fixture(scope='session')
 def gold(tags):
     """Returns some gold utterances from the `tags` fixture"""
     return list(wordseg.prepare.gold(tags, wordseg.separator.Separator()))

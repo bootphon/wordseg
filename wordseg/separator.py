@@ -109,7 +109,7 @@ class Separator(object):
         # build a regular expression for separator suppression,
         # considers also spaces within contiguous separators
         pattern = '((' + '|'.join('({})'.format(
-            self.__dict__[l]) for l in to_remove) + ')+\s*)+'
+            self.__dict__[l]) for l in to_remove) + r')+\s*)+'
 
         # remove leading separators
         utterance = re.sub('^' + pattern, '', utterance)

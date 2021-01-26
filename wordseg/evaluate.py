@@ -15,15 +15,16 @@ output JSON file to be specified).
 import codecs
 import collections
 import json
-import numpy as np
 import warnings
+
+import numpy as np
 from sklearn.metrics.cluster import adjusted_rand_score
 
 from wordseg import utils
 from wordseg.separator import Separator
 
 
-class TokenEvaluation(object):
+class TokenEvaluation:
     """Evaluation of token f-score, precision and recall"""
     def __init__(self):
         self.test = 0
@@ -63,14 +64,14 @@ class TokenEvaluation(object):
         self.gold += len([x for x in gold_set if x != '_'])
         self.correct += len(test_set & gold_set)
 
-    def update_lists(self, test_sets, gold_sets):
+    def update_lists(self, test, gold):
         """Update evaluation for a suite of utterances"""
-        if len(test_sets) != len(gold_sets):
+        if len(test) != len(gold):
             raise ValueError(
                 '#words different in test and gold: {} != {}'
-                .format(len(test_sets), len(gold_sets)))
+                .format(len(test), len(gold)))
 
-        for t, g in zip(test_sets, gold_sets):
+        for t, g in zip(test, gold):
             self.update(t, g)
 
 
@@ -136,7 +137,7 @@ class BoundaryNoEdgeEvaluation(BoundaryEvaluation):
         return [{left for left, _ in line if left > 0} for line in stringpos]
 
 
-class _StringPos(object):
+class _StringPos:
     """Compute start and stop index of words in an utterance"""
     def __init__(self):
         self.idx = 0
@@ -186,8 +187,7 @@ def read_data(text, separator=Separator(None, None, ' ')):
         positions.append({idx(len(word)) for word in utt})
 
     # return the words lexicon as a sorted list
-    lexicon = sorted([k for k in lexicon.keys()])
-    return words, positions, lexicon
+    return words, positions, sorted(lexicon.keys())
 
 
 def compute_class_labels(words, units):
@@ -259,7 +259,7 @@ def compute_class_labels(words, units):
         return index
 
     # build the class labels
-    class_labels = np.zeros((nunits,), dtype=np.int)
+    class_labels = np.zeros((nunits,), dtype=int)
     index = 0
     for class_id, word in enumerate(words):
         try:
@@ -273,7 +273,7 @@ def compute_class_labels(words, units):
     return class_labels
 
 
-class SegmentationSummary(object):
+class SegmentationSummary:
     """Computes a summary of the segmentation errors
 
     The errors can be oversegmentations, undersegmentations or

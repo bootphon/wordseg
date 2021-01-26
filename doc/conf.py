@@ -19,6 +19,7 @@
 #
 import datetime
 import sys
+import wordseg
 
 try:
     import sklearn.metrics.cluster
@@ -26,8 +27,6 @@ except ImportError:
     import mock
     sys.modules['sklearn.metrics.cluster'] = mock.MagicMock()
 
-
-sys.path.insert(0, '${CMAKE_CURRENT_SOURCE_DIR}')
 
 html_theme = "sphinx_rtd_theme"
 # html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
@@ -61,14 +60,15 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'wordseg'
-copyright = '2017 - {}, ${PROJECT_AUTHOR}'.format(datetime.datetime.now().year)
-author = '${PROJECT_AUTHOR}'
+author = wordseg.author()
+copyright = f'2017 - {datetime.datetime.now().year}, {author}'
+
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 
-_VERSION = '${PROJECT_VERSION}'
+_VERSION = wordseg.version()
 
 # The short X.Y version.
 version = '.'.join(_VERSION.split('.')[:2])

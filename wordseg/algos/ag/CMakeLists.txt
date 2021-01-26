@@ -1,6 +1,10 @@
 # Building script for the ag program (Pitman-Yor Context Free Grammar,
 # a.k.a Adaptor Grammar)
 
+cmake_minimum_required(VERSION 3.10)
+project(wordseg-ag)
+message(STATUS "Setting build type to ${CMAKE_BUILD_TYPE}")
+
 # to avoid a warning (cmake complains for a mix of relative and
 # absolute paths for linked libraries)
 if(COMMAND cmake_policy)
