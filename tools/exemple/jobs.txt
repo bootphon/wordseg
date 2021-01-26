@@ -5,4 +5,4 @@ tp_absolute_mi ./exemple/tags.txt phone -p' ' -s';esyll' -w';eword' wordseg-tp -
 tp_relative_ftp ./exemple/tags.txt phone -p' ' -s';esyll' -w';eword' wordseg-tp -v -t relative -d ftp
 tp_relative_btp ./exemple/tags.txt phone -p' ' -s';esyll' -w';eword' wordseg-tp -v -t relative -d btp
 tp_relative_mi ./exemple/tags.txt phone -p' ' -s';esyll' -w';eword' wordseg-tp -v -t relative -d mi
-dibs ./exemple/tags.txt phone -p' ' -s';esyll' -w';eword' wordseg-dibs -v ./exemple/tags.txt
+dibs ./exemple/tags.txt phone -p' ' -s';esyll' -w';eword' wordseg-dibs -v

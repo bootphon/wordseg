@@ -123,16 +123,12 @@ function schedule_job
     cp $tags_file $job_dir/tags.txt
     touch $job_dir/log.txt
 
-    # special case for wordseg-dibs, extract the train file as the
-    # last argument of $job_cmd
-    training_file=
-    if [[ $job_cmd == "wordseg-dibs"* ]];
-    then
-        training_file=${job_cmd##* }  # last word of job_cmd
-        job_cmd=${job_cmd% *}  # all but last word of job_cmd
-        cp $training_file $job_dir/train.txt
-        training_file=train.txt
-    fi
+    # special case of wordseg-dibs without --train-file option
+    input_file=input.txt
+    [[ $job_cmd == "wordseg-dibs"* ]] \
+        && [[ $job_cmd != *" -T"* ]] \
+        && [[ $job_cmd != *" --train-file"* ]] \
+        && input_file=tags.txt
 
     # write the job script that will be scheduled on qsub
     job_script=$job_dir/job.sh
@@ -164,7 +160,7 @@ then
 fi
 
 echo "start segmentation, command is: $job_cmd" >> log.txt
-$job_cmd -o output.txt input.txt $training_file 2>> log.txt
+$job_cmd -o output.txt $input_file 2>> log.txt
 if ! [ $? -eq 0 ]
 then
     echo "ERROR: segmentation failed" >> log.txt
