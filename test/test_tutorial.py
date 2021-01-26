@@ -7,6 +7,7 @@ import subprocess
 import pytest
 
 
+@pytest.mark.skipif(True, reason='skipping tutorial testing (too long)')
 @pytest.mark.parametrize('ext', ['py', 'sh'])
 def test_tutorial(tags, tmpdir, ext):
     tutorial_dir = os.path.abspath(

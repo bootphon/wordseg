@@ -56,7 +56,7 @@ Python tutorial
 ---------------
 
 The following script is located in ``../doc/tutorial.py``. It
-implements exactly the same process as the bash one:
+implements exactly the same process as the bash one (part 1 only):
 
 .. literalinclude:: tutorial.py
    :language: python
