@@ -20,7 +20,6 @@ import codecs
 import collections
 import datetime
 import gzip
-import joblib
 import logging
 import os
 import random
@@ -30,6 +29,8 @@ import shutil
 import subprocess
 import tempfile
 import threading
+
+import joblib
 
 from wordseg import utils
 
@@ -203,15 +204,16 @@ def _setup_seed(args, nruns):
 
     """
     new = [args] * nruns
-    for n in range(nruns):
+    for run in range(nruns):
         if '-r' in args:
             # extract the seed from the arguments string
             seed = int(re.sub(r'^.*\-r *([0-9]+).*$', r'\g<1>', args))
 
             # setup new seed for each run
-            new[n] = re.sub(r'\-r *([0-9]+)', '-r {}'.format(seed + n), args)
+            new[run] = re.sub(
+                r'\-r *([0-9]+)', '-r {}'.format(seed + run), args)
         else:
-            new[n] = args + ' -r {}'.format(random.randint(0, 2**16))
+            new[run] = args + ' -r {}'.format(random.randint(0, 2**16))
     return new
 
 
@@ -253,7 +255,7 @@ def build_colloc0_grammar(phones):
         'w').write(grammar) to save it to disk.
 
     """
-    g = '\n'.join([
+    grammar = '\n'.join([
         "1 1 Sentence --> Colloc0s",
         "1 1 Colloc0s --> Colloc0",
         "1 1 Colloc0s --> Colloc0 Colloc0s",
@@ -261,10 +263,10 @@ def build_colloc0_grammar(phones):
         "1 1 Phonemes --> Phoneme",
         "1 1 Phonemes --> Phoneme Phonemes"]) + '\n'
 
-    for p in sorted(set(phones)):
-        g += '1 1 Phoneme -->' + p + '\n'
+    for phone in sorted(set(phones)):
+        grammar += '1 1 Phoneme -->' + phone + '\n'
 
-    return g
+    return grammar
 
 
 def is_parent_in_grammar(grammar_file, parent):
@@ -415,7 +417,7 @@ def _segment_single(parse_counter, train_text, grammar_file,
 
         log.info('running "%s"', command)
 
-        t1 = datetime.datetime.now()
+        t_start = datetime.datetime.now()
 
         # run the command as a subprocess
         process = subprocess.Popen(
@@ -445,11 +447,11 @@ def _segment_single(parse_counter, train_text, grammar_file,
 
         threading.Thread(
             target=consume_lines,
-            args=[process.stderr, lambda line: stderr2log(line)]).start()
+            args=[process.stderr, stderr2log]).start()
 
         process.wait()
 
-        t2 = datetime.datetime.now()
+        t_stop = datetime.datetime.now()
 
         # fail if AG returns an error code
         if process.returncode:
@@ -457,13 +459,13 @@ def _segment_single(parse_counter, train_text, grammar_file,
                 'segmentation fails with error code {}'
                 .format(process.returncode))
 
-        log.info('segmentation done, took {}'.format(t2 - t1))
+        log.info('segmentation done, took %s', t_stop - t_start)
 
         postprocess(
             parse_counter, output_file, ignore_first_parses, log)
 
-        t3 = datetime.datetime.now()
-        log.info('postprocessing done, took %s', t3 - t2)
+        t_end = datetime.datetime.now()
+        log.info('postprocessing done, took %s', t_end - t_stop)
 
     finally:
         shutil.rmtree(temdir)
@@ -480,7 +482,7 @@ def _segment_single(parse_counter, train_text, grammar_file,
 # -----------------------------------------------------------------------------
 
 
-class ParseCounter(object):
+class ParseCounter:
     """Count the most frequent utterances in a sequence of parses"""
     def __init__(self, nutts):
         self.nutts = nutts
@@ -631,7 +633,7 @@ def segment(text, train_text=None, grammar_file=None, category='Colloc0',
         If the `score_category` is not found in the grammar.
 
     """
-    t1 = datetime.datetime.now()
+    t_start = datetime.datetime.now()
 
     # if any, force the test text from sequence to list
     test_text = text
@@ -703,26 +705,24 @@ def segment(text, train_text=None, grammar_file=None, category='Colloc0',
         # parallel runs of the AG algorithm
         log.info('running AG (%d times)...', nruns)
         parse_counter = ParseCounter(nutts)
-        try:
-            joblib.Parallel(
-                n_jobs=njobs, backend="threading", verbose=0)(
-                    joblib.delayed(_segment_single)(
-                        parse_counter,
-                        train_text,
-                        grammar_file,
-                        category,
-                        ignore_first_parses,
-                        args[n],
-                        test_text=test_text,
-                        log_level=log.getEffectiveLevel(),
-                        tempdir=tempdir,
-                        log_name='wordseg-ag - run {}'.format(n + 1))
-                    for n in range(nruns))
-        except joblib.JoblibRuntimeError as err:
-            raise RuntimeError(err)
 
-        t2 = datetime.datetime.now()
-        log.info('total processing time: %s', t2 - t1)
+        joblib.Parallel(
+            n_jobs=njobs, backend="threading", verbose=0)(
+                joblib.delayed(_segment_single)(
+                    parse_counter,
+                    train_text,
+                    grammar_file,
+                    category,
+                    ignore_first_parses,
+                    args[n],
+                    test_text=test_text,
+                    log_level=log.getEffectiveLevel(),
+                    tempdir=tempdir,
+                    log_name='wordseg-ag - run {}'.format(n + 1))
+                for n in range(nruns))
+
+        t_stop = datetime.datetime.now()
+        log.info('total processing time: %s', t_stop - t_start)
         log.info('extracting most common utterances in %d parses',
                  parse_counter.nparses)
 
@@ -871,16 +871,16 @@ def main():
     # call the AG algorithm
     segmented = segment(
         streamin,
-        train_text = train_text,
-        grammar_file = args.grammar,
-        category = args.category,
-        args = cmd_args,
-        save_grammar_to = args.save_grammar_to,
+        train_text=train_text,
+        grammar_file=args.grammar,
+        category=args.category,
+        args=cmd_args,
+        save_grammar_to=args.save_grammar_to,
         ignore_first_parses=args.ignore_first_parses,
-        nruns = args.nruns,
-        njobs = args.njobs,
-        tempdir = args.tempdir,
-        log = log)
+        nruns=args.nruns,
+        njobs=args.njobs,
+        tempdir=args.tempdir,
+        log=log)
 
     # output the results
     streamout.write('\n'.join(segmented) + '\n')
