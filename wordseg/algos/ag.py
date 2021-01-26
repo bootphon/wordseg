@@ -636,21 +636,16 @@ def segment(text, train_text=None, grammar_file=None, category='Colloc0',
     t_start = datetime.datetime.now()
 
     # if any, force the test text from sequence to list
-    test_text = text
-    if not isinstance(test_text, list):
-        test_text = list(test_text)
-    nutts = len(test_text)
-    log.info('test data: %s utterances loaded', nutts)
+    test_text = list(text)
+    log.info('test data: %s utterances loaded', len(test_text))
 
     if train_text is None:
         train_text = test_text
         log.info('not train data provided, will train model on test data')
     else:
         # force the train text from sequence to list
-        if not isinstance(train_text, list):
-            train_text = list(train_text)
-            nutts = len(train_text)
-    log.info('train data: %s utterances loaded', nutts)
+        train_text = list(train_text)
+        log.info('train data: %s utterances loaded', len(train_text))
 
     # display the AG algorithm parameters
     log.info('parameters are: "%s"', args)
@@ -678,8 +673,7 @@ def segment(text, train_text=None, grammar_file=None, category='Colloc0',
     log.info('random seeds are: %s', ', '.join(
         [arg.split('-r ')[1].split(' ')[0] for arg in args]))
 
-    # we may use a temp file to write the grammar, it is automatically
-    # erased when done
+    # we write the grammar in a temp file, automatically erased when done
     with tempfile.NamedTemporaryFile(dir=tempdir) as grammar_temp:
         # if grammar is not specified, generate a Colloc0 one from the
         # set of phones in the input text and write it in the tempfile
@@ -704,7 +698,7 @@ def segment(text, train_text=None, grammar_file=None, category='Colloc0',
 
         # parallel runs of the AG algorithm
         log.info('running AG (%d times)...', nruns)
-        parse_counter = ParseCounter(nutts)
+        parse_counter = ParseCounter(len(test_text))
 
         joblib.Parallel(
             n_jobs=njobs, backend="threading", verbose=0)(

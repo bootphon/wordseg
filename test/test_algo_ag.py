@@ -233,8 +233,8 @@ def test_traintext_equal_testtext(prep, grammar, level):
 
 # AG: <train_text!=test_text>
 @pytest.mark.parametrize('grammar, level', GRAMMARS)
-def test_traintext_notequal_testtext(grammar, level):
-    # hello world
+def test_traintext_notequal_testtext(prep, grammar, level):
+    # hello world 10 times
     train_text = ['hh ax l ow w er l d'] * 10
 
     # good morn, that dog is big (no phones shared with train)
