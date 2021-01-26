@@ -6,6 +6,8 @@
 not yet released
 ----------------
 
+* Simplified installation procedure using the standard ``setup.py`` script.
+
 * New documentation URL: https://docs.cognitive-ml.fr/wordseg.
 
 * In documentation: added citation information (use DOI from zenodo).
@@ -40,14 +42,10 @@ not yet released
 * In **wordseg-dpseg**, removed a warning with regular expressions on
   python-3.7.
 
-<<<<<<< HEAD
 * in **wordseg-puddle**, added an option ``--by-frequency`` to choose words
   based on their frequencies.
 
 * in cluster tools: improved duration and error reporting.
-=======
-* In cluster tools: improved duration and error reporting.
->>>>>>> c673eaabf20729c6d516a1cc6cc8e839c48ee55f
 
 
 wordseg-0.7.1

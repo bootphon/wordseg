@@ -20,14 +20,13 @@ welcome all the ideas and contributions.
 Reporting bugs, issues or ideas
 -------------------------------
 
-  Please open an issue on the wordseg's `github page
-  <https://github.com/bootphon/wordseg/issues>`_.
+Please open an issue on the wordseg's `github page
+<https://github.com/bootphon/wordseg/issues>`_.
 
-  .. note::
+.. note::
 
-     When reporting installation issues, please include the full
-     output of the `cmake`, `make` and `make install` commands in your
-     message.
+   When reporting installation issues, please include the full output of the
+   ``make install`` command in your message.
 
 
 Contributing to the code
