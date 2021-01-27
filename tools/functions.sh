@@ -12,8 +12,10 @@ function usage
     echo "Usage: $0 <jobs-file> <output-directory> [<$backend-options>]"
     echo
     echo "Each line of the <jobs-file> must be in the format:"
-    echo "  <job-name> <tags-file> <unit> <separator> <wordseg-command>"
+    echo "  <job-name> <test-file>[,<train-file>] <unit> <separator> <wordseg-command>"
     echo
+    echo "If <train-file> is specified the --train-file <train-file> option is appended "
+    echo "to the wordseg command. Else no training file is used."
     echo "See $(dirname $0)/README.md for more details"
     exit 1
 }
@@ -52,9 +54,21 @@ function check_jobs
         # we need at least 5 arguments
         [ "$(echo $line | wc -w)" -lt 5 ] && error "line $n: job definition invalid: $"
 
-        # check tags file exists
-        tags_file=$(echo $line | cut -d' ' -f2)
-        [ -f $tags_file ] || error "line $n: tags file not found $tags_file"
+        # check test/train files exist
+        input_files=$(echo $line | cut -d' ' -f2)
+        if [[ $input_files == *","* ]]
+        then
+            # both test and train files
+            test_file=$(echo $input_files | cut -d, -f1)
+            [ -f $test_file ] || error "line $n: test file not found $test_file"
+
+            train_file=$(echo $input_files | cut -d, -f2)
+            [ -f $train_file ] || error "line $n: train file not found $train_file"
+        else
+            # no train file
+            test_file=$input_files
+            [ -f $test_file ] || error "line $n: test file not found $test_file"
+        fi
 
         # check <unit> is either phone or syllable
         unit=$(echo $line | cut -d' ' -f3)
@@ -108,11 +122,21 @@ function schedule_job
 {
     # parse arguments
     job_name=$(echo $1 | cut -d' ' -f1)
-    tags_file=$(echo $1 | cut -d' ' -f2)
+    input_files=$(echo $1 | cut -d' ' -f2)
     unit=$(echo $1 | cut -d' ' -f3)
     job_cmd=$(parse_command "$1")
     job_slots=$(parse_nslots "$job_cmd")
     separator=$(parse_separator "$1")
+
+    # split input_files in test/train
+    if [[ $input_files != *","* ]]
+    then
+        test_file=$input_files
+        train_file=
+    else
+        test_file=$(echo $input_files | cut -d, -f1)
+        train_file=$(echo $input_files | cut -d, -f2)
+    fi
 
     # create the output directory
     job_dir=$output_dir/$job_name
@@ -120,15 +144,35 @@ function schedule_job
     job_dir=$(readlink -f $job_dir)
 
     # copy input data in the output directory
-    cp $tags_file $job_dir/tags.txt
+    cp $test_file $job_dir/tags.txt
+    ! [ -z $train_file ] && cp $train_file $job_dir/train_tags.txt
     touch $job_dir/log.txt
 
-    # special case of wordseg-dibs without --train-file option
-    input_file=input.txt
-    [[ $job_cmd == "wordseg-dibs"* ]] \
-        && [[ $job_cmd != *" -T"* ]] \
-        && [[ $job_cmd != *" --train-file"* ]] \
-        && input_file=tags.txt
+    # special case of wordseg-dibs with/without --train-file option
+    job_input_file=input.txt
+    job_train_file=train_input.txt
+    [[ $job_cmd == "wordseg-dibs"* ]] && [ -z $train_file ] && job_input_file=tags.txt
+    [[ $job_cmd == "wordseg-dibs"* ]] && ! [ -z $train_file ] && job_train_file=train_tags.txt
+
+    # specify train file if needed
+    job_train_option=
+    ! [ -z $train_file ] && job_train_option="-T $job_train_file"
+
+    job_train_part=$(mktemp)
+    trap "rm -f $job_train_part" EXIT
+    echo > $job_train_part
+    if ! [ -z $train_file ]
+    then
+        cat <<EOF >> $job_train_part
+echo "generate train_input and train_gold from train_tags" >> log.txt
+wordseg-prep -v -u $unit $separator -o train_input.txt -g train_gold.txt train_tags.txt 2>> log.txt
+if ! [ $? -eq 0 ]
+then
+    echo "ERROR: wordseg-prep failed" >> log.txt
+    exit 1
+fi
+EOF
+    fi
 
     # write the job script that will be scheduled on qsub
     job_script=$job_dir/job.sh
@@ -137,7 +181,7 @@ function schedule_job
 
 # compute the total time ellapsed in the pipeline and display it as
 # the last line of the log file
-tstart=$(date +%s)
+tstart=\$(date +%s)
 trap 'echo -n "Total time: " >> log.txt && \\
       date -u -d "0 \$(date +%s) sec - \$tstart sec" +"%H:%M:%S" >> log.txt' EXIT
 
@@ -158,9 +202,9 @@ then
     echo "ERROR: wordseg-prep failed" >> log.txt
     exit 1
 fi
-
-echo "start segmentation, command is: $job_cmd" >> log.txt
-$job_cmd -o output.txt $input_file 2>> log.txt
+$(cat $job_train_part)
+echo "start segmentation, command is: $job_cmd -o output.txt $job_train_option $job_input_file" >> log.txt
+$job_cmd -o output.txt $job_train_option $job_input_file 2>> log.txt
 if ! [ $? -eq 0 ]
 then
     echo "ERROR: segmentation failed" >> log.txt

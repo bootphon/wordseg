@@ -1,8 +1,5 @@
 # you can comment lines with a '#'
-tp_absolute_ftp ./exemple/tags.txt phone -p' ' -s';esyll' -w';eword' wordseg-tp -v -t absolute -d ftp
-tp_absolute_btp ./exemple/tags.txt phone -p' ' -s';esyll' -w';eword' wordseg-tp -v -t absolute -d btp
-tp_absolute_mi ./exemple/tags.txt phone -p' ' -s';esyll' -w';eword' wordseg-tp -v -t absolute -d mi
-tp_relative_ftp ./exemple/tags.txt phone -p' ' -s';esyll' -w';eword' wordseg-tp -v -t relative -d ftp
-tp_relative_btp ./exemple/tags.txt phone -p' ' -s';esyll' -w';eword' wordseg-tp -v -t relative -d btp
-tp_relative_mi ./exemple/tags.txt phone -p' ' -s';esyll' -w';eword' wordseg-tp -v -t relative -d mi
-dibs ./exemple/tags.txt phone -p' ' -s';esyll' -w';eword' wordseg-dibs -v
+tp ./exemple/test.txt phone -p' ' -s';esyll' -w';eword' wordseg-tp -v -t absolute -d ftp
+tp_tt ./exemple/test.txt,./exemple/train.txt phone -p' ' -s';esyll' -w';eword' wordseg-tp -v -t absolute -d ftp
+dibs ./exemple/test.txt phone -p' ' -s';esyll' -w';eword' wordseg-dibs -v
+dibs_tt ./exemple/test.txt,./exemple/train.txt phone -p' ' -s';esyll' -w';eword' wordseg-dibs -v

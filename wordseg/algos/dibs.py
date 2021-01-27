@@ -5,7 +5,7 @@
     there is a word-boundary there).
 
     The particularity of DiBS, with repect to the other segmentation algorithms
-    in wordseg, is that it requires a little training test with word boundaries
+    in wordseg, is that it requires a little training set with word boundaries
     (ie. in phonologized form, not in prepared form). User has two choices:
 
     - Train and segment on the same text:

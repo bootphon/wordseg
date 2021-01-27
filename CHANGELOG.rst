@@ -45,7 +45,11 @@ not yet released
 * in **wordseg-puddle**, added an option ``--by-frequency`` to choose words
   based on their frequencies.
 
-* in cluster tools: improved duration and error reporting.
+* in cluster tools:
+
+  * improved duration and error reporting.
+
+  * adaptations to new ``--train-file`` options.
 
 
 wordseg-0.7.1

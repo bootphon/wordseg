@@ -37,7 +37,7 @@ hh ax ;esyll l ow ;esyll ;eword dh eh r ;esyll ;eword hh ay ;esyll ;eword hh aw 
 aa ;esyll hh aa ;esyll ;eword
 aa ;esyll hh aa ;esyll ;eword
 ow ;esyll k ey ;esyll ;eword
-ow ;esyll k ey ;esyll ;eword hh uw z ;esyll ;eword 
+ow ;esyll k ey ;esyll ;eword hh uw z ;esyll ;eword
 ow ;esyll ;eword ay ;esyll ;eword d ih d n t ;esyll ;eword ow ;esyll k ey ;esyll ;eword
 ow ;esyll k ey ;esyll ;eword ow ;esyll k ey ;esyll ;eword w ah n ;esyll ;eword t eh n ;esyll ;eword ay ;esyll ;eword hh ae v ;esyll ;eword t ax ;esyll ;eword p ih k ;esyll ;eword y uw ;esyll ;eword ah p ;esyll ;eword ow ;esyll k ey ;esyll ;eword d ih d ;esyll ;eword y uw ;esyll ;eword g eh t ;esyll ;eword m ay ;esyll ;eword m eh ;esyll s ax jh ;esyll ;eword
 ow ;esyll ;eword jh ah s t ;esyll ;eword dh ax ;esyll ;eword w uh ;esyll m ax n ;esyll ;eword f r ax m ;esyll ;eword y uw ;esyll ;eword aa r ;esyll ;eword ay ;esyll ;eword k ao l d ;esyll ;eword b ey ;esyll s ax ;esyll k l iy ;esyll ;eword ih t ;esyll ;eword w aa z ;esyll ;eword l ay k ;esyll ;eword y ae ;esyll ;eword w iy ;esyll ;eword aa r ;esyll ;eword r iy l ;esyll ;eword t ay t ;esyll ;eword w ih dh ;esyll ;eword k l ae ;esyll s ax z ;esyll ;eword
@@ -136,65 +136,3 @@ y uw ;esyll ;eword w er ;esyll ;eword d uw ;esyll ax ng ;esyll ;eword s ah ch ;e
 dh ae t ;esyll ;eword w aa z ;esyll ;eword g r ey t ;esyll ;eword
 k ae n ;esyll ;eword y uw ;esyll ;eword p ih k ;esyll ;eword dh iy z ;esyll ;eword p iy ;esyll s ax z ;esyll ;eword ah p ;esyll ;eword ae n d ;esyll ;eword ay l ;esyll ;eword r eh d ;esyll ;eword ih t ;esyll ;eword t ax ;esyll ;eword y uw ;esyll ;eword
 ay ;esyll ;eword w ih l ;esyll ;eword r eh d ;esyll ;eword ih t ;esyll ;eword b ah t ;esyll ;eword f er s t ;esyll ;eword y uw ;esyll ;eword n iy d ;esyll ;eword t ax ;esyll ;eword p ih k ;esyll ;eword ah p ;esyll ;eword dh iy z ;esyll ;eword l ih ;esyll t ax l ;esyll ;eword f r uw t s ;esyll ;eword ae n d ;esyll ;eword v eh ;esyll g iy z ;esyll ;eword p l iy z ;esyll ;eword
-p uh t ;esyll ;eword dh ow z ;esyll ;eword ih n ;esyll ;eword dh ax ;esyll ;eword b ae ;esyll s k ax t ;esyll ;eword ae n d ;esyll ;eword m aa ;esyll m iy ;esyll ;eword w ih l ;esyll ;eword r eh d ;esyll ;eword t ax ;esyll ;eword y uw ;esyll ;eword
-ay ;esyll ;eword n ow ;esyll ;eword
-l uh k ;esyll ;eword ay l ;esyll ;eword hh eh l p ;esyll ;eword y uw ;esyll ;eword w iy ;esyll ;eword iy ch ;esyll ;eword p ih k ;esyll ;eword ah p ;esyll ;eword ax ;esyll ;eword p iy s ;esyll ;eword
-ow ;esyll ;eword g uh d ;esyll n ax s ;esyll ;eword
-l uh k ;esyll ;eword ay ;esyll ;eword p ih k t ;esyll ;eword ah p ;esyll ;eword ax ;esyll ;eword p iy s ;esyll ;eword
-y uw ;esyll ;eword p ih k ;esyll ;eword ah p ;esyll ;eword ax ;esyll ;eword p iy s ;esyll ;eword
-ay ;esyll ;eword p ih k ;esyll ;eword ah p ;esyll ;eword ax ;esyll ;eword p iy s ;esyll ;eword
-y uw ;esyll ;eword p ih k ;esyll ;eword ah p ;esyll ;eword ax ;esyll ;eword p iy s ;esyll ;eword
-ay ;esyll ;eword p ih k ;esyll ;eword ah p ;esyll ;eword ax ;esyll ;eword p iy s ;esyll ;eword
-y ey ;esyll ;eword
-ow ;esyll k ey ;esyll ;eword
-oy ;esyll ;eword oy ;esyll ;eword oy ;esyll ;eword oy ;esyll ;eword
-oy ;esyll ;eword oy ;esyll ;eword oy ;esyll ;eword
-ow ;esyll k ey ;esyll ;eword f r ae ng ;esyll k l ax n z ;esyll ;eword  k l ae s ;esyll ;eword t r ih p ;esyll ;eword
-f r ae ng ;esyll k l ax n ;esyll ;eword k uh d ;esyll ;eword k aw n t ;esyll ;eword b ay ;esyll ;eword t uw z ;esyll ;eword ae n d ;esyll ;eword t ay ;esyll ;eword hh ih z ;esyll ;eword sh uw z ;esyll ;eword
-hh iy ;esyll ;eword hh ae d ;esyll ;eword g ao n ;esyll ;eword w ih dh ;esyll ;eword hh ih z ;esyll ;eword k l ae s ;esyll ;eword t ax ;esyll ;eword dh ax ;esyll ;eword b ey ;esyll k er ;esyll iy ;esyll ;eword dh ax ;esyll ;eword f ay ;esyll er ;esyll ;eword s t ey ;esyll sh ax n ;esyll ;eword ae n d ;esyll ;eword dh ax ;esyll ;eword p eh t ;esyll ;eword s t ao r ;esyll ;eword
-t ax ;esyll d ey ;esyll ;eword f r ae ng ;esyll k l ax n z ;esyll ;eword  k l ae s ;esyll ;eword w aa z ;esyll ;eword g ow ;esyll ax ng ;esyll ;eword t ax ;esyll ;eword dh ax ;esyll ;eword m y uw ;esyll z iy ;esyll ax m ;esyll ;eword
-f r ae ng ;esyll k l ax n ;esyll ;eword w aa z ;esyll ;eword s ow ;esyll ;eword ax k ;esyll s ay ;esyll t ax d ;esyll ;eword dh ae t ;esyll ;eword hh iy ;esyll ;eword k uh d ;esyll ;eword hh aa r d ;esyll l iy ;esyll ;eword iy t ;esyll ;eword hh ih z ;esyll ;eword b r eh k ;esyll f ax s t ;esyll ;eword
-dh ax ;esyll ;eword m y uw ;esyll z iy ;esyll ax m ;esyll ;eword hh ae d ;esyll ;eword l aa t s ;esyll ;eword ah v ;esyll ;eword s t eh p s ;esyll ;eword ae n d ;esyll ;eword hh y uw jh ;esyll ;eword d ao r z ;esyll ;eword
-w aw ;esyll ;eword s eh d ;esyll ;eword f r ae ng ;esyll k l ax n ;esyll ;eword ih t s ;esyll ;eword b ih g ;esyll ;eword
-ih t ;esyll ;eword hh ae z ;esyll ;eword t ax ;esyll ;eword b iy ;esyll ;eword s eh d ;esyll ;eword b iy ;esyll v er ;esyll ;eword dh eh r ;esyll ;eword aa r ;esyll ;eword r iy l ;esyll ;eword d ay ;esyll n ax ;esyll s ao r z ;esyll ;eword ih n ;esyll ;eword dh eh r ;esyll ;eword
-d uw ;esyll ;eword y uw ;esyll ;eword r ax ;esyll m eh m ;esyll b er ;esyll ;eword ih n ;esyll ;eword n uw ;esyll ;eword y ao r k ;esyll ;eword w iy ;esyll ;eword w eh n t ;esyll ;eword w ih dh ;esyll ;eword g r ae ;esyll m ax ;esyll ;eword ae n d ;esyll ;eword g r ae n d ;esyll p aa ;esyll ;eword t ax ;esyll ;eword dh ax ;esyll ;eword m y uw ;esyll z iy ;esyll ax m ;esyll ;eword w ih dh ;esyll ;eword dh ax ;esyll ;eword d ay ;esyll n ax ;esyll s ao r z ;esyll ;eword
-y ae ;esyll ;eword dh ae t s ;esyll ;eword k ao l d ;esyll ;eword dh ax ;esyll ;eword m y uw ;esyll z iy ;esyll ax m ;esyll ;eword ax v ;esyll ;eword n ae ;esyll ch er ;esyll ax l ;esyll ;eword hh ih ;esyll s t er ;esyll iy ;esyll ;eword ih n ;esyll ;eword n uw ;esyll ;eword y ao r k ;esyll ;eword
-b iy ;esyll v er ;esyll ;eword hh ae d ;esyll ;eword b ih n ;esyll ;eword t ax ;esyll ;eword dh ax ;esyll ;eword m y uw ;esyll z iy ;esyll ax m ;esyll ;eword b iy ;esyll f ao r ;esyll ;eword sh iy ;esyll ;eword n uw ;esyll ;eword eh ;esyll v r iy ;esyll th ih ng ;esyll ;eword ax ;esyll b aw t ;esyll ;eword ih t ;esyll ;eword
-b ih g ;esyll ;eword d ay ;esyll n ax ;esyll s ao r z ;esyll ;eword sh iy ;esyll ;eword eh m ;esyll f ax ;esyll s ay z d ;esyll ;eword
-s ow ;esyll ;eword b ih g ;esyll ;eword dh ae t ;esyll ;eword dh ey ;esyll ;eword ey t ;esyll ;eword t r iy z ;esyll ;eword f ao r ;esyll ;eword b r eh k ;esyll f ax s t ;esyll ;eword
-f r ae ng ;esyll k l ax n ;esyll ;eword w ax z ;esyll ;eword ax ;esyll f r ey d ;esyll ;eword t ax ;esyll ;eword ae s k ;esyll ;eword w ah t ;esyll ;eword d ay ;esyll n ax ;esyll s ao r z ;esyll ;eword ey t ;esyll ;eword f ao r ;esyll ;eword l ah n ch ;esyll ;eword
-f r ae ng ;esyll k l ax n ;esyll ;eword s ae t ;esyll ;eword d aw n ;esyll ;eword aa n ;esyll ;eword dh ax ;esyll ;eword s t eh p s ;esyll ;eword
-w ah t s ;esyll ;eword  r ao ng ;esyll ;eword ae s k t ;esyll ;eword s n ey l ;esyll ;eword
-b iy ;esyll v er ;esyll ;eword s eh z ;esyll ;eword dh eh r ;esyll ;eword aa r ;esyll ;eword r iy l ;esyll ;eword d ay ;esyll n ax ;esyll s ao r z ;esyll ;eword ih n ;esyll ;eword dh ax ;esyll ;eword m y uw ;esyll z iy ;esyll ax m ;esyll ;eword
-s n ey l ;esyll ;eword l uh k t ;esyll ;eword ax ;esyll l aa r m d ;esyll ;eword
-dh ae t ;esyll ;eword s aw n d z ;esyll ;eword s k eh ;esyll r iy ;esyll ;eword
-ae n d ;esyll ;eword f r ae ng ;esyll k l ax n ;esyll ;eword n aa ;esyll d ax d ;esyll ;eword
-w iy ;esyll ;eword aa r ;esyll ;eword n aa t ;esyll ;eword g aa ;esyll n ax ;esyll ;eword g eh t ;esyll ;eword dh ae t ;esyll ;eword
-ih n ;esyll ;eword dh ax ;esyll ;eword m y uw ;esyll z iy ;esyll ax m ;esyll ;eword l aa ;esyll b iy ;esyll ;eword m ih ;esyll s t er ;esyll ;eword aw l ;esyll ;eword w eh n t ;esyll ;eword ow ;esyll v er ;esyll ;eword dh ax ;esyll ;eword r uw l z ;esyll ;eword
-n ow ;esyll ;eword sh aw ;esyll t ax ng ;esyll ;eword n ow ;esyll ;eword r ax ;esyll n ax ng ;esyll ;eword ae n d ;esyll ;eword s t ey ;esyll ;eword w ih dh ;esyll ;eword dh ax ;esyll ;eword g r uw p ;esyll ;eword
-m ih ;esyll s t er ;esyll ;eword aw l ;esyll ;eword s eh d ;esyll ;eword b iy ;esyll v er ;esyll ;eword w ah n ;esyll ;eword m ao r ;esyll ;eword th ih ng ;esyll ;eword
-w aa ch ;esyll ;eword aw t ;esyll ;eword f ao r ;esyll ;eword dh ax ;esyll ;eword d ay ;esyll n ax ;esyll s ao r z ;esyll ;eword
-m uw s ;esyll ;eword ae n d ;esyll ;eword b eh r ;esyll ;eword l ae f t ;esyll ;eword
-b ah t ;esyll ;eword f r ae ng ;esyll k l ax n ;esyll ;eword d ih d n t ;esyll ;eword hh iy ;esyll ;eword m uw v d ;esyll ;eword ax ;esyll ;eword l ih ;esyll t ax l ;esyll ;eword k l ow ;esyll s er ;esyll ;eword t ax ;esyll ;eword m ih ;esyll s t er ;esyll ;eword aw l ;esyll ;eword
-dh eh r ;esyll ;eword f er s t ;esyll ;eword s t aa p ;esyll ;eword w aa z ;esyll ;eword dh ax ;esyll ;eword b ae t ;esyll ;eword k ey v ;esyll ;eword
-ih t ;esyll ;eword w aa z ;esyll ;eword d aa r k ;esyll ;eword ax n ;esyll s ay d ;esyll ;eword
-s k w iy k s ;esyll ;eword ae n d ;esyll ;eword s k w ao k s ;esyll ;eword f ih l d ;esyll ;eword dh ax ;esyll ;eword eh r ;esyll ;eword
-w ah t s ;esyll ;eword  dh ax t ;esyll ;eword ae s k t ;esyll ;eword f r ae ng ;esyll k l ax n ;esyll ;eword
-b iy ;esyll v er ;esyll ;eword g ih ;esyll g ax l d ;esyll ;eword
-dh ae t s ;esyll ;eword dh ax ;esyll ;eword s aw n d ;esyll ;eword b ae t s ;esyll ;eword m ey k ;esyll ;eword t ax ;esyll ;eword f ay n d ;esyll ;eword dh eh r ;esyll ;eword w ey ;esyll ;eword er ;esyll aw n d ;esyll ;eword
-f r ae ng ;esyll k l ax n ;esyll ;eword w ax z ;esyll ;eword r ax ;esyll l iy v d ;esyll ;eword dh ae t ;esyll ;eword ih t ;esyll ;eword w aa z ;esyll ;eword b ae t s ;esyll ;eword ae n d ;esyll ;eword n aa t ;esyll ;eword d ay ;esyll n ax ;esyll s ao r z ;esyll ;eword
-dh ax ;esyll ;eword k l ae s ;esyll ;eword v ih ;esyll z ax ;esyll t ax d ;esyll ;eword dh ax ;esyll ;eword r ay n ;esyll f ao ;esyll r ax s t ;esyll ;eword n eh k s t ;esyll ;eword
-f r ae ng ;esyll k l ax n ;esyll ;eword k l ay m d ;esyll ;eword hh ay ;esyll ;eword ax n ;esyll t uw ;esyll ;eword ax ;esyll ;eword t r iy ;esyll ;eword hh aw s ;esyll ;eword
-hh iy ;esyll ;eword k uh d ;esyll ;eword s iy ;esyll ;eword dh ax ;esyll ;eword t aa p s ;esyll ;eword ah v ;esyll ;eword t r iy z ;esyll ;eword
-k ae n ;esyll ;eword y uw ;esyll ;eword s p aa t ;esyll ;eword ax ;esyll n iy ;esyll ;eword d ay ;esyll n ax ;esyll s ao r z ;esyll ;eword ae s k t ;esyll ;eword s n ey l ;esyll ;eword
-f r ae ng ;esyll k l ax n ;esyll ;eword sh uh k ;esyll ;eword hh ih z ;esyll ;eword hh eh d ;esyll ;eword ae n d ;esyll ;eword k l ay m d ;esyll ;eword d aw n ;esyll ;eword k w ih ;esyll k l iy ;esyll ;eword
-dh eh r ;esyll ;eword w aa z ;esyll ;eword s ow ;esyll ;eword m ah ch ;esyll ;eword t ax ;esyll ;eword d uw ;esyll ;eword ih n ;esyll ;eword dh ax ;esyll ;eword m y uw ;esyll z iy ;esyll ax m ;esyll ;eword dh ae t ;esyll ;eword f r ae ng ;esyll k l ax n ;esyll ;eword ao l ;esyll m ow s t ;esyll ;eword f er ;esyll g aa t ;esyll ;eword ax ;esyll b aw t ;esyll ;eword dh ax ;esyll ;eword d ay ;esyll n ax ;esyll s ao r z ;esyll ;eword
-ih n ;esyll ;eword dh ax ;esyll ;eword m ax ;esyll d iy ;esyll v ax l ;esyll ;eword r uw m ;esyll ;eword f r ae ng ;esyll k l ax n ;esyll ;eword hh ae d ;esyll ;eword f ah n ;esyll ;eword d r eh ;esyll s ax ng ;esyll ;eword ax p ;esyll ;eword l ay k ;esyll ;eword ax ;esyll ;eword n ay t ;esyll ;eword
-w iy ;esyll ;eword s ao ;esyll ;eword n ay t s ;esyll ;eword ih n ;esyll ;eword dh ax ;esyll ;eword ah ;esyll dh er ;esyll ;eword m y uw ;esyll z iy ;esyll ax m ;esyll ;eword ih n ;esyll ;eword n uw ;esyll ;eword y ao r k ;esyll ;eword ae t ;esyll ;eword dh ax ;esyll ;eword m eh ;esyll t r ax ;esyll p aa ;esyll l ax ;esyll t ax n ;esyll ;eword r ay t ;esyll ;eword
-y ae ;esyll ;eword
-f r ae ng ;esyll k l ax n ;esyll ;eword iy ;esyll v ax n ;esyll ;eword g aa t ;esyll ;eword t ax ;esyll ;eword d ih g ;esyll ;eword ih n ;esyll ;eword ax ;esyll ;eword s ae n ;esyll d iy ;esyll ;eword p ih t ;esyll ;eword
-hh iy ;esyll ;eword w aa z ;esyll ;eword dh ax ;esyll ;eword f er s t ;esyll ;eword w ah n ;esyll ;eword t ax ;esyll ;eword f ay n d ;esyll ;eword ax n ;esyll ;eword ae ;esyll r ow ;esyll ;eword hh eh d ;esyll ;eword
-ih t ;esyll ;eword w aa z ;esyll ;eword jh ah s t ;esyll ;eword l ay k ;esyll ;eword b iy ;esyll ax ng ;esyll ;eword ax ;esyll ;eword r iy l ;esyll ;eword aa r ;esyll k iy ;esyll aa ;esyll l ax ;esyll jh ih s t ;esyll ;eword
-w aw ;esyll ;eword dh ae t s ;esyll ;eword n iy t ;esyll ;eword
-ax n ;esyll ;eword aa r ;esyll k iy ;esyll aa ;esyll l ax ;esyll jh ax s t ;esyll ;eword ih z ;esyll ;eword w eh n ;esyll ;eword y uw ;esyll ;eword d ih g ;esyll ;eword ih n ;esyll ;eword dh ax ;esyll ;eword s ae n d ;esyll ;eword f ao r ;esyll ;eword v eh ;esyll r iy ;esyll ;eword ow l d ;esyll ;eword th ih ng z ;esyll ;eword
-y ae ;esyll ;eword
