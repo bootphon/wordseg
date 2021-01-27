@@ -203,6 +203,16 @@ def test_tokenize_noboundaries():
         == ['j', 'uː', 'n', 'oʊ', 'dʒ', 'ʌ', 's', 't']
 
 
+def test_tokenize_none():
+    s = Separator(phone=None, syllable=None, word=' ')
+    text = 'te9abesitosgr uNone'
+    assert list(s.tokenize(text, level='word')) == ['te9abesitosgr', 'uNone']
+
+    assert s.strip('uNone') == 'uNone'
+    assert s.strip('None') == 'None'
+    assert s.strip('Noneu') == 'Noneu'
+
+
 def test_tokenize_full_nosyll():
     t = 'j_uː_ n_oʊ_ dʒ_ʌ_s_t_ '
 

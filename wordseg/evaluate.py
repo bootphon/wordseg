@@ -452,9 +452,12 @@ class SegmentationSummary:
 
         """
         # non empty texts and same letters. This should be the case by
-        # construction, those asserts are not required.
-        assert len(gold) and len(text)
-        assert ''.join(gold) == ''.join(text)
+        # construction, those checks are not required.
+        if not(len(gold) and len(text)):
+            raise ValueError('gold or text is empty')
+        if ''.join(gold) != ''.join(text):
+            raise ValueError(
+                f'gold != text: {"".join(gold)} != {"".join(text)}')
 
         # easy case, first word is the same
         if gold[0] == text[0]:

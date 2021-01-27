@@ -108,13 +108,16 @@ class Separator(object):
 
         # build a regular expression for separator suppression,
         # considers also spaces within contiguous separators
-        pattern = '((' + '|'.join('({})'.format(
-            self.__dict__[l]) for l in to_remove) + r')+\s*)+'
+        pattern = (
+            r'((' + r'|'.join(
+                '({})'.format(self.__dict__[l])
+                for l in to_remove if self.__dict__[l])
+            + r')+\s*)+')
 
         # remove leading separators
-        utterance = re.sub('^' + pattern, '', utterance)
+        utterance = re.sub(r'^' + pattern, '', utterance)
         # remove ending ones
-        utterance = re.sub(pattern + '$', '', utterance)
+        utterance = re.sub(pattern + r'$', '', utterance)
 
         return utterance.strip()
 
@@ -173,7 +176,7 @@ class Separator(object):
             if not self._regexp[level]:
                 return [utterance]
 
-            return [self.strip(token) for token in re.split(
+            return [self.strip(token, level) for token in re.split(
                 self._regexp[level], utterance) if token]
 
         if level is None:
